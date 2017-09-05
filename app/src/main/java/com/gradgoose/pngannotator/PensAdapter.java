@@ -24,6 +24,8 @@ public class PensAdapter extends RecyclerView.Adapter {
 	
 	int mList [] = null; 
 	
+	boolean mPenModeMiniHands = false; 
+	
 	static final int HEADER_CODE = Color.argb (0, 1, 1, 1); 
 	public void setHeaderItemViews (View list []) { 
 		mHeaderItemViews = list; 
@@ -112,10 +114,12 @@ public class PensAdapter extends RecyclerView.Adapter {
 	public class Holder extends RecyclerView.ViewHolder {
 		final FrameLayout penLayout; 
 		final PenIcon penIcon; 
+		final View miniHand; 
 		public Holder (View root) { 
 			super (root); 
 			penLayout = root.findViewById (R.id.flPen); 
 			penIcon = root.findViewById (R.id.piPen); 
+			miniHand = root.findViewById (R.id.ivMiniHand); 
 			itemView.setOnClickListener (mOnClick); 
 		} 
 		public void bind (int color, int index) { 
@@ -126,6 +130,7 @@ public class PensAdapter extends RecyclerView.Adapter {
 			penIcon.setContentDescription (mContext.getString (R.string.access_pen) 
 				.replace ("[number]", String.valueOf (index + 1))); 
 			itemView.setTag (R.id.item_color, color); 
+			miniHand.setVisibility (mPenModeMiniHands ? View.VISIBLE : View.GONE); 
 		} 
 	} 
 	

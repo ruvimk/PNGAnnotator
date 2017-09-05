@@ -99,16 +99,21 @@ public class NoteActivity extends Activity {
 		super.onPrepareOptionsMenu (menu); 
 		boolean hasImages = PngNotesAdapter.hasImages (mBrowsingFolder); 
 		menu.findItem (R.id.menu_action_goto_page).setVisible (hasImages); 
-		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
+		menu.findItem (R.id.menu_action_pen_mode).setChecked (isPenModeEnabled ()); 
+//		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
 		return true; 
 	} 
 	@Override public boolean onOptionsItemSelected (MenuItem item) { 
 		switch (item.getItemId ()) { 
-			case R.id.menu_action_annotate: 
-				userSelectAnnotateOptions (); 
-				break; 
+//			case R.id.menu_action_annotate: 
+//				userSelectAnnotateOptions (); 
+//				break; 
 			case R.id.menu_action_goto_page: 
 				userSelectPage (); 
+				break; 
+			case R.id.menu_action_pen_mode: 
+				item.setChecked (!item.isChecked ()); 
+				enablePenMode (item.isChecked ()); 
 				break; 
 			case R.id.menu_action_settings: 
 				openSettings (); 
@@ -136,9 +141,9 @@ public class NoteActivity extends Activity {
 		else mRvBigPages.scrollToPosition (index + mNotesAdapter.countHeaderViews ()); 
 	} 
 	
-	void userSelectAnnotateOptions () { 
-		
-	} 
+//	void userSelectAnnotateOptions () { 
+//		
+//	} 
 	void userSelectPage () { 
 		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_number, 
 				(ViewGroup) findViewById (R.id.vMainRoot), false); 
@@ -186,6 +191,7 @@ public class NoteActivity extends Activity {
 	
 	View eraser = null; 
 	View hand = null; 
+	View eraser_miniHand = null; 
 	
 	void initUserInterface () { 
 		// Subfolder browser RecyclerView: 
@@ -227,6 +233,7 @@ public class NoteActivity extends Activity {
 				(ViewGroup) findViewById (R.id.vMainRoot), false); 
 		((ImageView) hand.findViewById (R.id.ivEraser)).setImageResource (R.mipmap.ic_hand); 
 		hand.findViewById (R.id.ivMiniHand).setVisibility (View.GONE); 
+		eraser_miniHand = eraser.findViewById (R.id.ivMiniHand); 
 		hand.setOnClickListener (new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				// Select the hand tool ("none"). 
@@ -235,6 +242,9 @@ public class NoteActivity extends Activity {
 				mPensAdapter.setBorderedItemPosition (-1); 
 				currentTool = TOOL_NONE; 
 				prefs.edit ().putInt ("tool", currentTool).apply (); 
+				// Update the touch event handler for PageView: 
+				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+				mNotesAdapter.notifyDataSetChanged (); 
 			} 
 		}); 
 		eraser.setOnClickListener (new View.OnClickListener () { 
@@ -245,6 +255,9 @@ public class NoteActivity extends Activity {
 				mPensAdapter.setBorderedItemPosition (-1); 
 				currentTool = TOOL_ERASER; 
 				prefs.edit ().putInt ("tool", currentTool).apply (); 
+				// Update the touch event handler for PageView: 
+				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+				mNotesAdapter.notifyDataSetChanged (); 
 			} 
 		}); 
 		mPensAdapter.setOnPenColorSelectedListener (new PensAdapter.OnPenColorSelectedListener () { 
@@ -254,9 +267,12 @@ public class NoteActivity extends Activity {
 				mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (penColor)); 
 				currentTool = TOOL_PEN; 
 				currentColor = penColor; 
-				prefs.edit ().putInt ("tool", currentTool)
-						.putInt ("color", currentColor)
+				prefs.edit ().putInt ("tool", currentTool) 
+						.putInt ("color", currentColor) 
 						.apply (); 
+				// Update the touch event handler for PageView: 
+				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+				mNotesAdapter.notifyDataSetChanged (); 
 			} 
 		}); 
 		mPensAdapter.setHeaderItemViews (new View [] {hand, eraser}); 
@@ -267,6 +283,12 @@ public class NoteActivity extends Activity {
 				R.drawable.black_border : 0); 
 		if (currentTool == TOOL_PEN) 
 			mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (currentColor)); 
+		mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+		mNotesAdapter.notifyDataSetChanged (); 
+		// Initialize the pen mode things: 
+		updateViewsForPenMode (); 
+		// Show the pen options only if there are images available for editing: 
+		mRvPenOptions.setVisibility (canEdit () ? View.VISIBLE : View.GONE); 
 		// Scroll to the initial scroll position, and forget the scroll position (so we 
 		// don't mess up and reuse it when the user doesn't want us to): 
 		setPageIndex (initialScrollItemPosition); 
@@ -286,13 +308,24 @@ public class NoteActivity extends Activity {
 	
 	void enablePenMode (boolean penMode) { 
 		prefs.edit ().putBoolean ("pen-mode", penMode).apply (); 
+		updateViewsForPenMode (); 
 	} 
 	boolean isPenModeEnabled () { 
 		return prefs.getBoolean ("pen-mode", false); 
 	} 
+	void updateViewsForPenMode () { 
+		eraser_miniHand.setVisibility (isPenModeEnabled () ? View.VISIBLE : View.GONE); 
+		mPensAdapter.mPenModeMiniHands = isPenModeEnabled (); 
+		mPensAdapter.notifyDataSetChanged (); 
+		mNotesAdapter.mPenMode = isPenModeEnabled (); 
+		mNotesAdapter.notifyDataSetChanged (); 
+	} 
 	
 	boolean canGoBack () { 
 		return !mBrowsingFolder.equals (mDCIM); 
+	} 
+	boolean canEdit () { 
+		return PngNotesAdapter.hasImages (mBrowsingFolder); 
 	} 
 	
 	

@@ -26,6 +26,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	final File mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
 	
+	boolean mPenMode = false; 
+	boolean mToolMode = false; 
+	
 	long headerPersistantIdStart = 0; 
 	View mHeaderItemViews [] = null; 
 	
@@ -112,6 +115,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		public void bind (File itemFile) { 
 			titleView.setText (itemFile.getName ()); 
 			pageView.setItemFile (itemFile); 
+			pageView.setPenMode (mPenMode); 
+			pageView.setToolMode (mToolMode); 
 		} 
 	} 
 	

@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import java.io.File;
 
@@ -34,33 +35,60 @@ public class NoteActivity extends Activity {
 		mBrowsingFolder = new File (browsingPath); 
 	} 
 	
+	static final String PREFS_NAME = "com.gradgoose.pngannotator.NoteActivity.prefs"; 
+	SharedPreferences prefs = null; 
+	
+	static final int TOOL_NONE = 0; 
+	static final int TOOL_PEN = 1; 
+	static final int TOOL_ERASER = 2; 
+	
+	int currentTool = 0; // None. 
+	int currentColor = Color.TRANSPARENT; 
+	
 	static final String STATE_BROWSING_PATH = "com.gradgoose.pngannotator.browse_path"; 
+	static final String STATE_SCROLL_ITEM = "com.gradgoose.pngannotator.scroll_item"; 
+	
+	int initialScrollItemPosition = 0; 
 	
 	@Override protected void onCreate (Bundle savedInstanceState) { 
 		super.onCreate (savedInstanceState); 
 		setContentView (R.layout.activity_main); 
+		// Read the key-value quick options from last time: 
+		prefs = getSharedPreferences (PREFS_NAME, MODE_PRIVATE); 
+		currentTool = prefs.getInt ("tool", currentTool); 
+		currentColor = prefs.getInt ("color", currentColor); 
+		// Get the folder where digital camera images are stored: 
 		mDCIM = Environment.getExternalStoragePublicDirectory ( 
 				Environment.DIRECTORY_DCIM 
 		); 
+		// See if we had a folder already open last time that we can reopen now: 
 		if (savedInstanceState != null) { 
 			if (savedInstanceState.containsKey (STATE_BROWSING_PATH)) 
 				setBrowsingPath (savedInstanceState.getString (STATE_BROWSING_PATH)); 
+			if (savedInstanceState.containsKey (STATE_SCROLL_ITEM)) 
+				initialScrollItemPosition = savedInstanceState.getInt (STATE_SCROLL_ITEM); 
 		} 
-		if (mBrowsingFolder == null) { /* If the above did not give us a folder ... */ 
-			Intent sourceIntent = getIntent (); 
-			Bundle extras = sourceIntent.getExtras (); 
-			if (extras != null) { 
+		// See if whoever started this activity wanted us to open any particular folder: 
+		Intent sourceIntent = getIntent (); 
+		Bundle extras = sourceIntent.getExtras (); 
+		if (extras != null) { 
+			if (mBrowsingFolder == null) { /* If the above did not give us a folder ... */
 				if (extras.containsKey (STATE_BROWSING_PATH)) 
 					setBrowsingPath (extras.getString (STATE_BROWSING_PATH)); 
 			} 
+			if (initialScrollItemPosition == 0) 
+				initialScrollItemPosition = extras.getInt (STATE_SCROLL_ITEM); 
 		} 
 		if (mBrowsingFolder == null) // Else use the default of the DCIM folder. 
 			mBrowsingFolder = mDCIM; 
-		initUserInterface (); 
-		initActionBar (); 
+		// Initialize views and the window title and icon: 
+		initUserInterface (); // Views. 
+		initActionBar (); // Title, Icon. 
 	} 
+	// Save which folder we're working on, and what scroll position: 
 	@Override protected void onSaveInstanceState (Bundle outState) { 
 		outState.putString (STATE_BROWSING_PATH, mBrowsingFolder.getAbsolutePath ()); 
+		outState.putInt (STATE_SCROLL_ITEM, getPageIndex ()); 
 	} 
 	
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 
@@ -152,6 +180,13 @@ public class NoteActivity extends Activity {
 	PngNotesAdapter mNotesAdapter = null; 
 	LinearLayoutManager mNotesLayoutManager = null; 
 	
+	RecyclerView mRvPenOptions = null; 
+	PensAdapter mPensAdapter = null; 
+	LinearLayoutManager mPensLayoutManager = null;
+	
+	View eraser = null; 
+	View hand = null; 
+	
 	void initUserInterface () { 
 		// Subfolder browser RecyclerView: 
 		mRvSubfolderBrowser = (RecyclerView) getLayoutInflater () 
@@ -181,6 +216,61 @@ public class NoteActivity extends Activity {
 						new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false)); 
 		mRvBigPages.setAdapter (mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolder)); 
 		mNotesAdapter.setHeaderItemViews (new View [] {mRvSubfolderBrowser}); 
+		// Pen options: 
+		mRvPenOptions = findViewById (R.id.rvPenOptions); 
+		mRvPenOptions.setLayoutManager (mPensLayoutManager = 
+						new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false)); 
+		mRvPenOptions.setAdapter (mPensAdapter = new PensAdapter (this)); 
+		eraser = getLayoutInflater ().inflate (R.layout.icon_eraser, 
+				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+		hand = getLayoutInflater ().inflate (R.layout.icon_eraser, 
+				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+		((ImageView) hand.findViewById (R.id.ivEraser)).setImageResource (R.mipmap.ic_hand); 
+		hand.findViewById (R.id.ivMiniHand).setVisibility (View.GONE); 
+		hand.setOnClickListener (new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				// Select the hand tool ("none"). 
+				hand.findViewById (R.id.flEraser).setBackgroundResource (R.drawable.black_border); 
+				eraser.findViewById (R.id.flEraser).setBackgroundResource (0); 
+				mPensAdapter.setBorderedItemPosition (-1); 
+				currentTool = TOOL_NONE; 
+				prefs.edit ().putInt ("tool", currentTool).apply (); 
+			} 
+		}); 
+		eraser.setOnClickListener (new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				// Select the eraser as the tool. 
+				hand.findViewById (R.id.flEraser).setBackgroundResource (0); 
+				eraser.findViewById (R.id.flEraser).setBackgroundResource (R.drawable.black_border); 
+				mPensAdapter.setBorderedItemPosition (-1); 
+				currentTool = TOOL_ERASER; 
+				prefs.edit ().putInt ("tool", currentTool).apply (); 
+			} 
+		}); 
+		mPensAdapter.setOnPenColorSelectedListener (new PensAdapter.OnPenColorSelectedListener () { 
+			@Override public void onPenColorSelected (int penColor) { 
+				hand.findViewById (R.id.flEraser).setBackgroundResource (0); 
+				eraser.findViewById (R.id.flEraser).setBackgroundResource (0); 
+				mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (penColor)); 
+				currentTool = TOOL_PEN; 
+				currentColor = penColor; 
+				prefs.edit ().putInt ("tool", currentTool)
+						.putInt ("color", currentColor)
+						.apply (); 
+			} 
+		}); 
+		mPensAdapter.setHeaderItemViews (new View [] {hand, eraser}); 
+		// Update the views for the tool initially selected: 
+		hand.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_NONE ? 
+				R.drawable.black_border : 0); 
+		eraser.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_ERASER ? 
+				R.drawable.black_border : 0); 
+		if (currentTool == TOOL_PEN) 
+			mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (currentColor)); 
+		// Scroll to the initial scroll position, and forget the scroll position (so we 
+		// don't mess up and reuse it when the user doesn't want us to): 
+		setPageIndex (initialScrollItemPosition); 
+		initialScrollItemPosition = 0; 
 	} 
 	
 	void initActionBar () { 
@@ -192,6 +282,13 @@ public class NoteActivity extends Activity {
 			actionBar.setDisplayShowHomeEnabled (true); 
 			actionBar.setHomeButtonEnabled (canGoBack ()); 
 		} 
+	} 
+	
+	void enablePenMode (boolean penMode) { 
+		prefs.edit ().putBoolean ("pen-mode", penMode).apply (); 
+	} 
+	boolean isPenModeEnabled () { 
+		return prefs.getBoolean ("pen-mode", false); 
 	} 
 	
 	boolean canGoBack () { 

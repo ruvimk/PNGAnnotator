@@ -3,5 +3,8 @@
 	
 	<item type="id" name="item_file" /> 
 	
+	<item type="id" name="item_color" /> 
+	
+	
 	
 </resources>

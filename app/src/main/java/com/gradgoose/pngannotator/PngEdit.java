@@ -71,7 +71,127 @@ public class PngEdit {
 	} 
 	
 	public void erase (float eraserPath [], float eraserRadius) { 
-		
+		if (eraserPath.length < 2) return; 
+		synchronized (mEdits) { 
+			// Perform erase operations on all the edits: 
+			for (LittleEdit edit : mEdits) { 
+				if (edit.points.length < 2) continue; 
+				float prevX = eraserPath[0]; 
+				float prevY = eraserPath[1]; 
+				eraseCircle (edit, prevX, prevY, eraserRadius); 
+				for (int i = 2; i < eraserPath.length; i += 2) { 
+					float x = eraserPath[i + 0]; 
+					float y = eraserPath[i + 1]; 
+					// We do the following check in case we are given Canvas.drawLines ()-like data: 
+					if (x == prevX && y == prevY) continue; 
+					// Do the operations: 
+					eraseLineSegment (edit, prevX, prevY, x, y, eraserRadius); 
+					eraseCircle (edit, x, y, eraserRadius); 
+					// Continue: 
+					prevX = x; 
+					prevY = y; 
+				} 
+			} 
+			// Remove any empty edits (some may have become empty after erasing points): 
+			for (int i = 0; i < mEdits.size (); i++) 
+				if (mEdits.get (i).points.length == 0) 
+					mEdits.remove (i); 
+		} 
+	} 
+	private static void eraseSubSegment (Vector<Float> result, 
+										 float ax, float ay, float bx, float by, 
+										 float m, float n) { 
+		float abx = bx - ax; 
+		float aby = by - ay; 
+		float abm = (float) Math.sqrt (abx * abx + aby * aby); 
+		if (n <= 0 || m >= abm || Float.isNaN (m) || Float.isNaN (n)) { 
+			result.add (ax); 
+			result.add (ay); 
+			result.add (bx); 
+			result.add (by); 
+			return; 
+		} 
+		float abhx = abx / abm; 
+		float abhy = aby / abm; 
+		if (m > 0 && m < abm) { 
+			result.add (ax); 
+			result.add (ay); 
+			result.add (ax + abhx * m); 
+			result.add (ay + abhy * m); 
+		} 
+		if (n > 0 && n < abm) { 
+			result.add (ax + abhx * n); 
+			result.add (ay + abhy * n); 
+			result.add (bx); 
+			result.add (by); 
+		} 
+	} 
+	private static void finishErasing (LittleEdit edit, Vector<Float> result) { 
+		float now []; 
+		if (result.size () != edit.points.length) 
+			now = new float [result.size ()]; 
+		else now = edit.points; 
+		for (int i = 0; i < now.length; i++) 
+			now[i] = result.elementAt (i); 
+		edit.points = now; 
+	} 
+	private static void eraseCircle (LittleEdit edit, float cx, float cy, float R) { 
+		Vector<Float> result = new Vector<> (edit.points.length); 
+		for (int i = 2; i < edit.points.length; i += 4) { 
+			float ax = edit.points[i - 2]; 
+			float ay = edit.points[i - 1]; 
+			float bx = edit.points[i + 0]; 
+			float by = edit.points[i + 1]; 
+			MN isect = findLineSegmentCircleIntersectionArcLengthPosition ( 
+					ax, ay, bx, by, 
+					cx, cy, R 
+			); 
+			eraseSubSegment (result, ax, ay, bx, by, isect.m, isect.n); 
+		} 
+		finishErasing (edit, result); 
+	} 
+	private static void eraseLineSegment (LittleEdit edit, 
+										  float cx, float cy, 
+										  float dx, float dy, 
+										  float R) { 
+		Vector<Float> result = new Vector<> (edit.points.length); 
+		for (int i = 2; i < edit.points.length; i += 4) { 
+			float ax = edit.points[i - 2]; 
+			float ay = edit.points[i - 1]; 
+			float bx = edit.points[i + 0]; 
+			float by = edit.points[i + 1]; 
+			float cdx = dx - cx; 
+			float cdy = dy - cy; 
+			float abm = (float) Math.sqrt (cdx * cdx + cdy * cdy); 
+			// Find an orthogonal unit vector to use for shifting the reference frame: 
+			float ox = -cdx / abm; 
+			float oy = cdy / abm; 
+			// Create sets of m and n line segments to use for the m and n s values: 
+			float cxm = cx - ox * R; 
+			float cym = cy - oy * R; 
+			float cxn = cx + ox * R; 
+			float cyn = cy + oy * R; 
+			float dxm = dx - ox * R; 
+			float dym = dy - oy * R; 
+			float dxn = dx + ox * R; 
+			float dyn = dx + oy * R; 
+			// Find intersections: 
+			float sm = findTwoLineSegmentIntersectionArcLengthPosition (
+					ax, ay, bx, by, cxm, cym, dxm, dym 
+			); 
+			float sn = findTwoLineSegmentIntersectionArcLengthPosition (
+					ax, ay, bx, by, cxn, cyn, dxn, dyn 
+			); 
+			// Erase the intersected area: 
+			eraseSubSegment (result, ax, ay, bx, by, sm, sn); 
+		} 
+		finishErasing (edit, result); 
+	} 
+	
+	public static float calculateDistance (float ax, float ay, float bx, float by) { 
+		float dx = bx - ax; 
+		float dy = by - ay; 
+		return (float) Math.sqrt (dx * dx + dy * dy); 
 	} 
 	
 	public static class MN { 

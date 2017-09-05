@@ -33,6 +33,26 @@ public class PngEdit {
 	File mVectorEdits = null; 
 	final Vector<LittleEdit> mEdits = new Vector<> (); 
 	
+	float windowWidth = 1; 
+	float windowHeight = 1; 
+	public void setWindowSize (float width, float height) { 
+		// Scale all the points from the old window size to the new window size: 
+		synchronized (mEdits) { 
+			for (LittleEdit edit : mEdits) { 
+				// Scale the brush width: 
+				edit.brushWidth *= width / windowWidth; 
+				// Scale the coordinates: 
+				for (int i = 0; i < edit.points.length / 2; i++) { 
+					edit.points[2 * i + 0] *= width / windowWidth; 
+					edit.points[2 * i + 1] *= height / windowHeight; 
+				} 
+			} 
+		} 
+		// Change the window size: 
+		windowWidth = width; 
+		windowHeight = height; 
+	} 
+	
 	public void addEdit (LittleEdit e) { 
 		synchronized (mEdits) { 
 			mEdits.add (e); 
@@ -72,11 +92,13 @@ public class PngEdit {
 		while (dataInput.available () >= 12) { 
 			LittleEdit littleEdit = new LittleEdit (); 
 			littleEdit.color = dataInput.readInt (); 
-			littleEdit.brushWidth = dataInput.readFloat (); 
+			littleEdit.brushWidth = dataInput.readFloat () * windowWidth; 
 			int numberCount = dataInput.readInt (); 
 			littleEdit.points = new float [numberCount]; 
-			for (int i = 0; i < numberCount; i++) 
-				littleEdit.points[i] = dataInput.readFloat (); 
+			for (int i = 0; i < numberCount / 2; i++) { 
+				littleEdit.points[2 * i + 0] = windowWidth * dataInput.readFloat (); 
+				littleEdit.points[2 * i + 1] = windowHeight * dataInput.readFloat (); 
+			} 
 			mEdits.add (littleEdit); 
 		} 
 		dataInput.close (); 
@@ -87,10 +109,12 @@ public class PngEdit {
 		DataOutputStream dataOutput = new DataOutputStream (outputStream); 
 		for (LittleEdit edit : mEdits) { 
 			dataOutput.writeInt (edit.color); 
-			dataOutput.writeFloat (edit.brushWidth); 
+			dataOutput.writeFloat (edit.brushWidth / windowWidth); 
 			dataOutput.writeInt (edit.points.length); 
-			for (float f : edit.points) 
-				dataOutput.writeFloat (f); 
+			for (int i = 0; i < edit.points.length / 2; i++) { 
+				dataOutput.writeFloat (edit.points[2 * i + 0] / windowWidth); 
+				dataOutput.writeFloat (edit.points[2 * i + 1] / windowHeight); 
+			} 
 		} 
 		dataOutput.close (); 
 		outputStream.close (); 

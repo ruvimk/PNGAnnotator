@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.Vector;
 
 /**
@@ -31,6 +32,7 @@ public class PageView extends ImageView {
 	WriteDetector mWriteDetector; 
 	
 	boolean mNowWriting = false; 
+	boolean mNowErasing = false; 
 	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
@@ -38,13 +40,26 @@ public class PageView extends ImageView {
 	
 	Path tmpPath = new Path (); 
 	
+	int executingPushes = 0; // To have some sort of synchronization between pushStrokes (); 
 	void pushStrokes (WriteDetector.Stroke ... params) { 
 		AsyncTask<WriteDetector.Stroke, Object, String> mPushStroke = 
 				new AsyncTask<WriteDetector.Stroke, Object, String> () { 
 					@Override protected String doInBackground (WriteDetector.Stroke... params) { 
-						Vector<PngEdit.LittleEdit> mJustNowEdits = new Vector<> (params.length); 
+						// Wait for any other operations to complete on the strokes. 
+						while (executingPushes > 0) { 
+							try { 
+								Thread.sleep (10); 
+							} catch (InterruptedException err) { 
+								// Do nothing. It's okay! 
+							} 
+						} 
+						executingPushes++; 
+						// Convert the strokes into these little edits of ours: 
+						int oldSize = edit.mEdits.size (); 
 						for (WriteDetector.Stroke stroke : params) { 
-							if (mTool == NoteActivity.TOOL_ERASER) { 
+							if (mTool == NoteActivity.TOOL_ERASER || 
+									stroke.getType () == WriteDetector.Stroke.TYPE_ERASE) { 
+								// This was an ERASE stroke. 
 								
 							} else { 
 								PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
@@ -55,25 +70,27 @@ public class PageView extends ImageView {
 								littleEdit.points[1] = stroke.getY (0); 
 								int i; 
 								for (i = 1; i + 1 < stroke.count (); i++) { 
-									littleEdit.points[2 * i + 0] = stroke.getX (i); 
-									littleEdit.points[2 * i + 1] = stroke.getY (i); 
-									littleEdit.points[2 * i + 2] = stroke.getX (i); 
-									littleEdit.points[2 * i + 3] = stroke.getY (i); 
+									littleEdit.points[4 * i - 2] = stroke.getX (i); 
+									littleEdit.points[4 * i - 1] = stroke.getY (i); 
+									littleEdit.points[4 * i + 0] = stroke.getX (i); 
+									littleEdit.points[4 * i + 1] = stroke.getY (i); 
 								} 
-								littleEdit.points[2 * i + 0] = stroke.getX (i); 
-								littleEdit.points[2 * i + 1] = stroke.getY (i); 
-								mJustNowEdits.add (littleEdit); 
+								littleEdit.points[4 * i - 2] = stroke.getX (i); 
+								littleEdit.points[4 * i - 1] = stroke.getY (i); 
 								edit.addEdit (littleEdit); 
 							} 
 						} 
+						// Try to save the strokes: 
 						try { 
-							edit.saveEdits (); 
+							edit.saveEdits (); // Save. 
+							executingPushes--; // Make the counter 0, so strokes can be edited again. 
 						} catch (IOException err) { 
 							// Log this error: 
 							err.printStackTrace (); 
-							// Take out the last edits (to not fool the user of false 'save'): 
-							for (PngEdit.LittleEdit e : mJustNowEdits) 
-								edit.removeEdit (e); 
+							// Restore all the previous edits (to not fool the user of false 'save'): 
+							edit.mEdits.setSize (oldSize); 
+							// Make the counter 0, so strokes can be edited by other operations now: 
+							executingPushes--; 
 							// Return an error code: 
 							return "IOException"; 
 						} 
@@ -81,16 +98,22 @@ public class PageView extends ImageView {
 					} 
 					
 					@Override protected void onPreExecute () { 
+						// What to do before the task executes. 
+						// I believe this runs on the user thread. 
 						
 					} 
 					
 					@Override protected void onPostExecute (String result) { 
+						// What to do once it's done executing. 
+						// This is also the user thread. 
 						if (result.equals ("IOException")) { 
+							// If the result is an I/O error, display the I/O error message: 
 							Toast.makeText (getContext (), 
 									R.string.error_io_no_edit, 
 									Toast.LENGTH_SHORT) 
 									.show (); 
-						} else invalidate (); // Redraw! 
+						} 
+						invalidate (); // Redraw! 
 					} 
 					
 					@Override protected void onProgressUpdate (Object... values) { 
@@ -110,7 +133,9 @@ public class PageView extends ImageView {
 				if (edit == null) return false; 
 				tmpPath.rewind (); 
 				tmpPath.moveTo (x, y); 
-				mNowWriting = true; 
+				if (mTool == NoteActivity.TOOL_ERASER) 
+					mNowErasing = true; 
+				else mNowWriting = true; 
 				return true; 
 			} 
 			
@@ -126,7 +151,9 @@ public class PageView extends ImageView {
 				WriteDetector.Stroke stroke = mWriteDetector.getStroke (strokeID); 
 				pushStrokes (stroke); 
 				tmpPath.rewind (); 
-				mNowWriting = false; 
+				if (mTool == NoteActivity.TOOL_ERASER) 
+					mNowErasing = false; 
+				else mNowWriting = false; 
 			} 
 			
 			@Override public void onStrokeCancel (int strokeID) { 
@@ -136,6 +163,7 @@ public class PageView extends ImageView {
 			} 
 			
 			@Override public boolean onEraseBegin (int strokeID, float x, float y) { 
+				mNowErasing = true; 
 				return true; 
 			} 
 			
@@ -146,7 +174,7 @@ public class PageView extends ImageView {
 			} 
 			
 			@Override public void onEraseEnd (int strokeID, float x, float y) { 
-				
+				mNowErasing = false; 
 			} 
 			
 			@Override public void onEraseCancel (int strokeID) { 
@@ -158,14 +186,17 @@ public class PageView extends ImageView {
 			} 
 			
 			@Override public boolean onBeginPan (int strokeID, float x0, float y0) { 
-				return !mWriteDetector.isInPenMode (); // Only pan with finger in pen mode. 
+				return false; 
+//				return !mToolMode && 
+//							   !mWriteDetector.isInPenMode (); // Only pan with finger in pen mode. 
 			} 
 			
 			@Override public boolean onSimplePan (int strokeID, 
 												  float xInitial, float yInitial, 
 												  float xt, float yt, 
 												  float elapsedSeconds) { 
-				return !mWriteDetector.isInPenMode (); 
+				return false; 
+//				return !mWriteDetector.isInPenMode (); 
 			} 
 			
 			@Override public boolean onPanHint (int strokeID, 
@@ -221,6 +252,7 @@ public class PageView extends ImageView {
 		setImageURI (Uri.fromFile (file)); 
 		try { 
 			edit = PngEdit.forFile (getContext (), file); 
+			edit.setWindowSize (getWidth (), getHeight ()); 
 		} catch (IOException err) { 
 			// Can't edit: 
 			edit = null; 
@@ -232,6 +264,12 @@ public class PageView extends ImageView {
 					Toast.LENGTH_SHORT) 
 					.show (); 
 		} 
+	} 
+	
+	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
+		super.onSizeChanged (w, h, oldW, oldH); 
+		if (edit != null) 
+			edit.setWindowSize (w, h); 
 	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 

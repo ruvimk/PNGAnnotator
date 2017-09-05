@@ -73,7 +73,7 @@ public class PngEdit {
 	public void erase (float eraserPath [], float eraserRadius) { 
 		
 	} 
-	public static float [] findTwoLineSegmentIntersectionArcLengthPosition (
+	public static float findTwoLineSegmentIntersectionArcLengthPosition (
 			float ax, float ay, float bx, float by, 
 			float cx, float cy, float dx, float dy 
 	) { 
@@ -85,13 +85,12 @@ public class PngEdit {
 		float dry = ay - cy; 
 		float magt = (float) Math.sqrt (tx * tx + ty * ty); 
 		float mags = (float) Math.sqrt (sx * sx + sy * sy); 
-		float thx = tx / magt; 
-		float thy = ty / magt; 
-		float numx = tx / mags * (drx * thx + dry * thy) - drx; 
-		float numy = ty / mags * (drx * thx + dry * thy) - dry; 
-		float denx = sx - tx / mags * (sx * thx + sy * thy); 
-		float deny = sy - ty / mags * (sx * thx + sy * thy); 
-		return new float [] {numx / denx, numy / deny}; 
+		float magr = (float) Math.sqrt (drx * drx + dry * dry); 
+		float cost = (sx * tx + sy * ty) / (mags * magt); 
+		float cosa = -(drx * tx + dry * ty) / (magr * magt); 
+		float sint = (float) Math.sqrt (1 - cost * cost); 
+		float sina = (float) Math.sqrt (1 - cosa * cosa); 
+		return -magr * sina / sint; 
 	} 
 	
 	static class LittleEdit { 

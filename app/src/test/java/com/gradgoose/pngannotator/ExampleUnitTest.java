@@ -16,10 +16,10 @@ public class ExampleUnitTest {
 	} 
 	
 	@Test public void intersection_isCorrect () throws Exception { 
-		float [] sm = PngEdit.findTwoLineSegmentIntersectionArcLengthPosition (
-				1, 4, 6, 5, 
-				4, 2, 5, 6 
+		float sm = PngEdit.findTwoLineSegmentIntersectionArcLengthPosition (
+				-3, 0, -6, 1, 
+				4, 0, 7, 2 
 		); 
-		assertEquals ((int) (100 * sm[0]), (int) (100 * sm[1])); 
+		assertEquals ((int) (100 * sm), (int) (100 * -4.919)); 
 	} 
 }

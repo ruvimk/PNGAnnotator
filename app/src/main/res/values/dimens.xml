@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources> 
+	
+	<integer name="ltr_rtl">1</integer>
+	
+	<fraction name="writedetector_pan_noreturn">150%</fraction>
+	<fraction name="writedetector_hold_mintime">75%</fraction>
+	<dimen name="writedetector_hold_threshold">10dp</dimen>
+	
+	<!-- The default paper size (1 = letter; 0 = A4): -->
+	<integer name="default_paper_size">0</integer> 
+	
+</resources>

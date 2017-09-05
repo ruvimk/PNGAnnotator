@@ -1,0 +1,18 @@
+<resources>
+	<string name="app_name">PNG Annotator</string>
+	
+	<string name="title_format">Annotate - [folder]</string> 
+	<string name="title_goto_page">Go to page:</string> 
+
+	<string name="menu_goto_page">Go to page</string> 
+	<string name="menu_annotate">Pen options</string> 
+	<string name="menu_settings">Settings</string> 
+	
+	<string name="label_ok">OK</string> 
+	<string name="label_cancel">Cancel</string> 
+	
+	<string name="msg_goto_page">You are at page [current] of [total]. </string> 
+	
+	
+	
+</resources>

@@ -22,4 +22,12 @@ public class ExampleUnitTest {
 		); 
 		assertEquals ((int) (100 * sm), (int) (100 * -4.919)); 
 	} 
+	@Test public void lineCircle_isCorrect () throws Exception {
+		PngEdit.MN result = PngEdit.findLineSegmentCircleIntersectionArcLengthPosition (
+				1, 4, 8, 5, 
+				4, 5, 2 
+		); 
+		assertEquals (1, result.m, 0.5); 
+		assertEquals (5, result.n, 0.5); 
+	} 
 }

@@ -73,6 +73,12 @@ public class PngEdit {
 	public void erase (float eraserPath [], float eraserRadius) { 
 		
 	} 
+	
+	public static class MN { 
+		float m; 
+		float n; 
+		MN (float arg_m, float arg_n) { m = arg_m; n = arg_n; } 
+	} 
 	public static float findTwoLineSegmentIntersectionArcLengthPosition (
 			float ax, float ay, float bx, float by, 
 			float cx, float cy, float dx, float dy 
@@ -92,6 +98,24 @@ public class PngEdit {
 		float sint = (float) Math.sqrt (1 - cost * cost); 
 		float sina = (float) Math.sqrt (1 - cosa * cosa); 
 		return -magr * sina / sint; 
+	} 
+	public static MN findLineSegmentCircleIntersectionArcLengthPosition ( 
+			float ax, float ay, float bx, float by, 
+			float cx, float cy, float R 
+	) { 
+		float abx = bx - ax; 
+		float aby = by - ay; 
+		float acx = cx - ax; 
+		float acy = cy - ay; 
+		float abm = (float) Math.sqrt (abx * abx + aby * aby); 
+		float acm = (float) Math.sqrt (acx * acx + acy * acy); 
+		if (acm == 0) return new MN (-R, R); 
+		float cost = (acx * abx + acy * aby) / (acm * abm); 
+		float sint = (float) Math.sqrt (1 - cost * cost); 
+		float h = acm * sint; 
+		float mn2 = (float) Math.sqrt (acm * acm - h * h); 
+		float nm2 = (float) Math.sqrt (R * R - h * h); 
+		return new MN (mn2 - nm2, mn2 + nm2); 
 	} 
 	
 	static class LittleEdit { 

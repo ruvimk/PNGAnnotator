@@ -187,8 +187,6 @@ public class PageView extends ImageView {
 			
 			@Override public boolean onBeginPan (int strokeID, float x0, float y0) { 
 				return false; 
-//				return !mToolMode && 
-//							   !mWriteDetector.isInPenMode (); // Only pan with finger in pen mode. 
 			} 
 			
 			@Override public boolean onSimplePan (int strokeID, 
@@ -196,7 +194,6 @@ public class PageView extends ImageView {
 												  float xt, float yt, 
 												  float elapsedSeconds) { 
 				return false; 
-//				return !mWriteDetector.isInPenMode (); 
 			} 
 			
 			@Override public boolean onPanHint (int strokeID, 
@@ -241,7 +238,7 @@ public class PageView extends ImageView {
 		});
 		WriteDetector.Mode mode = mWriteDetector.getMode (); 
 		mode.enableErase (true); 
-		mode.enablePan (false); 
+		mode.enablePan (false); // We'll use the default RecyclerView pan, so disable this. 
 		mode.enableWrite (true); 
 	} 
 	public void setPenMode (boolean penMode) { 

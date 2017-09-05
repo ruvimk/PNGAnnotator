@@ -55,12 +55,19 @@ public class PageView extends ImageView {
 						} 
 						executingPushes++; 
 						// Convert the strokes into these little edits of ours: 
+						boolean hasErase = false; 
 						int oldSize = edit.mEdits.size (); 
 						for (WriteDetector.Stroke stroke : params) { 
 							if (mTool == NoteActivity.TOOL_ERASER || 
 									stroke.getType () == WriteDetector.Stroke.TYPE_ERASE) { 
 								// This was an ERASE stroke. 
-								
+								float points [] = new float [2 * stroke.count ()]; 
+								for (int i = 0; i < points.length / 2; i++) { 
+									points[2 * i + 0] = stroke.getX (i); 
+									points[2 * i + 1] = stroke.getY (i); 
+								} 
+								edit.erase (points, mBrush / 2); 
+								hasErase = true; 
 							} else { 
 								PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
 								littleEdit.color = mColor; 
@@ -88,7 +95,8 @@ public class PageView extends ImageView {
 							// Log this error: 
 							err.printStackTrace (); 
 							// Restore all the previous edits (to not fool the user of false 'save'): 
-							edit.mEdits.setSize (oldSize); 
+							if (!hasErase) // (but it gets complicated with erasing, so 
+								edit.mEdits.setSize (oldSize); // just undo writes, no erases). 
 							// Make the counter 0, so strokes can be edited by other operations now: 
 							executingPushes--; 
 							// Return an error code: 

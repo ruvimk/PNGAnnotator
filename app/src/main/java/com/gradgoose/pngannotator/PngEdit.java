@@ -70,6 +70,30 @@ public class PngEdit {
 		} 
 	} 
 	
+	public void erase (float eraserPath [], float eraserRadius) { 
+		
+	} 
+	public static float [] findTwoLineSegmentIntersectionArcLengthPosition (
+			float ax, float ay, float bx, float by, 
+			float cx, float cy, float dx, float dy 
+	) { 
+		float sx = bx - ax; 
+		float sy = by - ay; 
+		float tx = dx - cx; 
+		float ty = dy - cy; 
+		float drx = ax - cx; 
+		float dry = ay - cy; 
+		float magt = (float) Math.sqrt (tx * tx + ty * ty); 
+		float mags = (float) Math.sqrt (sx * sx + sy * sy); 
+		float thx = tx / magt; 
+		float thy = ty / magt; 
+		float numx = tx / mags * (drx * thx + dry * thy) - drx; 
+		float numy = ty / mags * (drx * thx + dry * thy) - dry; 
+		float denx = sx - tx / mags * (sx * thx + sy * thy); 
+		float deny = sy - ty / mags * (sx * thx + sy * thy); 
+		return new float [] {numx / denx, numy / deny}; 
+	} 
+	
 	static class LittleEdit { 
 		int color = Color.BLACK; 
 		float brushWidth = 3.0f; // in target image pixels 

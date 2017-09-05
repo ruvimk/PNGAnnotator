@@ -83,9 +83,10 @@ public class PngEdit {
 		float ty = dy - cy; 
 		float drx = ax - cx; 
 		float dry = ay - cy; 
+		float magr = (float) Math.sqrt (drx * drx + dry * dry); 
+		if (magr == 0) return 0; // They intersect for when s = 0. 
 		float magt = (float) Math.sqrt (tx * tx + ty * ty); 
 		float mags = (float) Math.sqrt (sx * sx + sy * sy); 
-		float magr = (float) Math.sqrt (drx * drx + dry * dry); 
 		float cost = (sx * tx + sy * ty) / (mags * magt); 
 		float cosa = -(drx * tx + dry * ty) / (magr * magt); 
 		float sint = (float) Math.sqrt (1 - cost * cost); 

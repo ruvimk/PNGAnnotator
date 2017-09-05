@@ -39,6 +39,9 @@ public class PngEdit {
 	float windowWidth = 1; 
 	float windowHeight = 1; 
 	public void setWindowSize (float width, float height) { 
+		if (width == 0 || height == 0) { 
+			return; // Do nothing if the window has not been measured/laid out yet. 
+		} 
 		// Scale all the points from the old window size to the new window size: 
 		synchronized (mEdits) { 
 			for (LittleEdit edit : mEdits) { 
@@ -95,7 +98,8 @@ public class PngEdit {
 		while (dataInput.available () >= 12) { 
 			LittleEdit littleEdit = new LittleEdit (); 
 			littleEdit.color = dataInput.readInt (); 
-			littleEdit.brushWidth = dataInput.readFloat () * windowWidth; 
+			float relativeBrushWidth = dataInput.readFloat (); 
+			littleEdit.brushWidth = relativeBrushWidth * windowWidth; 
 			int numberCount = dataInput.readInt (); 
 			littleEdit.points = new float [numberCount]; 
 			for (int i = 0; i < numberCount / 2; i++) { 

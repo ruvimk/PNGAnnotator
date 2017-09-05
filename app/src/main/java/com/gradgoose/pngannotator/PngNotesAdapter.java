@@ -89,7 +89,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	} 
 	private static FileFilter mFilterJustImages = new FileFilter () { 
 		@Override public boolean accept (File file) { 
-			return file.isFile () && file.getName ().toLowerCase ().endsWith (".png"); 
+			String lowerName = file.getName ().toLowerCase (); 
+			return file.isFile () && ( 
+					lowerName.endsWith (".png") || 
+							lowerName.endsWith (".jpg") || 
+							lowerName.endsWith (".jpeg") || 
+							lowerName.endsWith (".gif") 
+			); 
 		} 
 	}; 
 	

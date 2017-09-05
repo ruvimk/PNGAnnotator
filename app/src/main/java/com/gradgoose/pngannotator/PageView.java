@@ -317,7 +317,8 @@ public class PageView extends ImageView {
 			canvas.drawLines (e.points, strokePaint); 
 		} 
 		// Finally, draw the currently being written path: 
-		strokePaint.setColor (mColor); 
+		strokePaint.setColor (mNowErasing ? getContext ().getResources () 
+													.getColor (R.color.colorEraser) : mColor); 
 		strokePaint.setStrokeWidth (mBrush); 
 		canvas.drawPath (tmpPath, strokePaint); 
 	} 

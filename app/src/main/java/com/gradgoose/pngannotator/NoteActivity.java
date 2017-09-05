@@ -244,6 +244,7 @@ public class NoteActivity extends Activity {
 				prefs.edit ().putInt ("tool", currentTool).apply (); 
 				// Update the touch event handler for PageView: 
 				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+				mNotesAdapter.mTool = currentTool; 
 				mNotesAdapter.notifyDataSetChanged (); 
 			} 
 		}); 
@@ -257,6 +258,8 @@ public class NoteActivity extends Activity {
 				prefs.edit ().putInt ("tool", currentTool).apply (); 
 				// Update the touch event handler for PageView: 
 				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+				mNotesAdapter.mTool = currentTool; 
+				mNotesAdapter.mBrush = prefs.getFloat ("erase-width", 15.0f); 
 				mNotesAdapter.notifyDataSetChanged (); 
 			} 
 		}); 
@@ -272,6 +275,9 @@ public class NoteActivity extends Activity {
 						.apply (); 
 				// Update the touch event handler for PageView: 
 				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+				mNotesAdapter.mTool = currentTool; 
+				mNotesAdapter.mColor = currentColor; 
+				mNotesAdapter.mBrush = prefs.getFloat ("write-width", 3.0f); 
 				mNotesAdapter.notifyDataSetChanged (); 
 			} 
 		}); 

@@ -15,7 +15,10 @@
 	<string name="msg_goto_page">You are at page [current] of [total]. </string> 
 	
 	<string name="access_eraser">Eraser</string> 
-	<string name="access_pen">Pen Color [number]</string>
+	<string name="access_pen">Pen Color [number]</string> 
+	
+	
+	<string name="error_io_no_edit">I/O error; cannot load/save writing</string> 
 	
 	
 	

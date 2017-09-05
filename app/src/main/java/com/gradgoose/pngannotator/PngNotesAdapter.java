@@ -1,6 +1,7 @@
 package com.gradgoose.pngannotator;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
@@ -28,6 +29,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	boolean mPenMode = false; 
 	boolean mToolMode = false; 
+	
+	int mTool = 0; 
+	int mColor = Color.BLACK; 
+	float mBrush = 3.0f; 
 	
 	long headerPersistantIdStart = 0; 
 	View mHeaderItemViews [] = null; 
@@ -117,6 +122,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.setItemFile (itemFile); 
 			pageView.setPenMode (mPenMode); 
 			pageView.setToolMode (mToolMode); 
+			pageView.mTool = mTool; 
+			pageView.mColor = mColor; 
+			pageView.mBrush = mBrush; 
 		} 
 	} 
 	

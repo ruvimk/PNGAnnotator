@@ -290,6 +290,11 @@ public class NoteActivity extends Activity {
 		if (currentTool == TOOL_PEN) 
 			mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (currentColor)); 
 		mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+		mNotesAdapter.mBrush = currentTool == TOOL_ERASER ? 
+									   prefs.getFloat ("erase-width", 15.0f) 
+									   : prefs.getFloat ("write-width", 3.0f); 
+		mNotesAdapter.mTool = currentTool; 
+		mNotesAdapter.mColor = currentColor; 
 		mNotesAdapter.notifyDataSetChanged (); 
 		// Initialize the pen mode things: 
 		updateViewsForPenMode (); 

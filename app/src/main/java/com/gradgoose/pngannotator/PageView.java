@@ -238,7 +238,11 @@ public class PageView extends ImageView {
 			@Override public void onPinchDone () { 
 				
 			} 
-		}); 
+		});
+		WriteDetector.Mode mode = mWriteDetector.getMode (); 
+		mode.enableErase (true); 
+		mode.enablePan (false); 
+		mode.enableWrite (true); 
 	} 
 	public void setPenMode (boolean penMode) { 
 		mWriteDetector.setPenMode (penMode); 

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -27,6 +28,8 @@ import java.util.Vector;
  */
 
 public class PngEdit { 
+	private static final String TAG = "PngEdit"; 
+	
 	final Context mContext; 
 	File mTarget = null; 
 	
@@ -152,7 +155,11 @@ public class PngEdit {
 	} 
 	private static File getEditsDir (Context context) {
 		File appFilesRoot = context.getFilesDir (); 
-		return new File (appFilesRoot, "User-Edits"); 
+		File editsDir = new File (appFilesRoot, "User-Edits"); 
+		if (!editsDir.exists () && !editsDir.mkdirs ()) {
+			Log.e (TAG, "Could not create private folder for user edits. "); 
+		} 
+		return editsDir; 
 	} 
 	public static PngEdit forFile (Context context, File pngFile) throws IOException { 
 		String md5sum = calculateMD5 (pngFile); 

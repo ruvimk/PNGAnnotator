@@ -148,7 +148,6 @@ public class PageView extends ImageView {
 									Toast.LENGTH_SHORT) 
 									.show (); 
 						} 
-						mCacheBitmapDirty = true; 
 						invalidate (); // Redraw! 
 					} 
 					
@@ -174,7 +173,6 @@ public class PageView extends ImageView {
 		mWriteDetector = new WriteDetector (getContext (), new WriteDetector.OnWriteGestureListener () { 
 			@Override public boolean onStrokeBegin (int strokeID, float x, float y) { 
 				if (edit.value == null) return false; 
-				tmpPath.rewind (); 
 				tmpPath.moveTo (x, y); 
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = true; 
@@ -193,7 +191,6 @@ public class PageView extends ImageView {
 			@Override public void onStrokeEnd (int strokeID, float x, float y) { 
 				WriteDetector.Stroke stroke = mWriteDetector.getStroke (strokeID); 
 				pushStrokes (stroke); 
-				tmpPath.rewind (); 
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = false; 
 				else mNowWriting = false; 
@@ -312,7 +309,6 @@ public class PageView extends ImageView {
 					Toast.LENGTH_SHORT) 
 					.show (); 
 		} 
-		mCacheBitmapDirty = true; 
 		invalidate (); 
 	} 
 	
@@ -345,64 +341,40 @@ public class PageView extends ImageView {
 	Paint strokePaint = new Paint (); 
 	Paint erasePaint = new Paint (); 
 	
-	boolean mCacheBitmapDirty = true; 
-	int lastBitmapItemCount = 0; 
-	Bitmap mBitmap = null; 
-	Canvas mCanvas = null; 
-	int [] pixels = null; 
-	
-	void ensureBitmapRightSize () { 
-		int needW = getWidth (); 
-		int needH = getHeight (); 
-		if (mBitmap == null || mBitmap.getWidth () != needW || mBitmap.getHeight () != needH) { 
-			if (mBitmap != null) 
-				mBitmap.recycle (); 
-			mBitmap = Bitmap.createBitmap (needW, needH, Bitmap.Config.ARGB_8888); 
-			mCanvas = new Canvas (mBitmap); 
-			pixels = new int [needW * needH]; 
-		} 
-	} 
+	int prevColor = 0; 
+	int prevTool = 0; 
 	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
+		// Check if the previous tool and color are different, and if so then 
+		// it's been a while, and we need to clear our temporary path: 
+		if (prevColor != mColor || prevTool != mTool) { 
+			tmpPath.rewind (); 
+			prevColor = mColor; 
+			prevTool = mTool; 
+		} 
 		// Now draw our annotation edits that the user made: 
-		ensureBitmapRightSize (); 
-		int nowEditCount; 
-		synchronized (edit) { 
-			nowEditCount = edit.value.mEdits.size (); 
-		} 
-		if (mNowWriting || nowEditCount > lastBitmapItemCount) { 
-			if (edit.value != null) synchronized (edit) {
-				PngEdit.LittleEdit e; 
-				for (int i = lastBitmapItemCount; i < edit.value.mEdits.size (); i++) { 
-					e = edit.value.mEdits.elementAt (i); 
-					if (e.color == Color.TRANSPARENT) { 
-						// Erase. 
-						erasePaint.setStrokeWidth (e.brushWidth); 
-						mCanvas.drawLines (e.points, erasePaint); 
-					} else { 
-						strokePaint.setColor (e.color); 
-						strokePaint.setStrokeWidth (e.brushWidth); 
-						mCanvas.drawLines (e.points, strokePaint); 
-					} 
+		if (edit.value != null) synchronized (edit) {
+			PngEdit.LittleEdit e; 
+			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
+				e = edit.value.mEdits.elementAt (i); 
+				if (e.color == Color.TRANSPARENT) { 
+					// Erase. 
+					erasePaint.setStrokeWidth (e.brushWidth); 
+					canvas.drawLines (e.points, erasePaint); 
+				} else { 
+					strokePaint.setColor (e.color); 
+					strokePaint.setStrokeWidth (e.brushWidth); 
+					canvas.drawLines (e.points, strokePaint); 
 				} 
-				lastBitmapItemCount = edit.value.mEdits.size (); 
 			} 
-			// Finally, draw the currently being written path: 
-			strokePaint.setColor (mNowErasing ? getContext ().getResources () 
-														.getColor (R.color.colorEraser) : mColor); 
-			strokePaint.setStrokeWidth (mBrush); 
-			canvas.drawPath (tmpPath, strokePaint); 
 		} 
-		canvas.drawBitmap (mBitmap, 0, 0, null); 
-		if (mNowErasing) { 
-			// Finally, draw the currently being written path: 
-			strokePaint.setColor (mNowErasing ? getContext ().getResources () 
-														.getColor (R.color.colorEraser) : mColor); 
-			strokePaint.setStrokeWidth (mBrush); 
-			canvas.drawPath (tmpPath, strokePaint); 
-		} 
+		// Finally, draw the currently being written path: 
+		strokePaint.setColor (mNowErasing ? getContext ().getResources () 
+													.getColor (R.color.colorEraser) : mColor); 
+		strokePaint.setStrokeWidth (mBrush); 
+		canvas.drawPath (tmpPath, strokePaint); 
 	} 
 	
 } 

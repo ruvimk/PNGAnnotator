@@ -6,8 +6,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.PorterDuffXfermode;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.ImageView;
@@ -66,12 +70,28 @@ public class PageView extends ImageView {
 								if (mTool == NoteActivity.TOOL_ERASER || 
 											stroke.getType () == WriteDetector.Stroke.TYPE_ERASE) { 
 									// This was an ERASE stroke. 
-									float points[] = new float[2 * stroke.count ()]; 
-									for (int i = 0; i < points.length / 2; i++) { 
-										points[2 * i + 0] = stroke.getX (i); 
-										points[2 * i + 1] = stroke.getY (i); 
+									PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
+									littleEdit.color = Color.TRANSPARENT; // Transparent over. 
+									littleEdit.brushWidth = mBrush; 
+									littleEdit.points = new float[(stroke.count () - 1) * 4]; 
+									littleEdit.points[0] = stroke.getX (0); 
+									littleEdit.points[1] = stroke.getY (0); 
+									int i; 
+									for (i = 1; i + 1 < stroke.count (); i++) { 
+										littleEdit.points[4 * i - 2] = stroke.getX (i); 
+										littleEdit.points[4 * i - 1] = stroke.getY (i); 
+										littleEdit.points[4 * i + 0] = stroke.getX (i); 
+										littleEdit.points[4 * i + 1] = stroke.getY (i); 
 									} 
-									edit.value.erase (points, mBrush / 2); 
+									littleEdit.points[4 * i - 2] = stroke.getX (i); 
+									littleEdit.points[4 * i - 1] = stroke.getY (i); 
+									edit.value.addEdit (littleEdit); 
+//									float points[] = new float[2 * stroke.count ()]; 
+//									for (int i = 0; i < points.length / 2; i++) { 
+//										points[2 * i + 0] = stroke.getX (i); 
+//										points[2 * i + 1] = stroke.getY (i); 
+//									} 
+//									edit.value.erase (points, mBrush / 2); 
 									hasErase = true; 
 								} else { 
 									PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
@@ -100,8 +120,9 @@ public class PageView extends ImageView {
 								// Log this error: 
 								err.printStackTrace (); 
 								// Restore all the previous edits (to not fool the user of false 'save'): 
-								if (!hasErase) // (but it gets complicated with erasing, so 
-									edit.value.mEdits.setSize (oldSize); // just undo writes, no erases). 
+//								if (!hasErase) // (but it gets complicated with erasing, so 
+//									edit.value.mEdits.setSize (oldSize); // just undo writes, no erases). 
+								edit.value.mEdits.setSize (oldSize); 
 								// Make the counter 0, so strokes can be edited by other operations now: 
 								executingPushes--; 
 								// Return an error code: 
@@ -127,6 +148,7 @@ public class PageView extends ImageView {
 									Toast.LENGTH_SHORT) 
 									.show (); 
 						} 
+						mCacheBitmapDirty = true; 
 						invalidate (); // Redraw! 
 					} 
 					
@@ -137,11 +159,18 @@ public class PageView extends ImageView {
 		mPushStroke.execute (params); 
 	} 
 	
+	static final int ERASE_COLOR = Color.argb (255, 254, 254, 254); 
 	public PageView (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
 		strokePaint.setStyle (Paint.Style.STROKE); 
 		strokePaint.setStrokeCap (Paint.Cap.ROUND); 
 		strokePaint.setStrokeJoin (Paint.Join.ROUND); 
+		erasePaint.setStyle (Paint.Style.STROKE); 
+		erasePaint.setStrokeCap (Paint.Cap.ROUND); 
+		erasePaint.setStrokeJoin (Paint.Join.ROUND); 
+		erasePaint.setColor (ERASE_COLOR); 
+//		erasePaint.setXfermode (new PorterDuffXfermode (PorterDuff.Mode.SRC_OUT)); 
+//		setLayerType (LAYER_TYPE_SOFTWARE, null); 
 		mWriteDetector = new WriteDetector (getContext (), new WriteDetector.OnWriteGestureListener () { 
 			@Override public boolean onStrokeBegin (int strokeID, float x, float y) { 
 				if (edit.value == null) return false; 
@@ -283,6 +312,8 @@ public class PageView extends ImageView {
 					Toast.LENGTH_SHORT) 
 					.show (); 
 		} 
+		mCacheBitmapDirty = true; 
+		invalidate (); 
 	} 
 	
 	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
@@ -312,8 +343,13 @@ public class PageView extends ImageView {
 	} 
 	
 	Paint strokePaint = new Paint (); 
+	Paint erasePaint = new Paint (); 
+	
+	boolean mCacheBitmapDirty = true; 
+	int lastBitmapItemCount = 0; 
 	Bitmap mBitmap = null; 
 	Canvas mCanvas = null; 
+	int [] pixels = null; 
 	
 	void ensureBitmapRightSize () { 
 		int needW = getWidth (); 
@@ -323,6 +359,7 @@ public class PageView extends ImageView {
 				mBitmap.recycle (); 
 			mBitmap = Bitmap.createBitmap (needW, needH, Bitmap.Config.ARGB_8888); 
 			mCanvas = new Canvas (mBitmap); 
+			pixels = new int [needW * needH]; 
 		} 
 	} 
 	
@@ -330,18 +367,42 @@ public class PageView extends ImageView {
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
 		// Now draw our annotation edits that the user made: 
-		if (edit.value != null) synchronized (edit) { 
-			for (PngEdit.LittleEdit e : edit.value.mEdits) { 
-				strokePaint.setColor (e.color); 
-				strokePaint.setStrokeWidth (e.brushWidth); 
-				canvas.drawLines (e.points, strokePaint); 
-			} 
+		ensureBitmapRightSize (); 
+		int nowEditCount; 
+		synchronized (edit) { 
+			nowEditCount = edit.value.mEdits.size (); 
 		} 
-		// Finally, draw the currently being written path: 
-		strokePaint.setColor (mNowErasing ? getContext ().getResources () 
-													.getColor (R.color.colorEraser) : mColor); 
-		strokePaint.setStrokeWidth (mBrush); 
-		canvas.drawPath (tmpPath, strokePaint); 
+		if (mNowWriting || nowEditCount > lastBitmapItemCount) { 
+			if (edit.value != null) synchronized (edit) {
+				PngEdit.LittleEdit e; 
+				for (int i = lastBitmapItemCount; i < edit.value.mEdits.size (); i++) { 
+					e = edit.value.mEdits.elementAt (i); 
+					if (e.color == Color.TRANSPARENT) { 
+						// Erase. 
+						erasePaint.setStrokeWidth (e.brushWidth); 
+						mCanvas.drawLines (e.points, erasePaint); 
+					} else { 
+						strokePaint.setColor (e.color); 
+						strokePaint.setStrokeWidth (e.brushWidth); 
+						mCanvas.drawLines (e.points, strokePaint); 
+					} 
+				} 
+				lastBitmapItemCount = edit.value.mEdits.size (); 
+			} 
+			// Finally, draw the currently being written path: 
+			strokePaint.setColor (mNowErasing ? getContext ().getResources () 
+														.getColor (R.color.colorEraser) : mColor); 
+			strokePaint.setStrokeWidth (mBrush); 
+			canvas.drawPath (tmpPath, strokePaint); 
+		} 
+		canvas.drawBitmap (mBitmap, 0, 0, null); 
+		if (mNowErasing) { 
+			// Finally, draw the currently being written path: 
+			strokePaint.setColor (mNowErasing ? getContext ().getResources () 
+														.getColor (R.color.colorEraser) : mColor); 
+			strokePaint.setStrokeWidth (mBrush); 
+			canvas.drawPath (tmpPath, strokePaint); 
+		} 
 	} 
 	
 } 

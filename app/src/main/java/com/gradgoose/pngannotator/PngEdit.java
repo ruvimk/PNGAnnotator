@@ -186,23 +186,6 @@ public class PngEdit {
 			float dym = dy - oy * R; 
 			float dxn = dx + ox * R; 
 			float dyn = dx + oy * R; 
-			// Check if it even intersects: 
-			float cxma = cxm - ax; 
-			float cyma = cym - ay; 
-			float cxna = cxn - ax; 
-			float cyna = cyn - ay; 
-			float dxma = dxm - ax; 
-			float dyma = dym - ay; 
-			float dxna = dyn - ax; 
-			float dyna = dyn - ay; 
-			float cmm = (float) Math.sqrt (cxma * cxma + cyma * cyma); 
-			float cmn = (float) Math.sqrt (cxna * cxna + cyna * cyna); 
-			float dmm = (float) Math.sqrt (dxma * dxma + dyma * dyma); 
-			float dmn = (float) Math.sqrt (dxna * dxna + dyna * dyna); 
-			float angle0 = (abx * cxma + aby * cyma) / (abm * cmm); 
-			float angle1 = (abx * cxna + aby * cyna) / (abm * cmn); 
-			float angle2 = (abx * dxma + aby * dxma) / (abm * dmm); 
-			float angle3 = (abx * dxna + aby * dyna) / (abm * dmn); 
 			// Find intersections: 
 			float s0 = findTwoLineSegmentIntersectionArcLengthPosition (
 					ax, ay, bx, by, cxm, cym, dxm, dym 

@@ -67,33 +67,6 @@ public class PageView extends ImageView {
 						synchronized (edit) { 
 							int oldSize = edit.value.mEdits.size (); 
 							for (WriteDetector.Stroke stroke : params) { 
-								if (mTool == NoteActivity.TOOL_ERASER || 
-											stroke.getType () == WriteDetector.Stroke.TYPE_ERASE) { 
-									// This was an ERASE stroke. 
-									PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
-									littleEdit.color = Color.TRANSPARENT; // Transparent over. 
-									littleEdit.brushWidth = mBrush; 
-									littleEdit.points = new float[(stroke.count () - 1) * 4]; 
-									littleEdit.points[0] = stroke.getX (0); 
-									littleEdit.points[1] = stroke.getY (0); 
-									int i; 
-									for (i = 1; i + 1 < stroke.count (); i++) { 
-										littleEdit.points[4 * i - 2] = stroke.getX (i); 
-										littleEdit.points[4 * i - 1] = stroke.getY (i); 
-										littleEdit.points[4 * i + 0] = stroke.getX (i); 
-										littleEdit.points[4 * i + 1] = stroke.getY (i); 
-									} 
-									littleEdit.points[4 * i - 2] = stroke.getX (i); 
-									littleEdit.points[4 * i - 1] = stroke.getY (i); 
-									edit.value.addEdit (littleEdit); 
-//									float points[] = new float[2 * stroke.count ()]; 
-//									for (int i = 0; i < points.length / 2; i++) { 
-//										points[2 * i + 0] = stroke.getX (i); 
-//										points[2 * i + 1] = stroke.getY (i); 
-//									} 
-//									edit.value.erase (points, mBrush / 2); 
-									hasErase = true; 
-								} else { 
 									PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
 									littleEdit.color = mColor; 
 									littleEdit.brushWidth = mBrush; 
@@ -110,7 +83,6 @@ public class PageView extends ImageView {
 									littleEdit.points[4 * i - 2] = stroke.getX (i); 
 									littleEdit.points[4 * i - 1] = stroke.getY (i); 
 									edit.value.addEdit (littleEdit); 
-								} 
 							} 
 							// Try to save the strokes: 
 							try { 
@@ -158,7 +130,7 @@ public class PageView extends ImageView {
 		mPushStroke.execute (params); 
 	} 
 	
-	static final int ERASE_COLOR = Color.argb (255, 254, 254, 254); 
+	static final int ERASE_COLOR = Color.WHITE; 
 	public PageView (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
 		strokePaint.setStyle (Paint.Style.STROKE); 
@@ -359,15 +331,9 @@ public class PageView extends ImageView {
 			PngEdit.LittleEdit e; 
 			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
 				e = edit.value.mEdits.elementAt (i); 
-				if (e.color == Color.TRANSPARENT) { 
-					// Erase. 
-					erasePaint.setStrokeWidth (e.brushWidth); 
-					canvas.drawLines (e.points, erasePaint); 
-				} else { 
-					strokePaint.setColor (e.color); 
-					strokePaint.setStrokeWidth (e.brushWidth); 
-					canvas.drawLines (e.points, strokePaint); 
-				} 
+				strokePaint.setColor (e.color); 
+				strokePaint.setStrokeWidth (e.brushWidth); 
+				canvas.drawLines (e.points, strokePaint); 
 			} 
 		} 
 		// Finally, draw the currently being written path: 

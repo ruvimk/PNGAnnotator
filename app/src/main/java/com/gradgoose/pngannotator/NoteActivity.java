@@ -255,9 +255,11 @@ public class NoteActivity extends Activity {
 				eraser.findViewById (R.id.flEraser).setBackgroundResource (R.drawable.black_border); 
 				mPensAdapter.setBorderedItemPosition (-1); 
 				currentTool = TOOL_ERASER; 
+				currentColor = PageView.ERASE_COLOR; 
 				prefs.edit ().putInt ("tool", currentTool).apply (); 
 				// Update the touch event handler for PageView: 
 				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+				mNotesAdapter.mColor = currentColor; 
 				mNotesAdapter.mTool = currentTool; 
 				mNotesAdapter.mBrush = prefs.getFloat ("erase-width", 15.0f); 
 				mNotesAdapter.notifyDataSetChanged (); 
@@ -289,6 +291,8 @@ public class NoteActivity extends Activity {
 				R.drawable.black_border : 0); 
 		if (currentTool == TOOL_PEN) 
 			mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (currentColor)); 
+		if (currentTool == TOOL_ERASER) 
+			currentColor = PageView.ERASE_COLOR; 
 		mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
 		mNotesAdapter.mBrush = currentTool == TOOL_ERASER ? 
 									   prefs.getFloat ("erase-width", 15.0f) 

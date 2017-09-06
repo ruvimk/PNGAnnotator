@@ -101,6 +101,8 @@ public class PageView extends ImageView {
 								return "IOException"; 
 							} 
 						} 
+						if (!mNowErasing && !mNowWriting) 
+							tmpPath.rewind (); 
 						return ""; 
 					} 
 					

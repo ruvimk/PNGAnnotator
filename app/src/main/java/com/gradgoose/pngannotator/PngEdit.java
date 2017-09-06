@@ -98,7 +98,14 @@ public class PngEdit {
 					mEdits.remove (i); 
 		} 
 	} 
-	private static void eraseSubSegment (Vector<Float> result, 
+	static void skipSegment (Vector<Float> result, 
+							 float ax, float ay, float bx, float by) { 
+		result.add (ax); 
+		result.add (ay); 
+		result.add (bx); 
+		result.add (by); 
+	} 
+	static void eraseSubSegment (Vector<Float> result, 
 										 float ax, float ay, float bx, float by, 
 										 float m, float n) { 
 		float abx = bx - ax; 
@@ -135,7 +142,7 @@ public class PngEdit {
 			now[i] = result.elementAt (i); 
 		edit.points = now; 
 	} 
-	private static void eraseCircle (LittleEdit edit, float cx, float cy, float R) { 
+	static void eraseCircle (LittleEdit edit, float cx, float cy, float R) { 
 		Vector<Float> result = new Vector<> (edit.points.length); 
 		for (int i = 2; i < edit.points.length; i += 4) { 
 			float ax = edit.points[i - 2]; 
@@ -150,7 +157,7 @@ public class PngEdit {
 		} 
 		finishErasing (edit, result); 
 	} 
-	private static void eraseLineSegment (LittleEdit edit, 
+	static void eraseLineSegment (LittleEdit edit, 
 										  float cx, float cy, 
 										  float dx, float dy, 
 										  float R) { 
@@ -162,10 +169,10 @@ public class PngEdit {
 			float by = edit.points[i + 1]; 
 			float cdx = dx - cx; 
 			float cdy = dy - cy; 
-			float abm = (float) Math.sqrt (cdx * cdx + cdy * cdy); 
+			float cdm = (float) Math.sqrt (cdx * cdx + cdy * cdy); 
 			// Find an orthogonal unit vector to use for shifting the reference frame: 
-			float ox = -cdx / abm; 
-			float oy = cdy / abm; 
+			float ox = -cdx / cdm; 
+			float oy = cdy / cdm; 
 			// Create sets of m and n line segments to use for the m and n s values: 
 			float cxm = cx - ox * R; 
 			float cym = cy - oy * R; 
@@ -175,6 +182,24 @@ public class PngEdit {
 			float dym = dy - oy * R; 
 			float dxn = dx + ox * R; 
 			float dyn = dx + oy * R; 
+			// Get the tm and tn positions to see if this line segment intersects 
+			// the eraser line segment or not: 
+			float tm = findTwoLineSegmentIntersectionArcLengthPosition ( 
+					cxm, cym, dxm, dym, ax, ay, bx, by 
+			); 
+			if (tm >= cdm) { 
+				// It does not intersect. Just let this segment through. 
+				skipSegment (result, ax, ay, bx, by); 
+				continue; 
+			} 
+			float tn = findTwoLineSegmentIntersectionArcLengthPosition ( 
+					cxn, cyn, dxn, dyn, ax, ay, bx, by 
+			); 
+			if (tn <= 0) { 
+				// It does not intersect. Also just let it through. 
+				skipSegment (result, ax, ay, bx, by); 
+				continue; 
+			} 
 			// Find intersections: 
 			float sm = findTwoLineSegmentIntersectionArcLengthPosition (
 					ax, ay, bx, by, cxm, cym, dxm, dym 
@@ -217,7 +242,7 @@ public class PngEdit {
 		float cosa = -(drx * tx + dry * ty) / (magr * magt); 
 		float sint = (float) Math.sqrt (1 - cost * cost); 
 		float sina = (float) Math.sqrt (1 - cosa * cosa); 
-		return -magr * sina / sint; 
+		return (cost < 0 || cosa < 0 ? 1 : -1) * magr * sina / sint; 
 	} 
 	public static MN findLineSegmentCircleIntersectionArcLengthPosition ( 
 			float ax, float ay, float bx, float by, 

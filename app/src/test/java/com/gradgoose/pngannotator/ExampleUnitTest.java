@@ -2,6 +2,8 @@ package com.gradgoose.pngannotator;
 
 import org.junit.Test;
 
+import java.util.Vector;
+
 import static org.junit.Assert.*;
 
 /**
@@ -30,4 +32,26 @@ public class ExampleUnitTest {
 		assertEquals (1, result.m, 0.5); 
 		assertEquals (5, result.n, 0.5); 
 	} 
-}
+	@Test public void eraseCircle_isCorrect () throws Exception { 
+		PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
+		// Set up the edit: 
+		littleEdit.points = new float [] { 
+												 2, 4, 
+												 20, 8 
+		}; 
+		// Try erasing a piece: 
+		PngEdit.eraseCircle (littleEdit, 4, 50, 2); 
+		assertEquals (littleEdit.points.length, 1 * 4); 
+	} 
+	@Test public void eraseSegment_isCorrect () throws Exception {
+		PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
+		// Set up the edit: 
+		littleEdit.points = new float [] { 
+												 2, 4, 
+												 20, 8 
+		}; 
+		// Try erasing a piece: 
+		PngEdit.eraseLineSegment (littleEdit, 14, 2, 12, 12, 2); 
+		assertEquals (littleEdit.points.length, 2 * 4); 
+	} 
+} 

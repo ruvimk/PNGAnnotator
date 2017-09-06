@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.nio.file.NoSuchFileException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Vector;
 
 /**
@@ -78,7 +79,7 @@ public class PngEdit {
 				if (edit.points.length < 2) continue; 
 				float prevX = eraserPath[0]; 
 				float prevY = eraserPath[1]; 
-				eraseCircle (edit, prevX, prevY, eraserRadius); 
+//				eraseCircle (edit, prevX, prevY, eraserRadius); 
 				for (int i = 2; i < eraserPath.length; i += 2) { 
 					float x = eraserPath[i + 0]; 
 					float y = eraserPath[i + 1]; 
@@ -86,7 +87,7 @@ public class PngEdit {
 					if (x == prevX && y == prevY) continue; 
 					// Do the operations: 
 					eraseLineSegment (edit, prevX, prevY, x, y, eraserRadius); 
-					eraseCircle (edit, x, y, eraserRadius); 
+//					eraseCircle (edit, x, y, eraserRadius); 
 					// Continue: 
 					prevX = x; 
 					prevY = y; 
@@ -167,12 +168,15 @@ public class PngEdit {
 			float ay = edit.points[i - 1]; 
 			float bx = edit.points[i + 0]; 
 			float by = edit.points[i + 1]; 
+			float abx = bx - ax; 
+			float aby = by - ay; 
 			float cdx = dx - cx; 
 			float cdy = dy - cy; 
+			float abm = (float) Math.sqrt (abx * abx + aby * aby); 
 			float cdm = (float) Math.sqrt (cdx * cdx + cdy * cdy); 
 			// Find an orthogonal unit vector to use for shifting the reference frame: 
-			float ox = -cdx / cdm; 
-			float oy = cdy / cdm; 
+			float ox = cdx / cdm; 
+			float oy = -cdy / cdm; 
 			// Create sets of m and n line segments to use for the m and n s values: 
 			float cxm = cx - ox * R; 
 			float cym = cy - oy * R; 
@@ -182,31 +186,40 @@ public class PngEdit {
 			float dym = dy - oy * R; 
 			float dxn = dx + ox * R; 
 			float dyn = dx + oy * R; 
-			// Get the tm and tn positions to see if this line segment intersects 
-			// the eraser line segment or not: 
-			float tm = findTwoLineSegmentIntersectionArcLengthPosition ( 
-					cxm, cym, dxm, dym, ax, ay, bx, by 
-			); 
-			if (tm >= cdm) { 
-				// It does not intersect. Just let this segment through. 
-				skipSegment (result, ax, ay, bx, by); 
-				continue; 
-			} 
-			float tn = findTwoLineSegmentIntersectionArcLengthPosition ( 
-					cxn, cyn, dxn, dyn, ax, ay, bx, by 
-			); 
-			if (tn <= 0) { 
-				// It does not intersect. Also just let it through. 
-				skipSegment (result, ax, ay, bx, by); 
-				continue; 
-			} 
+			// Check if it even intersects: 
+			float cxma = cxm - ax; 
+			float cyma = cym - ay; 
+			float cxna = cxn - ax; 
+			float cyna = cyn - ay; 
+			float dxma = dxm - ax; 
+			float dyma = dym - ay; 
+			float dxna = dyn - ax; 
+			float dyna = dyn - ay; 
+			float cmm = (float) Math.sqrt (cxma * cxma + cyma * cyma); 
+			float cmn = (float) Math.sqrt (cxna * cxna + cyna * cyna); 
+			float dmm = (float) Math.sqrt (dxma * dxma + dyma * dyma); 
+			float dmn = (float) Math.sqrt (dxna * dxna + dyna * dyna); 
+			float angle0 = (abx * cxma + aby * cyma) / (abm * cmm); 
+			float angle1 = (abx * cxna + aby * cyna) / (abm * cmn); 
+			float angle2 = (abx * dxma + aby * dxma) / (abm * dmm); 
+			float angle3 = (abx * dxna + aby * dyna) / (abm * dmn); 
 			// Find intersections: 
-			float sm = findTwoLineSegmentIntersectionArcLengthPosition (
+			float s0 = findTwoLineSegmentIntersectionArcLengthPosition (
 					ax, ay, bx, by, cxm, cym, dxm, dym 
 			); 
-			float sn = findTwoLineSegmentIntersectionArcLengthPosition (
+			float s1 = findTwoLineSegmentIntersectionArcLengthPosition (
 					ax, ay, bx, by, cxn, cyn, dxn, dyn 
 			); 
+			float s2 = findTwoLineSegmentIntersectionArcLengthPosition ( 
+					ax, ay, bx, by, cxm, cym, cxn, cyn 
+			); 
+			float s3 = findTwoLineSegmentIntersectionArcLengthPosition ( 
+					ax, ay, bx, by, dxm, dym, dxn, dyn 
+			); 
+			float numbers [] = new float [] {s0, s1, s2, s3};
+			Arrays.sort (numbers); 
+			float sm = numbers[1]; 
+			float sn = numbers[2]; 
 			// Erase the intersected area: 
 			eraseSubSegment (result, ax, ay, bx, by, sm, sn); 
 		} 
@@ -228,21 +241,15 @@ public class PngEdit {
 			float ax, float ay, float bx, float by, 
 			float cx, float cy, float dx, float dy 
 	) { 
-		float sx = bx - ax; 
-		float sy = by - ay; 
-		float tx = dx - cx; 
-		float ty = dy - cy; 
-		float drx = ax - cx; 
-		float dry = ay - cy; 
-		float magr = (float) Math.sqrt (drx * drx + dry * dry); 
-		if (magr == 0) return 0; // They intersect for when s = 0. 
-		float magt = (float) Math.sqrt (tx * tx + ty * ty); 
-		float mags = (float) Math.sqrt (sx * sx + sy * sy); 
-		float cost = (sx * tx + sy * ty) / (mags * magt); 
-		float cosa = -(drx * tx + dry * ty) / (magr * magt); 
-		float sint = (float) Math.sqrt (1 - cost * cost); 
-		float sina = (float) Math.sqrt (1 - cosa * cosa); 
-		return (cost < 0 || cosa < 0 ? 1 : -1) * magr * sina / sint; 
+		float qpx = cx - ax; 
+		float qpy = cy - ay; 
+		float rx = bx - ax; 
+		float ry = by - ay; 
+		float sx = dx - cx; 
+		float sy = dy - cy; 
+		float cs = qpx * sy - qpy * sx; 
+		float rs = rx * sy - ry * sx; 
+		return cs / rs; 
 	} 
 	public static MN findLineSegmentCircleIntersectionArcLengthPosition ( 
 			float ax, float ay, float bx, float by, 

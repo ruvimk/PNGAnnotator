@@ -1,17 +1,12 @@
 package com.gradgoose.pngannotator;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
-import android.graphics.PorterDuffXfermode;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.ImageView;
@@ -19,8 +14,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.util.Vector;
 
 /**
  * Created by Ruvim Kondratyev on 9/4/2017.
@@ -49,10 +42,8 @@ public class PageView extends ImageView {
 	Path tmpPath = new Path (); 
 	
 	int executingPushes = 0; // To have some sort of synchronization between pushStrokes (); 
-	void pushStrokes (WriteDetector.Stroke ... params) { 
-		AsyncTask<WriteDetector.Stroke, Object, String> mPushStroke = 
-				new AsyncTask<WriteDetector.Stroke, Object, String> () { 
-					@Override protected String doInBackground (WriteDetector.Stroke... params) { 
+		class MyWork { 
+					public String updateStrokeEdits (WriteDetector.Stroke... params) { 
 						// Wait for any other operations to complete on the strokes. 
 						while (executingPushes > 0) { 
 							try { 
@@ -113,13 +104,13 @@ public class PageView extends ImageView {
 						return ""; 
 					} 
 					
-					@Override protected void onPreExecute () { 
+					public void onPreExecute () { 
 						// What to do before the task executes. 
 						// I believe this runs on the user thread. 
 						
 					} 
 					
-					@Override protected void onPostExecute (String result) { 
+					public void onPostExecute (String result) { 
 						// What to do once it's done executing. 
 						// This is also the user thread. 
 						if (result.equals ("IOException")) { 
@@ -132,11 +123,33 @@ public class PageView extends ImageView {
 						invalidate (); // Redraw! 
 					} 
 					
-					@Override protected void onProgressUpdate (Object... values) { 
+					public void onProgressUpdate (Object... values) { 
 						
 					} 
 				}; 
+				MyWork mGlobalPushStroke = new MyWork (); 
+	void pushStrokes (WriteDetector.Stroke ... params) { // mGlobalPushStroke
+		AsyncTask<WriteDetector.Stroke, Object, String> mPushStroke = 
+				new AsyncTask<WriteDetector.Stroke, Object, String> () { 
+					@Override protected String doInBackground (WriteDetector.Stroke... params) { 
+						return mGlobalPushStroke.updateStrokeEdits (params); 
+					} 
+					@Override protected void onPreExecute () { 
+						mGlobalPushStroke.onPreExecute (); 
+					} 
+					@Override protected void onPostExecute (String result) { 
+						mGlobalPushStroke.onPostExecute (result); 
+					} 
+					@Override protected void onProgressUpdate (Object... values) { 
+						mGlobalPushStroke.onProgressUpdate (values); 
+					} 
+				}; 
 		mPushStroke.execute (params); 
+	} 
+	void pushStrokesInThisThread (WriteDetector.Stroke ... params) { 
+		mGlobalPushStroke.onPreExecute (); 
+		String result = mGlobalPushStroke.updateStrokeEdits (params); 
+		mGlobalPushStroke.onPostExecute (result); 
 	} 
 	
 	static final int ERASE_COLOR = Color.WHITE; 
@@ -171,7 +184,7 @@ public class PageView extends ImageView {
 			
 			@Override public void onStrokeEnd (int strokeID, float x, float y) { 
 				WriteDetector.Stroke stroke = mWriteDetector.getStroke (strokeID); 
-				pushStrokes (stroke); 
+				pushStrokesInThisThread (stroke); 
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = false; 
 				else mNowWriting = false; 

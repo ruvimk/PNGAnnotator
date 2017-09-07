@@ -2,6 +2,7 @@ package com.gradgoose.pngannotator;
 
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Vector;
 
 import static org.junit.Assert.*;
@@ -53,5 +54,15 @@ public class ExampleUnitTest {
 		// Try erasing a piece: 
 		PngEdit.eraseLineSegment (littleEdit, 14, 2, 12, 12, 2); 
 		assertEquals (littleEdit.points.length, 2 * 4); 
+	} 
+	@Test public void testHashMap () throws Exception { 
+		String key = "hi!"; 
+		String value = "1234"; 
+		String result = "";
+		HashMap<String, String> myMap = new HashMap<> (); 
+		myMap.put (key, value); 
+		for (String k : myMap.keySet ()) 
+			result = k; 
+		assertTrue (result.equals (key)); 
 	} 
 } 

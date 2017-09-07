@@ -184,10 +184,10 @@ public class PageView extends ImageView {
 			
 			@Override public void onStrokeEnd (int strokeID, float x, float y) { 
 				WriteDetector.Stroke stroke = mWriteDetector.getStroke (strokeID); 
-				pushStrokesInThisThread (stroke); 
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = false; 
 				else mNowWriting = false; 
+				pushStrokesInThisThread (stroke); 
 			} 
 			
 			@Override public void onStrokeCancel (int strokeID) { 

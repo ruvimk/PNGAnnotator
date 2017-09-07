@@ -37,6 +37,9 @@ public class PngEdit {
 	File mVectorEdits = null; 
 	final Vector<LittleEdit> mEdits = new Vector<> (); 
 	
+	int mLastIoEditCount = 0; 
+	boolean useDifferentialSave = true; 
+	
 	float windowWidth = 1; 
 	float windowHeight = 1; 
 	public void setWindowSize (float width, float height) { 
@@ -291,21 +294,27 @@ public class PngEdit {
 			} 
 			mEdits.add (littleEdit); 
 		} 
+		mLastIoEditCount = mEdits.size (); 
 		dataInput.close (); 
 		inputStream.close (); 
 	} 
 	public void saveEdits () throws IOException {
-		OutputStream outputStream = new FileOutputStream (mVectorEdits, false);
+		OutputStream outputStream = new FileOutputStream (mVectorEdits, useDifferentialSave);
 		DataOutputStream dataOutput = new DataOutputStream (outputStream); 
-		for (LittleEdit edit : mEdits) { 
+		if (!useDifferentialSave) 
+			mLastIoEditCount = 0; 
+		for (int i = mLastIoEditCount; i < mEdits.size (); i++) { 
+			LittleEdit edit = mEdits.elementAt (i); 
 			dataOutput.writeInt (edit.color); 
 			dataOutput.writeFloat (edit.brushWidth / windowWidth); 
 			dataOutput.writeInt (edit.points.length); 
-			for (int i = 0; i < edit.points.length / 2; i++) { 
-				dataOutput.writeFloat (edit.points[2 * i + 0] / windowWidth); 
-				dataOutput.writeFloat (edit.points[2 * i + 1] / windowHeight); 
+			for (int j = 0; j < edit.points.length / 2; j++) { 
+				dataOutput.writeFloat (edit.points[2 * j + 0] / windowWidth); 
+				dataOutput.writeFloat (edit.points[2 * j + 1] / windowHeight); 
 			} 
 		} 
+		useDifferentialSave = true; 
+		mLastIoEditCount = mEdits.size (); 
 		dataOutput.close (); 
 		outputStream.close (); 
 	} 

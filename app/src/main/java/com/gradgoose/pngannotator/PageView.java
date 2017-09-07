@@ -86,6 +86,13 @@ public class PageView extends ImageView {
 							} 
 							// Try to save the strokes: 
 							try { 
+								// TODO:  IF we end up doing non-append operations 
+								// to the LittleEdit list, then we should set 
+								// edit.value.useDifferentialSave = false 
+								// to RE-SAVE the whole file rather than 
+								// just appending the last edits. 
+								// SAME applies to UNDO operations, etc., 
+								// whenever we're NOT simply appending. 
 								edit.value.saveEdits (); // Save. 
 								executingPushes--; // Make the counter 0, so strokes can be edited again. 
 							} catch (IOException err) { 

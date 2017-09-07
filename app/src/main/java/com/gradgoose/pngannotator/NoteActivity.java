@@ -36,7 +36,9 @@ public class NoteActivity extends Activity {
 	} 
 	
 	static final String PREFS_NAME = "com.gradgoose.pngannotator.NoteActivity.prefs"; 
+	static final String LEFTOFF_NAME = "com.gradgoose.pngannotator.NoteActivity.leftOff"; 
 	SharedPreferences prefs = null; 
+	SharedPreferences leftOff = null; 
 	
 	static final int TOOL_NONE = 0; 
 	static final int TOOL_PEN = 1; 
@@ -55,6 +57,7 @@ public class NoteActivity extends Activity {
 		setContentView (R.layout.activity_main); 
 		// Read the key-value quick options from last time: 
 		prefs = getSharedPreferences (PREFS_NAME, MODE_PRIVATE); 
+		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
 		currentTool = prefs.getInt ("tool", currentTool); 
 		currentColor = prefs.getInt ("color", currentColor); 
 		// Get the folder where digital camera images are stored: 
@@ -81,14 +84,24 @@ public class NoteActivity extends Activity {
 		} 
 		if (mBrowsingFolder == null) // Else use the default of the DCIM folder. 
 			mBrowsingFolder = mDCIM; 
+		// Check to see if we have a record of what scroll position we were at last time: 
+		if (initialScrollItemPosition == 0) // (only if we don't have one loaded from onRestore...) 
+			initialScrollItemPosition = leftOff.getInt ("Scroll:" + mBrowsingFolder.getPath (), 0); 
 		// Initialize views and the window title and icon: 
 		initUserInterface (); // Views. 
 		initActionBar (); // Title, Icon. 
 	} 
 	// Save which folder we're working on, and what scroll position: 
 	@Override protected void onSaveInstanceState (Bundle outState) { 
+		// Put things into the saved instance state: 
 		outState.putString (STATE_BROWSING_PATH, mBrowsingFolder.getAbsolutePath ()); 
 		outState.putInt (STATE_SCROLL_ITEM, getPageIndex ()); 
+	} 
+	
+	@Override public void onPause () {
+		// Update the "last page, left off" value: 
+		leftOff.edit ().putInt ("Scroll:" + mBrowsingFolder.getPath (), getPageIndex ()).apply (); 
+		super.onPause (); 
 	} 
 	
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 

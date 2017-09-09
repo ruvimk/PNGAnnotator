@@ -98,8 +98,8 @@ public class NoteActivity extends Activity {
 		if (mBrowsingFolders == null) // Else use the default of the DCIM folder. 
 		{ 
 			mBrowsingFolders = new Vector<> (); 
-			mBrowsingFolders.add (mDCIM); 
 			mBrowsingFolders.add (mPictures); 
+			mBrowsingFolders.add (mDCIM); 
 			if (mSdDCIM.exists ()) 
 				mBrowsingFolders.add (mSdDCIM); 
 			if (mSdPictures.exists ()) 
@@ -157,6 +157,12 @@ public class NoteActivity extends Activity {
 			case R.id.menu_action_pen_mode: 
 				item.setChecked (!item.isChecked ()); 
 				enablePenMode (item.isChecked ()); 
+				break; 
+			case R.id.menu_action_new_folder: 
+				userRenameFile (null, ""); 
+				break; 
+			case R.id.menu_action_new_page: 
+				
 				break; 
 			case R.id.menu_action_settings: 
 				openSettings (); 
@@ -226,15 +232,29 @@ public class NoteActivity extends Activity {
 																			); 
 											 if (oldName != null) { 
 												 if (oldName.renameTo (nowFile)) { 
-													 
+													 // Renamed. 
+													 mSubfoldersAdapter.reloadList (); 
+													 mNotesAdapter.reloadList (); 
 												 } else { 
-													 
+													 // Try rename again? 
+													 userRenameFile (oldName, 
+															 getString (oldName.isDirectory () ? 
+																	 R.string.msg_could_not_ren_folder : 
+																				R.string.msg_could_not_ren_file
+															 ) 
+													 ); 
 												 } 
 											 } else { 
 												 if (nowFile.mkdirs ()) { 
-													 
+													 // Success. Now open the new folder. 
+													 Intent intent = new Intent (NoteActivity.this, 
+																						NoteActivity.class); 
+													 File [] toOpen = new File [] { nowFile }; 
+													 intent.putExtra (STATE_BROWSING_PATH, toOpen); 
 												 } else { 
-													 
+													 // Try create again? 
+													 userRenameFile (null, 
+															 getString (R.string.msg_could_not_new_folder)); 
 												 } 
 											 } 
 										 }

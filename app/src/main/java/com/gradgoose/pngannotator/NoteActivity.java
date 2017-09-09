@@ -103,6 +103,11 @@ public class NoteActivity extends Activity {
 		leftOff.edit ().putInt ("Scroll:" + mBrowsingFolder.getPath (), getPageIndex ()).apply (); 
 		super.onPause (); 
 	} 
+	@Override public void onResume () { 
+		super.onResume (); 
+		mSubfoldersAdapter.reloadList (); 
+		mNotesAdapter.reloadList (); 
+	} 
 	
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 
 		getMenuInflater ().inflate (R.menu.main_menu, menu); 
@@ -206,13 +211,20 @@ public class NoteActivity extends Activity {
 	View hand = null; 
 	View eraser_miniHand = null; 
 	
+	boolean isBrowsingRootFolder () { 
+		return mBrowsingFolder.equals (mDCIM); 
+	} 
+	boolean wantDisplaySubfoldersAsBig () { 
+		return PngNotesAdapter.hasImages (mBrowsingFolder) || 
+					   isBrowsingRootFolder (); 
+	} 
 	void initUserInterface () { 
 		// Subfolder browser RecyclerView: 
 		mRvSubfolderBrowser = (RecyclerView) getLayoutInflater () 
 				.inflate (R.layout.subfolder_browser, 
 						(ViewGroup) findViewById (R.id.vMainRoot), 
 						false); 
-		if (PngNotesAdapter.hasImages (mBrowsingFolder)) { 
+		if (!wantDisplaySubfoldersAsBig ()) { 
 			// If there ARE images to display, then list the subfolders up above the images: 
 			mSubfoldersLayoutManager = 
 					new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
@@ -350,7 +362,7 @@ public class NoteActivity extends Activity {
 	} 
 	
 	boolean canGoBack () { 
-		return !mBrowsingFolder.equals (mDCIM); 
+		return !isBrowsingRootFolder (); 
 	} 
 	boolean canEdit () { 
 		return PngNotesAdapter.hasImages (mBrowsingFolder); 

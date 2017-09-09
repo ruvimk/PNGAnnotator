@@ -28,6 +28,9 @@ public class NoteActivity extends Activity {
 	File mDCIM = null; // Keep track of the root camera images folder. 
 	File mPictures = null; 
 	
+	File mSdDCIM = null; 
+	File mSdPictures = null; 
+	
 	Vector<File> mBrowsingFolders = null; 
 	private void setBrowsingPaths (@Nullable String browsingPaths []) { 
 		if (browsingPaths == null) return; 
@@ -69,6 +72,11 @@ public class NoteActivity extends Activity {
 		mPictures = Environment.getExternalStoragePublicDirectory (
 				Environment.DIRECTORY_PICTURES 
 		); 
+		// Get some folders: 
+		String inCard = mDCIM.getParent (); 
+		String sdCard = System.getenv("SECONDARY_STORAGE"); 
+		mSdDCIM = new File (sdCard + mDCIM.getAbsolutePath ().substring (inCard.length ())); 
+		mSdPictures = new File (sdCard + mPictures.getAbsolutePath ().substring (inCard.length ())); 
 		// See if we had a folder already open last time that we can reopen now: 
 		if (savedInstanceState != null) { 
 			if (savedInstanceState.containsKey (STATE_BROWSING_PATH)) 
@@ -92,6 +100,10 @@ public class NoteActivity extends Activity {
 			mBrowsingFolders = new Vector<> (); 
 			mBrowsingFolders.add (mDCIM); 
 			mBrowsingFolders.add (mPictures); 
+			if (mSdDCIM.exists ()) 
+				mBrowsingFolders.add (mSdDCIM); 
+			if (mSdPictures.exists ()) 
+				mBrowsingFolders.add (mSdPictures); 
 		} 
 		// Check to see if we have a record of what scroll position we were at last time: 
 		if (initialScrollItemPosition == 0) // (only if we don't have one loaded from onRestore...) 

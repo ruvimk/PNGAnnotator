@@ -1,6 +1,7 @@
 package com.gradgoose.pngannotator;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -282,9 +283,36 @@ public class PageView extends ImageView {
 		mToolMode = toolMode; 
 	} 
 	
+	static int calculateInSampleSize (int naturalWidth, 
+									  int naturalHeight, 
+									  int requiredWidth, 
+									  int requiredHeight) { 
+		int inSampleSize = 1; 
+		if (naturalHeight > requiredHeight || naturalWidth > requiredWidth) { 
+			if (naturalWidth > naturalHeight && 
+					requiredHeight > 0) { 
+				inSampleSize = Math.round ((float) naturalHeight / (float) requiredHeight); 
+			} else if (requiredWidth > 0) { 
+				inSampleSize = Math.round ((float) naturalWidth / (float) requiredWidth); 
+			} 
+		} 
+		return inSampleSize; 
+	} 
 	public void setItemFile (File file) { 
 		itemFile = file; 
-		setImageURI (Uri.fromFile (file)); 
+		// Load just the image dimensions first: 
+		BitmapFactory.Options options = new BitmapFactory.Options (); 
+		options.inJustDecodeBounds = true; 
+		BitmapFactory.decodeFile (file.getPath (), options); 
+		// Calculate the down-sample scale: 
+		options.inSampleSize = calculateInSampleSize (options.outWidth, 
+				options.outHeight, 
+				getWidth (), 
+				0); 
+		// Now actually load the bitmap, down-sampled if needed: 
+		options.inJustDecodeBounds = false; 
+		setImageBitmap (BitmapFactory.decodeFile (file.getPath (), options)); 
+		// Now load our edits for this picture: 
 		try { 
 			synchronized (edit) { 
 				edit.value = PngEdit.forFile (getContext (), file); 
@@ -303,6 +331,7 @@ public class PageView extends ImageView {
 					Toast.LENGTH_SHORT) 
 					.show (); 
 		} 
+		// Redraw this view: 
 		invalidate (); 
 	} 
 	

@@ -1,6 +1,8 @@
 package com.gradgoose.pngannotator;
 
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -298,20 +300,45 @@ public class PageView extends ImageView {
 		} 
 		return inSampleSize; 
 	} 
-	public void setItemFile (File file) { 
+	int mBitmapNaturalWidth = 1; 
+	int mBitmapNaturalHeight = 1; 
+	public void setItemFile (final File file) { 
 		itemFile = file; 
 		// Load just the image dimensions first: 
-		BitmapFactory.Options options = new BitmapFactory.Options (); 
+		final BitmapFactory.Options options = new BitmapFactory.Options (); 
 		options.inJustDecodeBounds = true; 
 		BitmapFactory.decodeFile (file.getPath (), options); 
-		// Calculate the down-sample scale: 
+		// Set our natural width and height variables to better handle onMeasure (): 
+		mBitmapNaturalWidth = options.outWidth; 
+		mBitmapNaturalHeight = options.outHeight; 
+		// Load a REALLY small version for time time being, while it's loading 
+		// (this is to avoid white blanks and confusing the user by showing 
+		// them some random picture that they have just seen from a 
+		// recycled view): 
+		options.inJustDecodeBounds = false; 
 		options.inSampleSize = calculateInSampleSize (options.outWidth, 
 				options.outHeight, 
-				getWidth (), 
-				0); 
-		// Now actually load the bitmap, down-sampled if needed: 
-		options.inJustDecodeBounds = false; 
+				16, 16); 
 		setImageBitmap (BitmapFactory.decodeFile (file.getPath (), options)); 
+		// Load the bitmap in a separate thread: 
+		(new Thread () { 
+			@Override public void run () { 
+				// Calculate the down-sample scale: 
+				options.inSampleSize = 
+						calculateInSampleSize (options.outWidth, 
+								options.outHeight, 
+								getWidth (), 
+								0); 
+				// Now actually load the bitmap, down-sampled if needed: 
+				options.inJustDecodeBounds = false; 
+				final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+				((Activity) getContext ()).runOnUiThread (new Runnable () { 
+					@Override public void run () { 
+						setImageBitmap (myBitmap); 
+					} 
+				}); 
+			} 
+		}).start (); 
 		// Now load our edits for this picture: 
 		try { 
 			synchronized (edit) { 
@@ -333,6 +360,26 @@ public class PageView extends ImageView {
 		} 
 		// Redraw this view: 
 		invalidate (); 
+	} 
+	
+	@Override public void onMeasure (int widthMeasureSpec, int heightMeasureSpec) { 
+		if (mBitmapNaturalWidth > 0 && mBitmapNaturalHeight > 0) { 
+			int wMode = MeasureSpec.getMode (widthMeasureSpec); 
+			int hMode = MeasureSpec.getMode (heightMeasureSpec); 
+			int maxHeight = MeasureSpec.getSize (heightMeasureSpec); 
+			int needWidth = MeasureSpec.getSize (widthMeasureSpec); 
+			int needHeight = maxHeight; 
+			boolean changeHeight = 
+					wMode == MeasureSpec.EXACTLY || 
+							(wMode == MeasureSpec.AT_MOST && hMode != MeasureSpec.EXACTLY); 
+			if (changeHeight && hMode != MeasureSpec.EXACTLY) 
+				needHeight = needWidth * mBitmapNaturalHeight / mBitmapNaturalWidth; 
+			if (hMode == MeasureSpec.AT_MOST && needHeight > maxHeight) { 
+				needWidth = needWidth * maxHeight / needHeight; 
+				needHeight = maxHeight; 
+			} 
+			setMeasuredDimension (needWidth, needHeight); 
+		} else super.onMeasure (widthMeasureSpec, heightMeasureSpec); 
 	} 
 	
 	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 

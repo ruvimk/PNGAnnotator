@@ -225,7 +225,10 @@ public class NoteActivity extends Activity {
 	View eraser_miniHand = null; 
 	
 	boolean isBrowsingRootFolder () { 
-		return mBrowsingFolders.equals (mDCIM); 
+		for (File folder : mBrowsingFolders) 
+			if (folder.equals (mDCIM)) 
+				return true; 
+		return false; 
 	} 
 	boolean wantDisplaySubfoldersAsBig () { 
 		return PngNotesAdapter.hasImages (mBrowsingFolders) || 

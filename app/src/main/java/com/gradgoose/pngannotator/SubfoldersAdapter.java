@@ -97,7 +97,18 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	
 	private void openSubfolder (File itemFile) { 
 		Intent intent = new Intent (mContext, NoteActivity.class); 
-		intent.putExtra (NoteActivity.STATE_BROWSING_PATH, itemFile.getAbsolutePath ()); 
+		File [] target = null; 
+		for (File files [] : mList) 
+			if (files[0].equals (itemFile)) { 
+				target = files; 
+				break; 
+			} 
+		if (target == null) 
+			return; 
+		String paths [] = new String [target.length]; 
+		for (int i = 0; i < target.length; i++) 
+			paths[i] = target[i].getAbsolutePath (); 
+		intent.putExtra (NoteActivity.STATE_BROWSING_PATH, paths); 
 		mContext.startActivity (intent); 
 	} 
 	private View.OnClickListener mOnClick = new View.OnClickListener () { 

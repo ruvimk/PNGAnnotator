@@ -7,16 +7,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,15 +21,20 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import java.io.File;
+import java.util.Vector;
 
 public class NoteActivity extends Activity { 
 	
 	File mDCIM = null; // Keep track of the root camera images folder. 
+	File mPictures = null; 
 	
-	File mBrowsingFolder = null; 
-	private void setBrowsingPath (@Nullable String browsingPath) { 
-		if (browsingPath == null) return; 
-		mBrowsingFolder = new File (browsingPath); 
+	Vector<File> mBrowsingFolders = null; 
+	private void setBrowsingPaths (@Nullable String browsingPaths []) { 
+		if (browsingPaths == null) return; 
+		Vector<File> files = new Vector<> (); 
+		for (String path : browsingPaths) 
+			files.add (new File (path)); 
+		mBrowsingFolders = files; 
 	} 
 	
 	static final String PREFS_NAME = "com.gradgoose.pngannotator.NoteActivity.prefs"; 
@@ -64,10 +66,13 @@ public class NoteActivity extends Activity {
 		mDCIM = Environment.getExternalStoragePublicDirectory ( 
 				Environment.DIRECTORY_DCIM 
 		); 
+		mPictures = Environment.getExternalStoragePublicDirectory (
+				Environment.DIRECTORY_PICTURES 
+		); 
 		// See if we had a folder already open last time that we can reopen now: 
 		if (savedInstanceState != null) { 
 			if (savedInstanceState.containsKey (STATE_BROWSING_PATH)) 
-				setBrowsingPath (savedInstanceState.getString (STATE_BROWSING_PATH)); 
+				setBrowsingPaths (savedInstanceState.getStringArray (STATE_BROWSING_PATH)); 
 			if (savedInstanceState.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = savedInstanceState.getInt (STATE_SCROLL_ITEM); 
 		} 
@@ -75,18 +80,22 @@ public class NoteActivity extends Activity {
 		Intent sourceIntent = getIntent (); 
 		Bundle extras = sourceIntent.getExtras (); 
 		if (extras != null) { 
-			if (mBrowsingFolder == null) { /* If the above did not give us a folder ... */
+			if (mBrowsingFolders == null) { /* If the above did not give us a folder ... */
 				if (extras.containsKey (STATE_BROWSING_PATH)) 
-					setBrowsingPath (extras.getString (STATE_BROWSING_PATH)); 
+					setBrowsingPaths (extras.getStringArray (STATE_BROWSING_PATH)); 
 			} 
 			if (initialScrollItemPosition == 0) 
 				initialScrollItemPosition = extras.getInt (STATE_SCROLL_ITEM); 
 		} 
-		if (mBrowsingFolder == null) // Else use the default of the DCIM folder. 
-			mBrowsingFolder = mDCIM; 
+		if (mBrowsingFolders == null) // Else use the default of the DCIM folder. 
+		{ 
+			mBrowsingFolders = new Vector<> (); 
+			mBrowsingFolders.add (mDCIM); 
+			mBrowsingFolders.add (mPictures); 
+		} 
 		// Check to see if we have a record of what scroll position we were at last time: 
 		if (initialScrollItemPosition == 0) // (only if we don't have one loaded from onRestore...) 
-			initialScrollItemPosition = leftOff.getInt ("Scroll:" + mBrowsingFolder.getPath (), 0); 
+			initialScrollItemPosition = leftOff.getInt ("Scroll:" + mBrowsingFolders.get (0).getPath (), 0); 
 		// Initialize views and the window title and icon: 
 		initUserInterface (); // Views. 
 		initActionBar (); // Title, Icon. 
@@ -94,13 +103,17 @@ public class NoteActivity extends Activity {
 	// Save which folder we're working on, and what scroll position: 
 	@Override protected void onSaveInstanceState (Bundle outState) { 
 		// Put things into the saved instance state: 
-		outState.putString (STATE_BROWSING_PATH, mBrowsingFolder.getAbsolutePath ()); 
+		String paths [] = new String [mBrowsingFolders.size ()]; 
+		for (int i = 0; i < mBrowsingFolders.size (); i++) 
+			paths[i] = mBrowsingFolders.elementAt (i).getAbsolutePath (); 
+		outState.putStringArray (STATE_BROWSING_PATH, paths); 
 		outState.putInt (STATE_SCROLL_ITEM, getPageIndex ()); 
 	} 
 	
 	@Override public void onPause () {
 		// Update the "last page, left off" value: 
-		leftOff.edit ().putInt ("Scroll:" + mBrowsingFolder.getPath (), getPageIndex ()).apply (); 
+		leftOff.edit ().putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), 
+				getPageIndex ()).apply (); 
 		super.onPause (); 
 	} 
 	@Override public void onResume () { 
@@ -115,7 +128,7 @@ public class NoteActivity extends Activity {
 	} 
 	@Override public boolean onPrepareOptionsMenu (Menu menu) { 
 		super.onPrepareOptionsMenu (menu); 
-		boolean hasImages = PngNotesAdapter.hasImages (mBrowsingFolder); 
+		boolean hasImages = PngNotesAdapter.hasImages (mBrowsingFolders); 
 		menu.findItem (R.id.menu_action_goto_page).setVisible (hasImages); 
 		menu.findItem (R.id.menu_action_pen_mode).setChecked (isPenModeEnabled ()); 
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
@@ -212,10 +225,10 @@ public class NoteActivity extends Activity {
 	View eraser_miniHand = null; 
 	
 	boolean isBrowsingRootFolder () { 
-		return mBrowsingFolder.equals (mDCIM); 
+		return mBrowsingFolders.equals (mDCIM); 
 	} 
 	boolean wantDisplaySubfoldersAsBig () { 
-		return PngNotesAdapter.hasImages (mBrowsingFolder) || 
+		return PngNotesAdapter.hasImages (mBrowsingFolders) || 
 					   isBrowsingRootFolder (); 
 	} 
 	void initUserInterface () { 
@@ -239,13 +252,13 @@ public class NoteActivity extends Activity {
 		} 
 		mRvSubfolderBrowser.setLayoutManager (mSubfoldersLayoutManager); 
 		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter = 
-												new SubfoldersAdapter (this, mBrowsingFolder)); 
+												new SubfoldersAdapter (this, mBrowsingFolders)); 
 		
 		// Image annotation RecyclerView: 
 		mRvBigPages = findViewById (R.id.rvBigPages); 
 		mRvBigPages.setLayoutManager (mNotesLayoutManager = 
 						new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false)); 
-		mRvBigPages.setAdapter (mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolder)); 
+		mRvBigPages.setAdapter (mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolders)); 
 		mNotesAdapter.setHeaderItemViews (new View [] {mRvSubfolderBrowser}); 
 		// Pen options: 
 		mRvPenOptions = findViewById (R.id.rvPenOptions); 
@@ -337,7 +350,7 @@ public class NoteActivity extends Activity {
 	
 	void initActionBar () { 
 		setTitle (getString (R.string.title_format).replace ("[folder]", 
-				mBrowsingFolder.getName ())); 
+				mBrowsingFolders.elementAt (0).getName ())); 
 		ActionBar actionBar = getActionBar (); 
 		if (actionBar != null) { 
 			actionBar.setDisplayHomeAsUpEnabled (canGoBack ()); 
@@ -365,7 +378,7 @@ public class NoteActivity extends Activity {
 		return !isBrowsingRootFolder (); 
 	} 
 	boolean canEdit () { 
-		return PngNotesAdapter.hasImages (mBrowsingFolder); 
+		return PngNotesAdapter.hasImages (mBrowsingFolders); 
 	} 
 	
 	

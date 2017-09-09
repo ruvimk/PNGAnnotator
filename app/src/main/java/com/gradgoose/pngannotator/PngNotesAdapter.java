@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
 
 /**
  * Created by Ruvim Kondratyev on 9/4/2017.
@@ -24,7 +25,7 @@ import java.util.List;
 
 public class PngNotesAdapter extends RecyclerView.Adapter { 
 	final Context mContext; 
-	final File mBrowsingFolder; 
+	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
 	
 	boolean mPenMode = false; 
@@ -39,6 +40,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	File mList [] = null; 
 	
+	Comparator<File []> mFileComparator = new Comparator<File []> () { 
+		@Override public int compare (File a [], File b []) { 
+			return a[0].getName ().compareTo (b[0].getName ()); 
+		} 
+	}; 
+	
 	public void setHeaderItemViews (View list []) { 
 		mHeaderItemViews = list; 
 		long maximum = 1; 
@@ -51,9 +58,36 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	} 
 	
 	private void prepareFileList () { 
-		File list [] = mBrowsingFolder.listFiles (mFilterJustImages); 
-		Arrays.sort (list); 
-		mList = list; 
+		HashMap<String,Vector<File>> children = new HashMap<> (); 
+		for (File folder : mBrowsingFolder) { 
+			File list [] = folder.listFiles (mFilterJustImages); 
+			for (File file : list) 
+				if (!children.containsKey (file.getName ())) { 
+					Vector<File> files = new Vector<> (); 
+					files.add (file); 
+					children.put (file.getName (), files); 
+				} else children.get (file.getName ()).add (file); 
+		} 
+		File list [] [] = new File [children.size ()] []; 
+		int index = 0; 
+		int total = 0; 
+		for (String name : children.keySet ()) { 
+			Vector<File> possible = children.get (name); 
+			list[index] = new File [possible.size ()]; 
+			possible.toArray (list[index]); 
+			total += list[index].length; 
+			index++; 
+		} 
+		Arrays.sort (list, mFileComparator); 
+		File list2 [] = new File [total]; 
+		int c = 0; 
+		for (File [] possible : list) { 
+			for (File file : possible) { 
+				list2[c] = file; 
+				c++; 
+			} 
+		} 
+		mList = list2; 
 	} 
 	
 	public void reloadList () { 
@@ -81,6 +115,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		loadIds (mList); 
 	} 
 	
+	static boolean hasImages (Vector<File> folders) { 
+		for (File folder : folders) 
+			if (hasImages (folder)) 
+				return true; 
+		return false; 
+	} 
 	static boolean hasImages (File folder) { 
 		File list [] = folder.listFiles (); 
 		for (File file : list) 
@@ -100,7 +140,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 	}; 
 	
-	public PngNotesAdapter (Context context, File browsingDir) { 
+	public PngNotesAdapter (Context context, Vector<File> browsingDir) { 
 		super (); 
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 

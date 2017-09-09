@@ -12,7 +12,9 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Vector;
 
 /**
  * Created by Ruvim Kondratyev on 9/4/2017.
@@ -20,14 +22,36 @@ import java.util.HashMap;
 
 public class SubfoldersAdapter extends RecyclerView.Adapter { 
 	final Context mContext; 
-	final File mBrowsingFolder; 
+	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
 	
-	File mList [] = null; 
+	File mList [] [] = null; 
 	
+	Comparator<File []> mFileComparator = new Comparator<File []> () { 
+		@Override public int compare (File a [], File b []) { 
+			return a[0].getName ().compareTo (b[0].getName ()); 
+		} 
+	}; 
 	private void prepareFileList () { 
-		File list [] = mBrowsingFolder.listFiles (mFilterJustFolders); 
-		Arrays.sort (list); 
+		HashMap<String,Vector<File>> children = new HashMap<> (); 
+		for (File folder : mBrowsingFolder) { 
+			File list [] = folder.listFiles (mFilterJustFolders); 
+			for (File file : list) 
+				if (!children.containsKey (file.getName ())) { 
+					Vector<File> files = new Vector<> (); 
+					files.add (file); 
+					children.put (file.getName (), files); 
+				} else children.get (file.getName ()).add (file); 
+		} 
+		File list [] [] = new File [children.size ()] []; 
+		int index = 0; 
+		for (String name : children.keySet ()) { 
+			Vector<File> possible = children.get (name); 
+			list[index] = new File [possible.size ()]; 
+			possible.toArray (list[index]); 
+			index++; 
+		} 
+		Arrays.sort (list, mFileComparator); 
 		mList = list; 
 	} 
 	
@@ -37,17 +61,17 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	
 	private File getItemFile (int position) { 
-		return position < mList.length ? mList[position] : null; 
+		return position < mList.length ? mList[position][0] : null; 
 	} 
 	
-	private void loadIds (File list []) { 
+	private void loadIds (File list [] []) { 
 		long maximum = 1; 
 		for (Long l : mStableIds.values ()) 
 			if (l > maximum) 
 				maximum = l; 
-		for (File file : list) 
-			if (!mStableIds.containsKey (file.getAbsolutePath ())) 
-				mStableIds.put (file.getAbsolutePath (), ++maximum); 
+		for (File files [] : list) 
+			if (!mStableIds.containsKey (files[0].getAbsolutePath ())) 
+				mStableIds.put (files[0].getAbsolutePath (), ++maximum); 
 	} 
 	private void loadIds () { 
 		prepareFileList (); 
@@ -60,7 +84,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 	}; 
 	
-	public SubfoldersAdapter (Context context, File browsingDir) { 
+	public SubfoldersAdapter (Context context, Vector<File> browsingDir) { 
 		super (); 
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 

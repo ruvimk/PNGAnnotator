@@ -3,6 +3,7 @@
 	
 	<string name="title_format">Annotate - [folder]</string> 
 	<string name="title_goto_page">Go to page:</string> 
+	<string name="title_root_dir">My Picture Folders</string> 
 
 	<string name="menu_goto_page">Go to page</string> 
 	<string name="menu_annotate">Annotate</string> 

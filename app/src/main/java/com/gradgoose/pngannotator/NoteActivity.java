@@ -364,8 +364,11 @@ public class NoteActivity extends Activity {
 	} 
 	
 	void initActionBar () { 
-		setTitle (getString (R.string.title_format).replace ("[folder]", 
-				mBrowsingFolders.elementAt (0).getName ())); 
+		if (isBrowsingRootFolder ()) 
+			setTitle (R.string.title_root_dir); 
+		else 
+			setTitle (getString (R.string.title_format).replace ("[folder]", 
+					mBrowsingFolders.elementAt (0).getName ())); 
 		ActionBar actionBar = getActionBar (); 
 		if (actionBar != null) { 
 			actionBar.setDisplayHomeAsUpEnabled (canGoBack ()); 

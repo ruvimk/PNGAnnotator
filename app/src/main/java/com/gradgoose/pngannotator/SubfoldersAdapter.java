@@ -50,7 +50,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 				mStableIds.put (file.getAbsolutePath (), ++maximum); 
 	} 
 	private void loadIds () { 
-		loadIds (mBrowsingFolder.listFiles (mFilterJustFolders)); 
+		prepareFileList (); 
+		loadIds (mList); 
 	} 
 	
 	private FileFilter mFilterJustFolders = new FileFilter () { 
@@ -63,9 +64,9 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		super (); 
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 
-		File [] list = browsingDir.listFiles (mFilterJustFolders); 
-		mStableIds = new HashMap<> (list.length); 
-		loadIds (list); 
+		prepareFileList (); 
+		mStableIds = new HashMap<> (mList.length); 
+		loadIds (mList); 
 		reloadList (); // Load the list for the first time. 
 		setHasStableIds (true); 
 	} 

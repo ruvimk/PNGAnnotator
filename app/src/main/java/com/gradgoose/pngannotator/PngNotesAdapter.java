@@ -77,7 +77,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				mStableIds.put (file.getAbsolutePath (), ++maximum); 
 	} 
 	private void loadIds () { 
-		loadIds (mBrowsingFolder.listFiles (mFilterJustImages)); 
+		prepareFileList (); 
+		loadIds (mList); 
 	} 
 	
 	static boolean hasImages (File folder) { 
@@ -103,9 +104,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		super (); 
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 
-		File [] list = browsingDir.listFiles (mFilterJustImages); 
-		mStableIds = new HashMap<> (list.length); 
-		loadIds (list); 
+		prepareFileList (); 
+		mStableIds = new HashMap<> (mList.length); 
+		loadIds (mList); 
 		reloadList (); // Load the list for the first time. 
 		setHasStableIds (true); 
 	} 

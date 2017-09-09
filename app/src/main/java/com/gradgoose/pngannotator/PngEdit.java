@@ -366,10 +366,13 @@ public class PngEdit {
 		return editsDir; 
 	} 
 	
-	public static File getEditsFile (Context context, File pngFile) throws IOException { 
+	public static String getFullFileName (Context context, File pngFile) throws IOException { 
+		return getFullFileName (context, pngFile, ".dat"); 
+	} 
+	public static String getFullFileName (Context context, File pngFile, String ext) throws IOException { 
 		String md5sum = calculateMD5 (pngFile); 
 		// Create a filename that is based on this version of the file: 
-		String fullFilename = md5sum + "-" + Long.toString (pngFile.lastModified (), 16) + ".dat"; 
+		return md5sum + "-" + Long.toString (pngFile.lastModified (), 16) + ext; 
 		// The edits' filename takes into account that the user may have created a second copy 
 		// of a picture file, hoping to mark up the second copy with different edits. 
 		// For example, it may be a picture of some graph paper, and the user wants to 
@@ -378,6 +381,10 @@ public class PngEdit {
 		// will hopefully be different, so we know it's a different page. 
 		// If the picture file is modified, then BOTH the MD5 and the lastModified () 
 		// will change, so our edits are locked onto just this version of the file. 
+	} 
+	public static File getEditsFile (Context context, File pngFile) throws IOException { 
+		// Get file name: 
+		String fullFilename = getFullFileName (context, pngFile); 
 		
 		// Get the file for the full filename: 
 		File ourDir = getEditsDir (context); 

@@ -315,11 +315,18 @@ public class PageView extends ImageView {
 		// (this is to avoid white blanks and confusing the user by showing 
 		// them some random picture that they have just seen from a 
 		// recycled view): 
-		options.inJustDecodeBounds = false; 
-		options.inSampleSize = calculateInSampleSize (options.outWidth, 
-				options.outHeight, 
-				16, 16); 
-		setImageBitmap (BitmapFactory.decodeFile (file.getPath (), options)); 
+		Bitmap littleBitmap; 
+		File thumbnail = PngNotesAdapter.getThumbnailFile (getContext (), file); 
+		if (thumbnail != null && thumbnail.exists ()) { 
+			littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
+		} else { 
+			options.inJustDecodeBounds = false; 
+			options.inSampleSize = calculateInSampleSize (options.outWidth, 
+					options.outHeight, 
+					16, 16); 
+			littleBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+		} 
+		setImageBitmap (littleBitmap); 
 		// Load the bitmap in a separate thread: 
 		(new Thread () { 
 			@Override public void run () { 

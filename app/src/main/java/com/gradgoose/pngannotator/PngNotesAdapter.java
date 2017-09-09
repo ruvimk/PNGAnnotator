@@ -1,8 +1,12 @@
 package com.gradgoose.pngannotator;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -12,6 +16,8 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -57,6 +63,57 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		notifyDataSetChanged (); 
 	} 
 	
+	@Nullable static File getThumbnailFile (Context context, File targetFile) { 
+		File cacheDir = context.getCacheDir (); 
+		File thumbnailDir = new File (cacheDir, "Thumbnails"); 
+		if (!thumbnailDir.exists () && !thumbnailDir.mkdirs ()) return null; 
+		String fullFileName; 
+		try { 
+			fullFileName = PngEdit.getFullFileName (context, targetFile, ".png"); 
+		} catch (IOException err) { 
+			return null; 
+		} 
+		return new File (thumbnailDir, fullFileName); 
+	} 
+	private void updateThumbnailCache () {
+		AsyncTask<File [], Void, Void> mUpdateThumbnailsTask = 
+				new AsyncTask<File[], Void, Void> () { 
+					@Override protected Void doInBackground (File[]... files) { 
+						for (File [] list : files) { 
+							for (File picture : list) { 
+								// Get the file where to save the thumbnail: 
+								File thumbnail = getThumbnailFile (mContext, picture); 
+								if (thumbnail == null) continue; 
+								// Load just the image dimensions first: 
+								final BitmapFactory.Options options = new BitmapFactory.Options (); 
+								options.inJustDecodeBounds = true; 
+								BitmapFactory.decodeFile (picture.getPath (), options); 
+								// Load a REALLY small version for time time being, while it's loading 
+								// (this is to avoid white blanks and confusing the user by showing 
+								// them some random picture that they have just seen from a 
+								// recycled view): 
+								options.inJustDecodeBounds = false; 
+								options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
+										options.outHeight, 
+										16, 16); 
+								// Load a small version of the picture into a bitmap: 
+								Bitmap bmp = BitmapFactory.decodeFile (picture.getPath (), options); 
+								// Save the small bitmap to a PNG thumbnail: 
+								try { 
+									FileOutputStream fos = new FileOutputStream (thumbnail, false); 
+									bmp.compress (Bitmap.CompressFormat.PNG, 100, fos); 
+									fos.close (); 
+								} catch (IOException e) { 
+									e.printStackTrace (); 
+								} 
+								bmp.recycle (); 
+							} 
+						} 
+						return null; 
+					} 
+				}; 
+		mUpdateThumbnailsTask.execute (mList); 
+	} 
 	private void prepareFileList () { 
 		HashMap<String,Vector<File>> children = new HashMap<> (); 
 		for (File folder : mBrowsingFolder) { 
@@ -88,6 +145,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			} 
 		} 
 		mList = list2; 
+		// Update thumbnails: 
+		updateThumbnailCache (); 
 	} 
 	
 	public void reloadList () { 

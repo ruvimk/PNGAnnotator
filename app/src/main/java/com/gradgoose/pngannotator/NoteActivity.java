@@ -187,6 +187,62 @@ public class NoteActivity extends Activity {
 //	void userSelectAnnotateOptions () { 
 //		
 //	} 
+	void userRenameFile (final @Nullable File oldName, String userMessage) { 
+		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_file_name, 
+				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+		String currentName; 
+		if (oldName == null) { 
+			String baseTitle = getString (R.string.label_new_folder); 
+			int folderNumber = 1; 
+			currentName = baseTitle; 
+			while ((new File (currentName)).exists ()) { 
+				folderNumber++; 
+				currentName = baseTitle + " (" + folderNumber + ")"; 
+			} 
+		} else currentName = oldName.getName (); 
+		editText.setText (currentName); 
+		editText.setSelection (0, currentName.length ()); 
+		AlertDialog dialog = new AlertDialog.Builder (this) 
+									 .setTitle ( 
+									 		oldName == null ? R.string.title_new_folder : 
+													(oldName.isDirectory () ? 
+															 R.string.title_ren_folder : 
+															 R.string.title_ren_file 
+													)
+									 ) 
+									 .setMessage (userMessage) 
+									 .setView (editText) 
+									 .setPositiveButton (R.string.label_ok, new DialogInterface.OnClickListener () {
+										 @Override public void onClick (DialogInterface dialogInterface, int i) {
+											 String nowName = editText.getText ().toString (); 
+											 File nowFile = oldName == null ? 
+																	new File (mBrowsingFolders.elementAt (0), 
+																					 nowName) : 
+																	( 
+																			new File (
+																					oldName.getParentFile (), 
+																							 nowName 
+																			) 
+																			); 
+											 if (oldName != null) { 
+												 if (oldName.renameTo (nowFile)) { 
+													 
+												 } else { 
+													 
+												 } 
+											 } else { 
+												 if (nowFile.mkdirs ()) { 
+													 
+												 } else { 
+													 
+												 } 
+											 } 
+										 }
+									 }) 
+									 .setNegativeButton (R.string.label_cancel, null) 
+									 .create (); 
+		dialog.show (); 
+	} 
 	void userSelectPage () { 
 		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_number, 
 				(ViewGroup) findViewById (R.id.vMainRoot), false); 

@@ -243,7 +243,7 @@ public class NoteActivity extends Activity {
 		return false; 
 	} 
 	boolean wantDisplaySubfoldersAsBig () { 
-		return PngNotesAdapter.hasImages (mBrowsingFolders) || 
+		return !PngNotesAdapter.hasImages (mBrowsingFolders) || 
 					   isBrowsingRootFolder (); 
 	} 
 	void initUserInterface () { 

@@ -36,12 +36,16 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		HashMap<String,Vector<File>> children = new HashMap<> (); 
 		for (File folder : mBrowsingFolder) { 
 			File list [] = folder.listFiles (mFilterJustFolders); 
-			for (File file : list) 
+			for (File file : list) { 
+				// Skip certain folder names: 
+				if (file.getName ().equals (".thumbnails")) continue; 
+				// Add the folder to a list that has all folders of this exact name: 
 				if (!children.containsKey (file.getName ())) { 
 					Vector<File> files = new Vector<> (); 
 					files.add (file); 
 					children.put (file.getName (), files); 
 				} else children.get (file.getName ()).add (file); 
+			} 
 		} 
 		File list [] [] = new File [children.size ()] []; 
 		int index = 0; 

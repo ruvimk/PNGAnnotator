@@ -2,6 +2,7 @@ package com.gradgoose.pngannotator;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -329,7 +331,11 @@ public class PngEdit {
 		mTarget = file; 
 	} 
 	
-	public static String calculateMD5 (File file) throws IOException {
+	public static @NonNull String calculateMD5 (File file) throws IOException { 
+		return calculateMD5 (file, null); 
+	} 
+	public static @NonNull 
+	String calculateMD5 (File file, @Nullable byte additional_tail []) throws IOException { 
 		MessageDigest digest; 
 		try {
 			digest = MessageDigest.getInstance ("MD5"); 
@@ -345,6 +351,8 @@ public class PngEdit {
 		while ((bRead = inputStream.read (buffer)) > 0) { 
 			digest.update (buffer, 0, bRead); 
 		} 
+		if (additional_tail != null) 
+			digest.update (additional_tail); 
 		byte md5sum [] = digest.digest ();
 		BigInteger bigInteger = new BigInteger (1, md5sum); 
 		return String.format ("%32s", bigInteger.toString (16)).replace (' ', '0'); 
@@ -357,17 +365,75 @@ public class PngEdit {
 		} 
 		return editsDir; 
 	} 
-	public static PngEdit forFile (Context context, File pngFile) throws IOException { 
+	
+	public static File getEditsFile (Context context, File pngFile) throws IOException { 
 		String md5sum = calculateMD5 (pngFile); 
-		PngEdit edit = new PngEdit (context, pngFile); 
+		String pathFolders [] = pngFile.getPath ().split ("/"); 
+		StringBuilder sb = new StringBuilder ().append (md5sum); 
+		for (String folder : pathFolders) 
+			sb.append ('-').append (folder); 
+		String fullFilename = sb.append (".dat").toString (); 
 		File ourDir = getEditsDir (context); 
-		edit.mVectorEdits = new File (ourDir, md5sum + ".dat"); 
+		File targetFile =new File (ourDir, fullFilename); 
+		if (!targetFile.exists ()) { 
+			File searchResult = searchForFile (ourDir, new String [] {md5sum}, pathFolders); 
+			if (searchResult != null) { 
+				// Rename the old file to the new file: 
+				if (!searchResult.renameTo (targetFile)) { 
+					// It's okay, I guess. 
+				} 
+			} 
+		} 
+		return targetFile; 
+	} 
+	public static PngEdit forFile (Context context, File pngFile) throws IOException {
+		PngEdit edit = new PngEdit (context, pngFile);
 		try { 
 			edit.loadEdits (); 
 		} catch (IOException err) { 
 			// Do nothing. It's okay at this point because it may be a new PNG, etc. 
 		} 
 		return edit; 
+	} 
+	
+	static final int FULL_SCORE = 100; 
+	static @Nullable File searchForFile (File searchDir, 
+										 String exactOnlyTokens [], 
+										 String nameTokens []) { 
+		File list [] = searchDir.listFiles (); 
+		int similarity [] = new int [list.length]; 
+		// Calculate the similarity rating for each file: 
+		for (int i = 0; i < list.length; i++) { 
+			String name = list[i].getName (); 
+			int s = 0; 
+			for (String token : exactOnlyTokens) { 
+				if (name.contains (token)) 
+					s += FULL_SCORE; 
+			} 
+			for (String token : nameTokens) { 
+				if (name.contains (token)) { 
+					s += FULL_SCORE; 
+					continue; 
+				} 
+				int len = token.length (); 
+				for (int k = 0; k < len; k++) { 
+					s += FULL_SCORE * countSimilarity (name, token) / len; 
+				} 
+			} 
+			similarity[i] = s; 
+		} 
+		// Find the first maximum-rated file: 
+		int sMax = 0; 
+		File fMax = null; 
+		for (int i = 0; i < list.length; i++) { 
+			if (similarity[i] <= sMax) continue; 
+			sMax = similarity[i]; 
+			fMax = list[i]; 
+		} 
+		return fMax; 
+	} 
+	static int countSimilarity (String hayStack, String needle) { 
+		
 	} 
 	
 	

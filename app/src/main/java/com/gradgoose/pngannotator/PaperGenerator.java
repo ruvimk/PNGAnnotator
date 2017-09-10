@@ -66,33 +66,46 @@ public class PaperGenerator {
 			return null; 
 		} 
 	} 
-	public boolean makeGraphPaper (File inFolder, @Nullable File insertBefore) {
-		File file = makeNewPaperFile (inFolder, insertBefore); 
-		if (file == null) return false; // TODO: Take this check out when we figure makeNewPaperFile () out. 
-		int pxPaperW = (int) (mPaperW * mDPI); 
-		int pxPaperH = (int) (mPaperH * mDPI); 
-		Bitmap bmp = Bitmap.createBitmap (pxPaperW, pxPaperH, Bitmap.Config.ARGB_8888);
-		Canvas can = new Canvas (bmp); 
-		int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
-		Paint paint = new Paint (); 
-		paint.setStrokeWidth (mDPI * 0.5f /*mm*/ / 25.4f /*mm/in*/); 
-		paint.setColor (Color.rgb (100, 100, 255)); 
-		for (int x = pxSpan / 2; x < pxPaperW; x += pxSpan) { 
-			can.drawLine (x, 0, x, pxPaperH, paint); 
-		} 
-		for (int y = pxSpan / 2; y < pxPaperH; y += pxSpan) { 
-			can.drawLine (0, y, pxPaperW, y, paint); 
-		} 
-		boolean success = true; 
-		try { 
-			FileOutputStream fos = new FileOutputStream (file, false); 
-			bmp.compress (Bitmap.CompressFormat.PNG, 100, fos); 
-			fos.close (); 
-		} catch (IOException err) { 
-			err.printStackTrace (); 
-			success = false; 
-		} 
-		bmp.recycle (); 
-		return success; 
+	public void makeGraphPaper (final File inFolder, @Nullable final File insertBefore, 
+								   @Nullable final Runnable onComplete) { 
+		(new Thread () { 
+			@Override public void run () { 
+				File file = makeNewPaperFile (inFolder, insertBefore); 
+				if (file == null) 
+					return; // TODO: Take this check out when we figure makeNewPaperFile () out. 
+				int pxPaperW = (int) (mPaperW * mDPI); 
+				int pxPaperH = (int) (mPaperH * mDPI); 
+				Bitmap bmp = Bitmap.createBitmap (pxPaperW, pxPaperH, Bitmap.Config.ARGB_8888); 
+				Canvas can = new Canvas (bmp); 
+				int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
+				Paint paint = new Paint (); 
+				paint.setStrokeWidth (mDPI * 0.5f /*mm*/ / 25.4f /*mm/in*/); 
+				paint.setColor (Color.rgb (100, 100, 255)); 
+				for (int x = pxSpan / 2; 
+						x < pxPaperW; x += pxSpan) 
+				{ 
+					can.drawLine (x, 0, x, pxPaperH, paint); 
+				} 
+				for (int y = pxSpan / 2; 
+						y < pxPaperH; y += pxSpan) 
+				{ 
+					can.drawLine (0, y, pxPaperW, y, paint); 
+				} 
+				
+				try 
+				{ 
+					FileOutputStream fos = new FileOutputStream (file, false); 
+					bmp.compress (Bitmap.CompressFormat.PNG, 100, fos); 
+					fos.close (); 
+				} catch (IOException err) 
+				{ 
+					err.printStackTrace (); 
+				} 
+				bmp.recycle (); 
+				
+				if (onComplete != null) 
+					onComplete.run (); 
+			} 
+		}).start (); 
 	} 
 } 

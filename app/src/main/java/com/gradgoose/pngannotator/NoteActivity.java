@@ -165,10 +165,14 @@ public class NoteActivity extends Activity {
 				break; 
 			case R.id.menu_action_new_page: 
 				// Insert a new graph paper at the end of the list: 
-				boolean wasEmpty = !PngNotesAdapter.hasImages (mBrowsingFolders); 
-				mPaperGenerator.makeGraphPaper (mBrowsingFolders.elementAt (0), null); 
-				if (wasEmpty) initUserInterface (); 
-				else mNotesAdapter.reloadList (); 
+				final boolean wasEmpty = !PngNotesAdapter.hasImages (mBrowsingFolders); 
+				mPaperGenerator.makeGraphPaper (mBrowsingFolders.elementAt (0), null, 
+						new Runnable () { 
+							@Override public void run () { 
+								if (wasEmpty) initUserInterface (); 
+								else mNotesAdapter.reloadList (); 
+							} 
+						}); 
 				break; 
 			case R.id.menu_action_settings: 
 				openSettings (); 

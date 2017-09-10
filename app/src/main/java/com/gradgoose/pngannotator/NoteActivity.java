@@ -169,8 +169,12 @@ public class NoteActivity extends Activity {
 				mPaperGenerator.makeGraphPaper (mBrowsingFolders.elementAt (0), null, 
 						new Runnable () { 
 							@Override public void run () { 
-								if (wasEmpty) initUserInterface (); 
-								else mNotesAdapter.reloadList (); 
+								runOnUiThread (new Runnable () { 
+									@Override public void run () { 
+										if (wasEmpty) initUserInterface (); 
+										else mNotesAdapter.reloadList (); 
+									} 
+								}); 
 							} 
 						}); 
 				break; 

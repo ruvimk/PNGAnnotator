@@ -79,8 +79,8 @@ public class PaperGenerator {
 				Canvas can = new Canvas (bmp); 
 				int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
 				Paint paint = new Paint (); 
-				paint.setStrokeWidth (mDPI * 0.5f /*mm*/ / 25.4f /*mm/in*/); 
-				paint.setColor (Color.rgb (100, 100, 255)); 
+				paint.setStrokeWidth (mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/); 
+				paint.setColor (Color.rgb (150, 200, 255)); 
 				for (int x = pxSpan / 2; 
 						x < pxPaperW; x += pxSpan) 
 				{ 

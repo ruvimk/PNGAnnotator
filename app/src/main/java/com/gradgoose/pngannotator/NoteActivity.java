@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -22,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Vector;
 
 public class NoteActivity extends Activity { 
@@ -159,6 +162,9 @@ public class NoteActivity extends Activity {
 			case R.id.menu_action_pen_mode: 
 				item.setChecked (!item.isChecked ()); 
 				enablePenMode (item.isChecked ()); 
+				break; 
+			case R.id.menu_action_export_pages: 
+				exportPages (); 
 				break; 
 			case R.id.menu_action_new_folder: 
 				userRenameFile (null, ""); 
@@ -309,6 +315,37 @@ public class NoteActivity extends Activity {
 									 .setNegativeButton (R.string.label_cancel, null) 
 									 .create (); 
 		dialog.show (); 
+	} 
+	void exportPages () { 
+		mNotesAdapter.reloadList (); // Just in case. 
+		(new AsyncTask<File [], Void, File> () { 
+			boolean success = true; 
+			@Override protected File doInBackground (File [] ... params) { 
+				try { 
+					success = true; 
+					return ZipRenderer.render (NoteActivity.this, params[0], 
+							mBrowsingFolders.elementAt (0).getName ()); 
+				} catch (IOException err) { 
+					err.printStackTrace (); 
+					success = false; 
+					return null; 
+				} 
+			} 
+			@Override protected void onPostExecute (File result) { 
+				if (success) { 
+					Uri toFile = Uri.fromFile (result); 
+					Intent shareIntent = new Intent (); 
+					shareIntent.setAction (Intent.ACTION_SEND); 
+					shareIntent.putExtra (Intent.EXTRA_STREAM, toFile); 
+					shareIntent.setType ("application/zip"); 
+					startActivity (Intent.createChooser (shareIntent, 
+							getString (R.string.title_send_zip_to))); 
+				} else { 
+					Toast.makeText (NoteActivity.this, R.string.msg_could_not_export_io, 
+							Toast.LENGTH_SHORT).show (); 
+				} 
+			} 
+		}).execute (mNotesAdapter.mList); 
 	} 
 	void openSettings () { 
 		

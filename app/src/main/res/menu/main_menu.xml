@@ -30,6 +30,12 @@
 		android:title="@string/menu_create_folder"
 		/> 
 	
+	<item 
+		android:id="@+id/menu_action_export_pages"
+		android:showAsAction="never"
+		android:title="@string/menu_export_pages"
+		/> 
+	
 	
 	<item
 		android:id="@+id/menu_action_pen_mode"

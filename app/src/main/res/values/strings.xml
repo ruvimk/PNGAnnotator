@@ -8,11 +8,13 @@
 	<string name="title_new_folder">New Folder Name</string> 
 	<string name="title_ren_folder">Rename Folder</string> 
 	<string name="title_ren_file">Rename File</string> 
+	<string name="title_send_zip_to">Send notes to</string> 
 	
 	<string name="menu_create_folder">New Folder</string> 
 	<string name="menu_create_page">New Page</string> 
 	<string name="menu_goto_page">Go to page</string> 
 	<string name="menu_annotate">Annotate</string> 
+	<string name="menu_export_pages">Export Pages</string> 
 	<string name="menu_pen_mode">Pen Mode</string> 
 	<string name="menu_settings">Settings</string> 
 	
@@ -24,6 +26,7 @@
 	<string name="msg_could_not_new_folder">Could not create folder. Try again? </string> 
 	<string name="msg_could_not_ren_folder">Could not rename folder. Try again? </string> 
 	<string name="msg_could_not_ren_file">Could not rename file. Try again? </string> 
+	<string name="msg_could_not_export_io">Could not export ZIP: I/O error</string> 
 	<string name="msg_making_paper">Adding page &#8230;</string> 
 	
 	<string name="access_eraser">Eraser</string> 

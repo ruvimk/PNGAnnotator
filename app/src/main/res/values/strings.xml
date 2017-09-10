@@ -24,6 +24,7 @@
 	<string name="msg_could_not_new_folder">Could not create folder. Try again? </string> 
 	<string name="msg_could_not_ren_folder">Could not rename folder. Try again? </string> 
 	<string name="msg_could_not_ren_file">Could not rename file. Try again? </string> 
+	<string name="msg_making_paper">Adding page &#8230;</string> 
 	
 	<string name="access_eraser">Eraser</string> 
 	<string name="access_pen">Pen Color [number]</string> 

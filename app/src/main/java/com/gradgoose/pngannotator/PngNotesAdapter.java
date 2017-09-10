@@ -46,7 +46,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	File mList [] = null; 
 	
-	Comparator<File []> mFileComparator = new Comparator<File []> () { 
+	static Comparator<File []> mFileComparator = new Comparator<File []> () { 
 		@Override public int compare (File a [], File b []) { 
 			return a[0].getName ().compareTo (b[0].getName ()); 
 		} 
@@ -114,9 +114,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				}; 
 		mUpdateThumbnailsTask.execute (mList); 
 	} 
-	private void prepareFileList () { 
+	public static File [] prepareFileList (Vector<File> browsingFolder) { 
 		HashMap<String,Vector<File>> children = new HashMap<> (); 
-		for (File folder : mBrowsingFolder) { 
+		for (File folder : browsingFolder) { 
 			File list [] = folder.listFiles (mFilterJustImages); 
 			for (File file : list) 
 				if (!children.containsKey (file.getName ())) { 
@@ -144,13 +144,17 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				c++; 
 			} 
 		} 
-		mList = list2; 
+		return list2; 
+	} 
+	private void prepareFileList () { 
+		mList = prepareFileList (mBrowsingFolder); 
 		// Update thumbnails: 
 		updateThumbnailCache (); 
 	} 
 	
 	public void reloadList () { 
 		prepareFileList (); 
+		notifyDataSetChanged (); 
 	} 
 	
 	private File getItemFile (int position) { 

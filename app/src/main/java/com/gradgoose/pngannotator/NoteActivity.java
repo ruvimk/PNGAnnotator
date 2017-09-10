@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.Vector;
@@ -146,6 +147,7 @@ public class NoteActivity extends Activity {
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
 		return true; 
 	} 
+	PaperGenerator mPaperGenerator = new PaperGenerator (); 
 	@Override public boolean onOptionsItemSelected (MenuItem item) { 
 		switch (item.getItemId ()) { 
 //			case R.id.menu_action_annotate: 
@@ -162,7 +164,11 @@ public class NoteActivity extends Activity {
 				userRenameFile (null, ""); 
 				break; 
 			case R.id.menu_action_new_page: 
-				
+				// Insert a new graph paper at the end of the list: 
+				boolean wasEmpty = !PngNotesAdapter.hasImages (mBrowsingFolders); 
+				mPaperGenerator.makeGraphPaper (mBrowsingFolders.elementAt (0), null); 
+				if (wasEmpty) initUserInterface (); 
+				else mNotesAdapter.reloadList (); 
 				break; 
 			case R.id.menu_action_settings: 
 				openSettings (); 

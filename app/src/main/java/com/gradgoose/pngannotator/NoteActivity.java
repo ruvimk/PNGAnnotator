@@ -178,6 +178,7 @@ public class NoteActivity extends Activity {
 //								}); 
 //							} 
 //						}); 
+				mRvBigPages.scrollToPosition (mNotesAdapter.countImages () - 1); // Scroll to new page. 
 				break; 
 			case R.id.menu_action_settings: 
 				openSettings (); 

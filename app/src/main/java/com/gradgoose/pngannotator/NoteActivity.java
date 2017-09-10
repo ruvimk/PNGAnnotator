@@ -228,7 +228,7 @@ public class NoteActivity extends Activity {
 													 // Success. Now open the new folder. 
 													 Intent intent = new Intent (NoteActivity.this, 
 																						NoteActivity.class); 
-													 File[] toOpen = new File[]{nowFile}; 
+													 File [] toOpen = new File[]{nowFile}; 
 													 intent.putExtra (STATE_BROWSING_PATH, toOpen); 
 												 } else { 
 													 // Try create again? 

@@ -1,5 +1,6 @@
 package com.gradgoose.pngannotator;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -8,8 +9,10 @@ import android.graphics.Paint;
 import android.support.annotation.Nullable;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Vector;
 
 /**
@@ -64,6 +67,29 @@ public class PaperGenerator {
 		} else { 
 			// TODO: Insert new page before the specified file. 
 			return null; 
+		} 
+	} 
+	public void copyGraphPaper (Context context, File intoFolder, File insertBefore) { 
+		File file = makeNewPaperFile (intoFolder, insertBefore); 
+		if (file == null) 
+			return; 
+		try { 
+			FileOutputStream fos = new FileOutputStream (file, false); 
+			byte buffer [] = new byte [4096]; 
+			int bRead; 
+			try { 
+				InputStream src = context.getResources ().openRawResource (R.raw.plain_graph_paper_4x4); 
+				while ((bRead = src.read (buffer, 0, buffer.length)) > 0) 
+					fos.write (buffer, 0, bRead); 
+				src.close (); 
+				fos.close (); 
+			} catch (IOException e) { 
+				e.printStackTrace (); 
+				// If the copy was not found, then make one from scratch: 
+				makeGraphPaper (intoFolder, insertBefore, null); 
+			} 
+		} catch (FileNotFoundException e) { 
+			e.printStackTrace (); 
 		} 
 	} 
 	public void makeGraphPaper (final File inFolder, @Nullable final File insertBefore, 

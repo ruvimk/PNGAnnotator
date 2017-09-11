@@ -300,6 +300,7 @@ public class PageView extends ImageView {
 		} 
 		return inSampleSize; 
 	} 
+	String lastLoadedPath = ""; 
 	int mBitmapNaturalWidth = 1; 
 	int mBitmapNaturalHeight = 1; 
 	public void setItemFile (final File file) { 
@@ -311,22 +312,27 @@ public class PageView extends ImageView {
 		// Set our natural width and height variables to better handle onMeasure (): 
 		mBitmapNaturalWidth = options.outWidth; 
 		mBitmapNaturalHeight = options.outHeight; 
-		// Load a REALLY small version for time time being, while it's loading 
-		// (this is to avoid white blanks and confusing the user by showing 
-		// them some random picture that they have just seen from a 
-		// recycled view): 
-		Bitmap littleBitmap; 
-		File thumbnail = PngNotesAdapter.getThumbnailFile (getContext (), file); 
-		if (thumbnail != null && thumbnail.exists ()) { 
-			littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
-		} else { 
-			options.inJustDecodeBounds = false; 
-			options.inSampleSize = calculateInSampleSize (options.outWidth, 
-					options.outHeight, 
-					16, 16); 
-			littleBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+		// If this is a different filename from before, 
+		if (!file.getPath ().equals (lastLoadedPath)) { 
+			// Load a REALLY small version for time time being, while it's loading 
+			// (this is to avoid white blanks and confusing the user by showing 
+			// them some random picture that they have just seen from a 
+			// recycled view): 
+			Bitmap littleBitmap; 
+			File thumbnail = PngNotesAdapter.getThumbnailFile (getContext (), file); 
+			if (thumbnail != null && thumbnail.exists ()) { 
+				littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
+			} else { 
+				options.inJustDecodeBounds = false; 
+				options.inSampleSize = calculateInSampleSize (options.outWidth, 
+						options.outHeight, 
+						16, 16); 
+				littleBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+			} 
+			setImageBitmap (littleBitmap); 
+			// Update the last loaded path: 
+			lastLoadedPath = file.getPath (); 
 		} 
-		setImageBitmap (littleBitmap); 
 		// Load the bitmap in a separate thread: 
 		(new Thread () { 
 			@Override public void run () { 

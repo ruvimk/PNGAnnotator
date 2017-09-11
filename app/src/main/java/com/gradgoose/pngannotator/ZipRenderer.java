@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 
 import java.io.File;
@@ -22,7 +23,7 @@ public class ZipRenderer {
 	public static File render (Context context, File fromTargets [],
 							   @Nullable String zipFolderName) throws IOException { 
 		File tmp = File.createTempFile ((zipFolderName != null ? (zipFolderName + "-") : "") + 
-				"Pages", ".zip", context.getCacheDir ()); 
+				"Pages", ".zip", Environment.getExternalStorageDirectory ()); 
 		FileOutputStream fos = new FileOutputStream (tmp); 
 		ZipOutputStream zos = new ZipOutputStream (fos); 
 		for (File backgroundFile : fromTargets) { 

@@ -234,7 +234,8 @@ public class NoteActivity extends Activity {
 		return currentView != null ? currentView.getTop () : 0; 
 	} 
 	void addScrollSpace (int pixelsY) { 
-		mRvBigPages.scrollBy (0, -pixelsY); 
+		int nowTop = getScrollSpace (); 
+		mRvBigPages.scrollBy (0, nowTop - pixelsY); 
 	} 
 	
 //	void userSelectAnnotateOptions () { 
@@ -543,12 +544,22 @@ public class NoteActivity extends Activity {
 				// Check if we still need to do this or not (maybe it's the first time, and no need to scroll): 
 				if (initialScrollItemPosition == 0 && 
 						initialScrollItemSpace == 0) return; 
+				// Wait for pre-draw before we update the scroll position again: 
+				mRvBigPages.getViewTreeObserver ().addOnScrollChangedListener ( 
+						new ViewTreeObserver.OnScrollChangedListener () { 
+					@Override public void onScrollChanged () { 
+						// Scroll to the place: 
+						addScrollSpace (initialScrollItemSpace); 
+						// Reset the variable, so we don't confuse ourselves (already scrolled): 
+						initialScrollItemSpace = 0; 
+						// Remove the listener, to avoid extra overhead (done listening): 
+						mRvBigPages.getViewTreeObserver ().removeOnScrollChangedListener (this); 
+					} 
+				}); 
 				// Scroll to the initial scroll position, and forget the scroll position (so we 
 				// don't mess up and reuse it when the user doesn't want us to): 
 				setPageIndex (initialScrollItemPosition); 
-				addScrollSpace (initialScrollItemSpace); 
 				initialScrollItemPosition = 0; 
-				initialScrollItemSpace = 0; 
 				// Remove the extra layout overhead by removing this listener: 
 				if (Build.VERSION.SDK_INT >= 16) 
 					mRvBigPages.getViewTreeObserver ().removeOnGlobalLayoutListener (this); 

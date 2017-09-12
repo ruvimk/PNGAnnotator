@@ -22,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -536,12 +537,23 @@ public class NoteActivity extends Activity {
 		updateViewsForPenMode (); 
 		// Show the pen options only if there are images available for editing: 
 		mRvPenOptions.setVisibility (canEdit () ? View.VISIBLE : View.GONE); 
-		// Scroll to the initial scroll position, and forget the scroll position (so we 
-		// don't mess up and reuse it when the user doesn't want us to): 
-		setPageIndex (initialScrollItemPosition); 
-		addScrollSpace (initialScrollItemSpace); 
-		initialScrollItemPosition = 0; 
-		initialScrollItemSpace = 0; 
+		// Wait for the RecyclerView to finish loading, and then scroll to the right place: 
+		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (new ViewTreeObserver.OnGlobalLayoutListener () { 
+			@Override  public void onGlobalLayout () { 
+				// Check if we still need to do this or not (maybe it's the first time, and no need to scroll): 
+				if (initialScrollItemPosition == 0 && 
+						initialScrollItemSpace == 0) return; 
+				// Scroll to the initial scroll position, and forget the scroll position (so we 
+				// don't mess up and reuse it when the user doesn't want us to): 
+				setPageIndex (initialScrollItemPosition); 
+				addScrollSpace (initialScrollItemSpace); 
+				initialScrollItemPosition = 0; 
+				initialScrollItemSpace = 0; 
+				// Remove the extra layout overhead by removing this listener: 
+				if (Build.VERSION.SDK_INT >= 16) 
+					mRvBigPages.getViewTreeObserver ().removeOnGlobalLayoutListener (this); 
+			} 
+		}); 
 	} 
 	
 	void initActionBar () { 

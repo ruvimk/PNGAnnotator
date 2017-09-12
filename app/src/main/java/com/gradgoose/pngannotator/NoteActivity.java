@@ -62,8 +62,10 @@ public class NoteActivity extends Activity {
 	
 	static final String STATE_BROWSING_PATH = "com.gradgoose.pngannotator.browse_path"; 
 	static final String STATE_SCROLL_ITEM = "com.gradgoose.pngannotator.scroll_item"; 
+	static final String STATE_SCROLL_SPACE = "com.gradgoose.pngannotator.scroll_space"; 
 	
 	int initialScrollItemPosition = 0; 
+	int initialScrollItemSpace = 0; 
 	
 	@Override protected void onCreate (Bundle savedInstanceState) { 
 		super.onCreate (savedInstanceState); 
@@ -91,6 +93,8 @@ public class NoteActivity extends Activity {
 				setBrowsingPaths (savedInstanceState.getStringArray (STATE_BROWSING_PATH)); 
 			if (savedInstanceState.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = savedInstanceState.getInt (STATE_SCROLL_ITEM); 
+			if (savedInstanceState.containsKey (STATE_SCROLL_SPACE)) 
+				initialScrollItemSpace = savedInstanceState.getInt (STATE_SCROLL_SPACE); 
 		} 
 		// See if whoever started this activity wanted us to open any particular folder: 
 		Intent sourceIntent = getIntent (); 
@@ -100,8 +104,10 @@ public class NoteActivity extends Activity {
 				if (extras.containsKey (STATE_BROWSING_PATH)) 
 					setBrowsingPaths (extras.getStringArray (STATE_BROWSING_PATH)); 
 			} 
-			if (initialScrollItemPosition == 0) 
+			if (initialScrollItemPosition == 0 && extras.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = extras.getInt (STATE_SCROLL_ITEM); 
+			if (initialScrollItemSpace == 0 && extras.containsKey (STATE_SCROLL_SPACE)) 
+				initialScrollItemSpace = extras.getInt (STATE_SCROLL_SPACE); 
 		} 
 		if (mBrowsingFolders == null) // Else use the default of the DCIM folder. 
 		{ 
@@ -116,6 +122,8 @@ public class NoteActivity extends Activity {
 		// Check to see if we have a record of what scroll position we were at last time: 
 		if (initialScrollItemPosition == 0) // (only if we don't have one loaded from onRestore...) 
 			initialScrollItemPosition = leftOff.getInt ("Scroll:" + mBrowsingFolders.get (0).getPath (), 0); 
+		if (initialScrollItemSpace == 0) 
+			initialScrollItemSpace = leftOff.getInt ("ScrollSpace:" + mBrowsingFolders.get (0).getPath (), 0); 
 		// Initialize views and the window title and icon: 
 		initUserInterface (); // Views. 
 		initActionBar (); // Title, Icon. 
@@ -128,12 +136,15 @@ public class NoteActivity extends Activity {
 			paths[i] = mBrowsingFolders.elementAt (i).getAbsolutePath (); 
 		outState.putStringArray (STATE_BROWSING_PATH, paths); 
 		outState.putInt (STATE_SCROLL_ITEM, getPageIndex ()); 
+		outState.putInt (STATE_SCROLL_SPACE, getScrollSpace ()); 
 	} 
 	
 	@Override public void onPause () {
 		// Update the "last page, left off" value: 
-		leftOff.edit ().putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), 
-				getPageIndex ()).apply (); 
+		leftOff.edit () 
+				.putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), getPageIndex ()) 
+				.putInt ("ScrollSpace:" + mBrowsingFolders.elementAt (0).getPath (), getScrollSpace ()) 
+				.apply (); 
 		super.onPause (); 
 	} 
 	@Override public void onResume () { 
@@ -214,6 +225,15 @@ public class NoteActivity extends Activity {
 		if (index == 0) 
 			mRvBigPages.scrollToPosition (0); 
 		else mRvBigPages.scrollToPosition (index + mNotesAdapter.countHeaderViews ()); 
+	} 
+	int getScrollSpace () { 
+		int pageIndex = getPageIndex (); 
+		int position = pageIndex > 0 ? pageIndex + mNotesAdapter.countHeaderViews () : 0; 
+		View currentView = mNotesLayoutManager.findViewByPosition (position); 
+		return currentView != null ? currentView.getTop () : 0; 
+	} 
+	void addScrollSpace (int pixelsY) { 
+		mRvBigPages.scrollBy (0, -pixelsY); 
 	} 
 	
 //	void userSelectAnnotateOptions () { 
@@ -519,7 +539,9 @@ public class NoteActivity extends Activity {
 		// Scroll to the initial scroll position, and forget the scroll position (so we 
 		// don't mess up and reuse it when the user doesn't want us to): 
 		setPageIndex (initialScrollItemPosition); 
+		addScrollSpace (initialScrollItemSpace); 
 		initialScrollItemPosition = 0; 
+		initialScrollItemSpace = 0; 
 	} 
 	
 	void initActionBar () { 

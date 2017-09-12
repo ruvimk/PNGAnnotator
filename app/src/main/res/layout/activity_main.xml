@@ -25,4 +25,11 @@
 		android:scrollbars="vertical|horizontal"
 		/>
 	
+	<android.support.v4.widget.ContentLoadingProgressBar
+		android:id="@+id/pbMainProgress"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content" 
+		
+		/>
+	
 </LinearLayout>

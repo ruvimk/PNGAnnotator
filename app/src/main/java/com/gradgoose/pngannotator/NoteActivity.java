@@ -12,9 +12,11 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -318,20 +320,32 @@ public class NoteActivity extends Activity {
 	} 
 	void exportPages () { 
 		mNotesAdapter.reloadList (); // Just in case. 
-		(new AsyncTask<File [], Void, File> () { 
+		(new AsyncTask<File [], Integer, File> () { 
 			boolean success = true; 
+			int mTotal = 1; 
 			@Override protected File doInBackground (File [] ... params) { 
 				try { 
 					success = true; 
 					return ZipRenderer.render (NoteActivity.this, params[0], 
-							mBrowsingFolders.elementAt (0).getName ()); 
+							mBrowsingFolders.elementAt (0).getName (), 
+							new ZipRenderer.OnRenderProgress () { 
+								@Override public void onRenderProgress (int current, int total) { 
+									mTotal = total; 
+									publishProgress (current); 
+								} 
+							}); 
 				} catch (IOException err) { 
 					err.printStackTrace (); 
 					success = false; 
 					return null; 
 				} 
 			} 
+			@Override protected void onPreExecute () { 
+				pbMainProgress.setProgress (0); 
+				pbMainProgress.setVisibility (View.VISIBLE); 
+			} 
 			@Override protected void onPostExecute (File result) { 
+				pbMainProgress.setVisibility (View.GONE); 
 				if (success) { 
 					Uri toFile = Uri.fromFile (result); 
 					Intent shareIntent = new Intent (); 
@@ -343,6 +357,11 @@ public class NoteActivity extends Activity {
 				} else { 
 					Toast.makeText (NoteActivity.this, R.string.msg_could_not_export_io, 
 							Toast.LENGTH_SHORT).show (); 
+				} 
+			} 
+			@Override protected void onProgressUpdate (Integer ... values) { 
+				for (int current : values) { 
+					pbMainProgress.setProgress (current * 100 / mTotal); 
 				} 
 			} 
 		}).execute (mNotesAdapter.mList); 
@@ -366,6 +385,8 @@ public class NoteActivity extends Activity {
 	View eraser = null; 
 	View hand = null; 
 	View eraser_miniHand = null; 
+	
+	ContentLoadingProgressBar pbMainProgress = null; 
 	
 	boolean isBrowsingRootFolder () { 
 		for (File folder : mBrowsingFolders) 
@@ -468,6 +489,9 @@ public class NoteActivity extends Activity {
 			} 
 		}); 
 		mPensAdapter.setHeaderItemViews (new View [] {hand, eraser}); 
+		// Progress bar: 
+		pbMainProgress = findViewById (R.id.pbMainProgress); 
+		pbMainProgress.setVisibility (View.GONE); 
 		// Update the views for the tool initially selected: 
 		hand.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_NONE ? 
 				R.drawable.black_border : 0); 

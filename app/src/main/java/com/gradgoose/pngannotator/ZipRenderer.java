@@ -20,18 +20,27 @@ import java.util.zip.ZipOutputStream;
  */
 
 public class ZipRenderer { 
+	public interface OnRenderProgress { 
+		void onRenderProgress (int current, int total); 
+	} 
 	public static File render (Context context, File fromTargets [],
-							   @Nullable String zipFolderName) throws IOException { 
+							   @Nullable String zipFolderName, 
+							   @Nullable OnRenderProgress progressCallback) throws IOException { 
 		File tmp = File.createTempFile ((zipFolderName != null ? (zipFolderName + "-") : "") + 
 				"Pages", ".zip", Environment.getExternalStorageDirectory ()); 
 		FileOutputStream fos = new FileOutputStream (tmp); 
 		ZipOutputStream zos = new ZipOutputStream (fos); 
+		int current = 0; 
+		int total = fromTargets.length; 
 		for (File backgroundFile : fromTargets) { 
+			if (progressCallback != null) 
+				progressCallback.onRenderProgress (current, total); 
 			zos.putNextEntry (new ZipEntry (backgroundFile.getName ())); 
 			Bitmap bmp = renderPage (context, backgroundFile); 
 			bmp.compress (Bitmap.CompressFormat.PNG, 100, zos); 
 			bmp.recycle (); 
 			zos.closeEntry (); 
+			current++; 
 		} 
 		zos.finish (); 
 		return tmp; 

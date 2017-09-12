@@ -42,7 +42,8 @@ public class PageView extends ImageView {
 	int mColor = Color.BLACK; 
 	float mBrush = 3.0f; 
 	
-	Path tmpPath = new Path (); 
+	float tmpPoints [] = new float [256]; 
+	int tmpPointCount = 0; 
 	
 	int executingPushes = 0; // To have some sort of synchronization between pushStrokes (); 
 		class MyWork { 
@@ -103,7 +104,7 @@ public class PageView extends ImageView {
 							} 
 						} 
 						if (!mNowErasing && !mNowWriting) 
-							tmpPath.rewind (); 
+							tmpPointCount = 0; 
 						return ""; 
 					} 
 					
@@ -170,7 +171,9 @@ public class PageView extends ImageView {
 		mWriteDetector = new WriteDetector (getContext (), new WriteDetector.OnWriteGestureListener () { 
 			@Override public boolean onStrokeBegin (int strokeID, float x, float y) { 
 				if (edit.value == null) return false; 
-				tmpPath.moveTo (x, y); 
+				tmpPointCount = 2; 
+				tmpPoints[0] = x; 
+				tmpPoints[1] = y; 
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = true; 
 				else mNowWriting = true; 
@@ -180,7 +183,17 @@ public class PageView extends ImageView {
 			@Override public boolean onStrokeWrite (int strokeID, 
 													float x0, float y0, 
 													float x1, float y1) { 
-				tmpPath.lineTo (x1, y1); 
+				tmpPoints[tmpPointCount + 0] = x1; 
+				tmpPoints[tmpPointCount + 1] = y1; 
+				tmpPoints[tmpPointCount + 2] = x1; 
+				tmpPoints[tmpPointCount + 3] = y1; 
+				tmpPointCount += 4; 
+				if (tmpPointCount + 4 > tmpPoints.length) { 
+					// Grow the size of the point buffer: 
+					float now [] = new float [tmpPoints.length + 256]; 
+					System.arraycopy (tmpPoints, 0, now, 0, tmpPointCount); 
+					tmpPoints = now; 
+				} 
 				invalidate (); // Redraw. 
 				return true; 
 			} 
@@ -190,11 +203,13 @@ public class PageView extends ImageView {
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = false; 
 				else mNowWriting = false; 
+				tmpPointCount -= 2; // The last two coordinates are the beginning 
+				// of a new line segment, which is not needed anymore if the stroke is done. 
 				pushStrokesInThisThread (stroke); 
 			} 
 			
 			@Override public void onStrokeCancel (int strokeID) { 
-				tmpPath.rewind (); 
+				tmpPointCount = 0; 
 				mNowWriting = false; 
 				invalidate (); 
 			} 
@@ -433,7 +448,7 @@ public class PageView extends ImageView {
 		// Check if the previous tool and color are different, and if so then 
 		// it's been a while, and we need to clear our temporary path: 
 		if (prevColor != mColor || prevTool != mTool) { 
-			tmpPath.rewind (); 
+			tmpPointCount = 0; 
 			prevColor = mColor; 
 			prevTool = mTool; 
 		} 
@@ -451,7 +466,7 @@ public class PageView extends ImageView {
 		strokePaint.setColor (mNowErasing ? getContext ().getResources () 
 													.getColor (R.color.colorEraser) : mColor); 
 		strokePaint.setStrokeWidth (mBrush); 
-		canvas.drawPath (tmpPath, strokePaint); 
+		canvas.drawLines (tmpPoints, 0, tmpPointCount, strokePaint); 
 	} 
 	
 } 

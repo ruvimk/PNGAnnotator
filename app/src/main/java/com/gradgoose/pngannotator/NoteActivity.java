@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.File;
@@ -386,7 +387,7 @@ public class NoteActivity extends Activity {
 	View hand = null; 
 	View eraser_miniHand = null; 
 	
-	ContentLoadingProgressBar pbMainProgress = null; 
+	ProgressBar pbMainProgress = null; 
 	
 	boolean isBrowsingRootFolder () { 
 		for (File folder : mBrowsingFolders) 

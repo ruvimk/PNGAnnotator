@@ -41,6 +41,7 @@ public class ZipRenderer {
 		Bitmap bg = BitmapFactory.decodeFile (targetBackground.getPath ()); 
 		Bitmap bmp = Bitmap.createBitmap (bg.getWidth (), bg.getHeight (), Bitmap.Config.ARGB_8888); 
 		PngEdit edit = PngEdit.forFile (context, targetBackground); 
+		edit.setWindowSize (bmp.getWidth (), bmp.getHeight ()); 
 		// Initialize our drawing tools: 
 		Canvas canvas = new Canvas (bmp); 
 		Paint paint = new Paint (); 

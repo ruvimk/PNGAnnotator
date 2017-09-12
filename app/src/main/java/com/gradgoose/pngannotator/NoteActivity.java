@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -362,7 +363,9 @@ public class NoteActivity extends Activity {
 			} 
 			@Override protected void onProgressUpdate (Integer ... values) { 
 				for (int current : values) { 
-					pbMainProgress.setProgress (current * 100 / mTotal); 
+					if (Build.VERSION.SDK_INT >= 24) { 
+						pbMainProgress.setProgress (current * 100 / mTotal, true); 
+					} else pbMainProgress.setProgress (current * 100 / mTotal); 
 				} 
 			} 
 		}).execute (mNotesAdapter.mList); 

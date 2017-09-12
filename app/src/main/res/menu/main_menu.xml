@@ -8,14 +8,6 @@
 		<!--android:title="@string/menu_annotate"-->
 		<!--/>-->
 	
-	<item 
-		android:id="@+id/menu_action_goto_page"
-		android:icon="@drawable/ic_filter_5_black_24dp"
-		android:showAsAction="ifRoom"
-		android:title="@string/menu_goto_page"
-		/> 
-	
-	
 	<item
 		android:id="@+id/menu_action_new_page"
 		android:icon="@drawable/ic_add_black_24dp"
@@ -29,6 +21,13 @@
 		android:showAsAction="ifRoom"
 		android:title="@string/menu_create_folder"
 		/> 
+	
+	<item
+		android:id="@+id/menu_action_goto_page"
+		android:icon="@drawable/ic_page_number_v1"
+		android:showAsAction="ifRoom"
+		android:title="@string/menu_goto_page"
+		/>
 	
 	<item 
 		android:id="@+id/menu_action_export_pages"

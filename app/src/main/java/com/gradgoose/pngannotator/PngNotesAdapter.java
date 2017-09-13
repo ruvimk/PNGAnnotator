@@ -48,7 +48,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	static Comparator<File []> mFileComparator = new Comparator<File []> () { 
 		@Override public int compare (File a [], File b []) { 
-			return a[0].getName ().compareTo (b[0].getName ()); 
+			return a[0].compareTo (b[0]); 
 		} 
 	}; 
 	

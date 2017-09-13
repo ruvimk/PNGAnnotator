@@ -2,6 +2,7 @@ package com.gradgoose.pngannotator;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -327,46 +328,63 @@ public class PageView extends ImageView {
 		// Set our natural width and height variables to better handle onMeasure (): 
 		mBitmapNaturalWidth = options.outWidth; 
 		mBitmapNaturalHeight = options.outHeight; 
-		// If this is a different filename from before, 
-		if (!file.getPath ().equals (lastLoadedPath)) { 
-			// Load a REALLY small version for time time being, while it's loading 
-			// (this is to avoid white blanks and confusing the user by showing 
-			// them some random picture that they have just seen from a 
-			// recycled view): 
-			Bitmap littleBitmap; 
-			File thumbnail = PngNotesAdapter.getThumbnailFile (getContext (), file); 
-			if (thumbnail != null && thumbnail.exists ()) { 
-				littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
-			} else { 
-				options.inJustDecodeBounds = false; 
-				options.inSampleSize = calculateInSampleSize (options.outWidth, 
-						options.outHeight, 
-						16, 16); 
-				littleBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+		// If this is one of our known files, grab a small version to load just for display: 
+		int knownSmallVersion = 0; 
+		try { 
+			String md5 = PngEdit.calculateMD5 (file);
+			Resources res = getResources (); 
+			if (md5.equals (res.getString (R.string.md5_graph_paper))) { 
+				knownSmallVersion = R.drawable.plain_graph_paper_4x4_small; 
 			} 
-			setImageBitmap (littleBitmap); 
-			// Update the last loaded path: 
-			lastLoadedPath = file.getPath (); 
+		} catch (IOException err) { 
+			// Do nothing. It's okay! 
 		} 
-		// Load the bitmap in a separate thread: 
-		(new Thread () { 
-			@Override public void run () { 
-				// Calculate the down-sample scale: 
-				options.inSampleSize = 
-						calculateInSampleSize (options.outWidth, 
-								options.outHeight, 
-								getWidth (), 
-								0); 
-				// Now actually load the bitmap, down-sampled if needed: 
-				options.inJustDecodeBounds = false; 
-				final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
-				((Activity) getContext ()).runOnUiThread (new Runnable () { 
-					@Override public void run () { 
-						setImageBitmap (myBitmap); 
-					} 
-				}); 
+		if (knownSmallVersion == 0) { 
+			// If this is a different filename from before, 
+			if (!file.getPath ().equals (lastLoadedPath)) { 
+				// Load a REALLY small version for time time being, while it's loading 
+				// (this is to avoid white blanks and confusing the user by showing 
+				// them some random picture that they have just seen from a 
+				// recycled view): 
+				Bitmap littleBitmap; 
+				File thumbnail = PngNotesAdapter.getThumbnailFile (getContext (), file); 
+				if (thumbnail != null && thumbnail.exists ()) { 
+					littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
+				} else { 
+					options.inJustDecodeBounds = false; 
+					options.inSampleSize = calculateInSampleSize (options.outWidth, 
+							options.outHeight, 
+							16, 16); 
+					littleBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+				} 
+				setImageBitmap (littleBitmap); 
+				// Update the last loaded path: 
+				lastLoadedPath = file.getPath (); 
 			} 
-		}).start (); 
+			// Load the bitmap in a separate thread: 
+			(new Thread () { 
+				@Override public void run () { 
+					// Calculate the down-sample scale: 
+					options.inSampleSize = 
+							calculateInSampleSize (options.outWidth, 
+									options.outHeight, 
+									getWidth (), 
+									0); 
+					// Now actually load the bitmap, down-sampled if needed: 
+					options.inJustDecodeBounds = false; 
+					final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+					((Activity) getContext ()).runOnUiThread (new Runnable () { 
+						@Override public void run () { 
+							setImageBitmap (myBitmap); 
+						} 
+					}); 
+				} 
+			}).start (); 
+		} else { 
+			// If this 'else' bracket was reached, it means that there is a known 
+			// smaller version of the picture. Use IT! 
+			setImageResource (knownSmallVersion); 
+		} 
 		// Now load our edits for this picture: 
 		try { 
 			synchronized (edit) { 

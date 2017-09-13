@@ -8,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -18,7 +19,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.security.MessageDigest;
@@ -280,45 +283,151 @@ public class PngEdit {
 	
 	public void loadEdits () throws IOException { 
 		if (mVectorEdits == null || !mVectorEdits.exists ()) return; 
-		mEdits.clear (); 
-		InputStream inputStream = new FileInputStream (mVectorEdits); 
-		DataInputStream dataInput = new DataInputStream (inputStream); 
-		while (dataInput.available () >= 12) { 
-			LittleEdit littleEdit = new LittleEdit (); 
-			littleEdit.color = dataInput.readInt (); 
-			float relativeBrushWidth = dataInput.readFloat (); 
-			littleEdit.brushWidth = relativeBrushWidth * windowWidth; 
-			int numberCount = dataInput.readInt (); 
-			littleEdit.points = new float [numberCount]; 
-			for (int i = 0; i < numberCount / 2; i++) { 
-				littleEdit.points[2 * i + 0] = windowWidth * dataInput.readFloat (); 
-				littleEdit.points[2 * i + 1] = windowHeight * dataInput.readFloat (); 
+		synchronized (mEdits) { 
+			mEdits.clear (); 
+			InputStream inputStream = new FileInputStream (mVectorEdits); 
+			byte magic [] = new byte [4]; 
+			int version = 0; 
+			if (inputStream.read (magic) >= 4 && magic[0] == 'G' && magic[1] == 'E') { 
+				if (magic[2] == '1' && magic[3] == '0') 
+					version = 1; 
+			} else ((FileInputStream) inputStream).getChannel ().position (0); // Seek back. 
+			int totalBytes = inputStream.available (); 
+			ByteBuffer buffer = version > 0 ? ByteBuffer.allocate (totalBytes) : null; 
+			if (version == 1) { 
+				((FileInputStream) inputStream).getChannel ().read (buffer); 
+				float buf [] = new float [totalBytes / 4]; 
+				buffer.rewind (); // Seek back to position 0, for reading now. 
+				buffer.asFloatBuffer ().get (buf); 
+				// Process it: 
+				int ptCount; 
+				for (int i = 0; i < buf.length; i += 6 + ptCount) { 
+					// Get things: 
+					float colorA = buf[i + 0]; 
+					float colorR = buf[i + 1]; 
+					float colorG = buf[i + 2]; 
+					float colorB = buf[i + 3]; 
+					float brushW = buf[i + 4]; 
+					float countP = buf[i + 5]; 
+					ptCount = Math.round (countP); 
+					// Store these: 
+					LittleEdit littleEdit = new LittleEdit (); 
+					littleEdit.color = Color.argb ((int) (colorA * 255), 
+							(int) (colorR * 255), 
+							(int) (colorG * 255), 
+							(int) (colorB * 255)); 
+					littleEdit.brushWidth = brushW * windowWidth; 
+					littleEdit.points = new float [ptCount]; 
+					for (int j = i + 6; j < i + 6 + ptCount; j++) 
+						buf[j] *= (j % 2 == 0 ? windowWidth : windowHeight); 
+					System.arraycopy (buf, i + 6, littleEdit.points, 0, ptCount); 
+					// Continue: 
+					mEdits.add (littleEdit); 
+				} 
+				// Clean up: 
+				mLastIoEditCount = mEdits.size (); 
+				inputStream.close (); 
+				return; 
 			} 
-			mEdits.add (littleEdit); 
+			DataInputStream dataInput = new DataInputStream (inputStream); 
+			while (dataInput.available () >= 12) { 
+				LittleEdit littleEdit = new LittleEdit (); 
+				littleEdit.color = dataInput.readInt (); 
+				float relativeBrushWidth = dataInput.readFloat (); 
+				littleEdit.brushWidth = relativeBrushWidth * windowWidth; 
+				int numberCount = dataInput.readInt (); 
+				littleEdit.points = new float[numberCount]; 
+				for (int i = 0; i < numberCount / 2; i++) { 
+					littleEdit.points[2 * i + 0] = windowWidth * dataInput.readFloat (); 
+					littleEdit.points[2 * i + 1] = windowHeight * dataInput.readFloat (); 
+				} 
+				mEdits.add (littleEdit); 
+			} 
+			if (version != SAVE_VERSION) { 
+				// Need to RESAVE the whole thing. Different file version. 
+				useDifferentialSave = false; 
+				mLastIoEditCount = 0; 
+			} else mLastIoEditCount = mEdits.size (); 
+			dataInput.close (); 
+			inputStream.close (); 
 		} 
-		mLastIoEditCount = mEdits.size (); 
-		dataInput.close (); 
-		inputStream.close (); 
 	} 
-	public void saveEdits () throws IOException {
-		OutputStream outputStream = new FileOutputStream (mVectorEdits, useDifferentialSave);
-		DataOutputStream dataOutput = new DataOutputStream (outputStream); 
-		if (!useDifferentialSave) 
-			mLastIoEditCount = 0; 
-		for (int i = mLastIoEditCount; i < mEdits.size (); i++) { 
-			LittleEdit edit = mEdits.elementAt (i); 
-			dataOutput.writeInt (edit.color); 
-			dataOutput.writeFloat (edit.brushWidth / windowWidth); 
-			dataOutput.writeInt (edit.points.length); 
-			for (int j = 0; j < edit.points.length / 2; j++) { 
-				dataOutput.writeFloat (edit.points[2 * j + 0] / windowWidth); 
-				dataOutput.writeFloat (edit.points[2 * j + 1] / windowHeight); 
+	int SAVE_VERSION = 1; 
+	public void saveEdits () throws IOException { 
+		synchronized (mEdits) { 
+			// The following statement is needed because the magic number needs to be 
+			// written to the file the first time it is saved, but it will not be 
+			// written if 'useDifferentialSave' flag is set: 
+			if (mLastIoEditCount == 0) 
+				useDifferentialSave = false; 
+			// Open the file for writing, with the append flag set to true if saving differentially: 
+			OutputStream outputStream = new FileOutputStream (mVectorEdits, useDifferentialSave); 
+			if (SAVE_VERSION == 1) { 
+				if (!useDifferentialSave) { 
+					// Write magic number: 
+					byte magic [] = new byte [] { 'G', 'E', '1', '0' }; 
+					outputStream.write (magic); 
+					// Reset last edit count: 
+					mLastIoEditCount = 0; 
+				} 
+				int totalEditCount = mEdits.size () - mLastIoEditCount; 
+				int totalPointCount = 0; 
+				for (int i = mLastIoEditCount; i < mEdits.size (); i++) { 
+					totalPointCount += mEdits.elementAt (i).points.length; 
+				} 
+				ByteBuffer buffer = ByteBuffer.allocate ((totalEditCount * 6 + totalPointCount) * 4); 
+				float buf [] = new float [totalEditCount * 6 + totalPointCount]; 
+				int index = 0; 
+				int ptCount; 
+				for (int i = mLastIoEditCount; i < mEdits.size (); i++) { 
+					LittleEdit edit = mEdits.elementAt (i); 
+					ptCount = edit.points.length; 
+					// Get things: 
+					float colorA = (float) Color.alpha (edit.color) / 255f; 
+					float colorR = (float) Color.red (edit.color) / 255f; 
+					float colorG = (float) Color.green (edit.color) / 255f; 
+					float colorB = (float) Color.blue (edit.color) / 255f; 
+					float brushW = edit.brushWidth / windowWidth; 
+					float countP = (float) ptCount; 
+					// Copy things: 
+					buf[index + 0] = colorA; 
+					buf[index + 1] = colorR; 
+					buf[index + 2] = colorG; 
+					buf[index + 3] = colorB; 
+					buf[index + 4] = brushW; 
+					buf[index + 5] = countP; 
+					System.arraycopy (edit.points, 0, buf, index + 6, ptCount); 
+					for (int j = index + 6; j < index + 6 + ptCount; j++) 
+						buf[j] /= (j % 2 == 0 ? windowWidth : windowHeight); 
+					// Continue: 
+					index += 6 + ptCount; 
+				} 
+				// Save to file: 
+				buffer.asFloatBuffer ().put (buf); 
+				((FileOutputStream) outputStream).getChannel ().write (buffer); 
+				// For next time: 
+				useDifferentialSave = true; 
+				mLastIoEditCount = mEdits.size (); 
+			} else { 
+				DataOutputStream dataOutput = new DataOutputStream (outputStream); 
+				if (!useDifferentialSave) 
+					mLastIoEditCount = 0; 
+				for (int i = mLastIoEditCount; i < mEdits.size (); i++) { 
+					LittleEdit edit = mEdits.elementAt (i); 
+					dataOutput.writeInt (edit.color); 
+					dataOutput.writeFloat (edit.brushWidth / windowWidth); 
+					dataOutput.writeInt (edit.points.length); 
+					for (int j = 0; j < edit.points.length / 2; j++) { 
+						dataOutput.writeFloat (edit.points[2 * j + 0] / windowWidth); 
+						dataOutput.writeFloat (edit.points[2 * j + 1] / windowHeight); 
+					} 
+				} 
+				useDifferentialSave = true; 
+				mLastIoEditCount = mEdits.size (); 
+				dataOutput.close (); 
 			} 
+			outputStream.close (); 
 		} 
-		useDifferentialSave = true; 
-		mLastIoEditCount = mEdits.size (); 
-		dataOutput.close (); 
-		outputStream.close (); 
 	} 
 	
 	

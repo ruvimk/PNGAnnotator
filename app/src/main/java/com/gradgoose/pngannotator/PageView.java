@@ -481,7 +481,7 @@ public class PageView extends ImageView {
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 
 			canvas.drawLines (paperPoints, paperPaint); 
-		} switch (knownSmallVersion) { 
+		} else switch (knownSmallVersion) { 
 			case R.drawable.plain_graph_paper_4x4_small: 
 				paperGenerator.drawGraphPaper (canvas, paperPaint); 
 				break; 

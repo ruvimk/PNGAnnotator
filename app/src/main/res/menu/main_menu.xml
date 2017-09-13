@@ -14,7 +14,7 @@
 		android:showAsAction="ifRoom"
 		android:title="@string/menu_create_page"
 		/>
-
+	
 	<item
 		android:id="@+id/menu_action_new_folder"
 		android:icon="@drawable/ic_create_new_folder_black_24dp"

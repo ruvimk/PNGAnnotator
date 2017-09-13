@@ -27,7 +27,10 @@ public class ZipRenderer {
 							   @Nullable String zipFolderName, 
 							   @Nullable OnRenderProgress progressCallback) throws IOException { 
 		File folder = new File (Environment.getExternalStorageDirectory (), "PNG-Annotator"); 
-		if (!folder.exists ()) folder.mkdirs (); 
+		if (!folder.exists ()) { 
+			if (!folder.mkdirs ()) // If can't make folder, just use the root folder: 
+				folder = Environment.getExternalStorageDirectory (); 
+		} 
 		File tmp = File.createTempFile ((zipFolderName != null ? (zipFolderName + "-") : "") + 
 				"Pages", ".zip", folder); 
 		FileOutputStream fos = new FileOutputStream (tmp); 

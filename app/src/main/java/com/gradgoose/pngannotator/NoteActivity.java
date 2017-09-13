@@ -140,18 +140,26 @@ public class NoteActivity extends Activity {
 		outState.putInt (STATE_SCROLL_SPACE, getScrollSpace ()); 
 	} 
 	
+	boolean mReloadOnNextResume = false; 
 	@Override public void onPause () {
 		// Update the "last page, left off" value: 
 		leftOff.edit () 
 				.putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), getPageIndex ()) 
 				.putInt ("ScrollSpace:" + mBrowsingFolders.elementAt (0).getPath (), getScrollSpace ()) 
 				.apply (); 
+		mReloadOnNextResume = true; 
 		super.onPause (); 
 	} 
 	@Override public void onResume () { 
 		super.onResume (); 
-		mSubfoldersAdapter.reloadList (); 
-		mNotesAdapter.reloadList (); 
+		// Only reload if this is following an onPause (): 
+		if (mReloadOnNextResume) { 
+			mSubfoldersAdapter.reloadList (); 
+			mNotesAdapter.reloadList (); 
+			// This is because we don't want to reload following an onCreate (), 
+			// in which case we would have just been done creating the adapters, 
+			// so the lists are already up to date. 
+		} 
 	} 
 	
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 
@@ -421,7 +429,7 @@ public class NoteActivity extends Activity {
 		return false; 
 	} 
 	boolean wantDisplaySubfoldersAsBig () { 
-		return !PngNotesAdapter.hasImages (mBrowsingFolders) || 
+		return !mNotesAdapter.hasImages () || 
 					   isBrowsingRootFolder (); 
 	} 
 	void initUserInterface () { 
@@ -430,6 +438,8 @@ public class NoteActivity extends Activity {
 				.inflate (R.layout.subfolder_browser, 
 						(ViewGroup) findViewById (R.id.vMainRoot), 
 						false); 
+		mSubfoldersAdapter = new SubfoldersAdapter (this, mBrowsingFolders); 
+		mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolders); 
 		if (!wantDisplaySubfoldersAsBig ()) { 
 			// If there ARE images to display, then list the subfolders up above the images: 
 			mSubfoldersLayoutManager = 
@@ -444,14 +454,13 @@ public class NoteActivity extends Activity {
 			mRvSubfolderBrowser.setBackgroundColor (Color.TRANSPARENT); 
 		} 
 		mRvSubfolderBrowser.setLayoutManager (mSubfoldersLayoutManager); 
-		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter = 
-												new SubfoldersAdapter (this, mBrowsingFolders)); 
+		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter); 
 		
 		// Image annotation RecyclerView: 
 		mRvBigPages = findViewById (R.id.rvBigPages); 
 		mRvBigPages.setLayoutManager (mNotesLayoutManager = 
 						new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false)); 
-		mRvBigPages.setAdapter (mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolders)); 
+		mRvBigPages.setAdapter (mNotesAdapter); 
 		mNotesAdapter.setHeaderItemViews (new View [] {mRvSubfolderBrowser}); 
 		// Pen options: 
 		mRvPenOptions = findViewById (R.id.rvPenOptions); 
@@ -600,7 +609,7 @@ public class NoteActivity extends Activity {
 		return !isBrowsingRootFolder (); 
 	} 
 	boolean canEdit () { 
-		return PngNotesAdapter.hasImages (mBrowsingFolders); 
+		return mNotesAdapter.hasImages (); 
 	} 
 	
 	

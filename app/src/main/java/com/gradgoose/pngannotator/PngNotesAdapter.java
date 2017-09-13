@@ -195,6 +195,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				return true; 
 		return false; 
 	} 
+	boolean hasImages () { 
+		return mList.length > 0; 
+	} 
 	private static FileFilter mFilterJustImages = new FileFilter () { 
 		@Override public boolean accept (File file) { 
 			String lowerName = file.getName ().toLowerCase (); 

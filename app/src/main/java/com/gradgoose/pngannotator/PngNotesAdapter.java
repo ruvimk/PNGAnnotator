@@ -162,10 +162,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	} 
 	
 	private File getItemFile (int position) { 
-		return position < mHeaderItemViews.length ? 
+		int headerCount = mHeaderItemViews != null ? mHeaderItemViews.length : 0; 
+		return position < headerCount ? 
 					   null : 
-				(position - mHeaderItemViews.length < mList.length ? 
-						mList[position - mHeaderItemViews.length] : null); 
+				(position - headerCount < mList.length ? 
+						mList[position - headerCount] : null); 
 	} 
 	
 	private void loadIds (File list []) { 
@@ -260,7 +261,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	} 
 	
 	@Override public int getItemViewType (int position) { 
-		return position < mHeaderItemViews.length ? 
+		int headerCount = mHeaderItemViews != null ? mHeaderItemViews.length : 0; 
+		return position < headerCount ? 
 					   (position + 100) // Just use 100 and on for header view types. 
 					   : 1; 
 	} 

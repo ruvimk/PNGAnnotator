@@ -289,15 +289,23 @@ public class NoteActivity extends Activity {
 									 .setPositiveButton (R.string.label_ok, new DialogInterface.OnClickListener () {
 										 @Override public void onClick (DialogInterface dialogInterface, int i) {
 											 String nowName = editText.getText ().toString (); 
+											 boolean wasEmpty = mSubfoldersAdapter.mList.length > 0; 
 											 boolean success = true; 
 											 if (oldName == null) { 
 												 File nowFile = new File (mBrowsingFolders.elementAt (0), nowName); 
 												 if (nowFile.mkdirs ()) { 
-													 // Success. Now open the new folder. 
+													 // Success. Add the subfolders view if it wasn't there yet 
+													 // (we don't add it in the initialization procedure if it 
+													 // is empty, so check if it was empty to begin with): 
+													 if (wasEmpty) 
+														 mNotesAdapter.setHeaderItemViews ( 
+														 		new View [] {mRvSubfolderBrowser}); 
+													 // Now open the new folder. 
 													 Intent intent = new Intent (NoteActivity.this, 
 																						NoteActivity.class); 
-													 File [] toOpen = new File[]{nowFile}; 
+													 String [] toOpen = new String [] {nowFile.getPath ()}; 
 													 intent.putExtra (STATE_BROWSING_PATH, toOpen); 
+													 startActivity (intent); 
 												 } else { 
 													 // Try create again? 
 													 userRenameFile (null, 
@@ -474,7 +482,9 @@ public class NoteActivity extends Activity {
 		mRvBigPages.setLayoutManager (mNotesLayoutManager = 
 						new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false)); 
 		mRvBigPages.setAdapter (mNotesAdapter); 
-		mNotesAdapter.setHeaderItemViews (new View [] {mRvSubfolderBrowser}); 
+		// Put it into the list only if it's not empty (to avoid a scroll bar problem): 
+		if (mSubfoldersAdapter.mList.length > 0) 
+			mNotesAdapter.setHeaderItemViews (new View [] {mRvSubfolderBrowser}); 
 		// Pen options: 
 		mRvPenOptions = findViewById (R.id.rvPenOptions); 
 		mRvPenOptions.setLayoutManager (mPensLayoutManager = 

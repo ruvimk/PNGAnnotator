@@ -336,7 +336,11 @@ public class PageView extends ImageView {
 			Resources res = getResources (); 
 			if (md5.equals (res.getString (R.string.md5_graph_paper))) { 
 				knownSmallVersion = R.drawable.plain_graph_paper_4x4_small; 
+				// Make an array of line segments for drawing graph paper: 
+				paperPoints = paperGenerator.makeGraphPaperLines (getWidth (), getHeight (), 
+						paperPaint); 
 			} 
+			else paperPoints = null; 
 		} catch (IOException err) { 
 			// Do nothing. It's okay! 
 		} 
@@ -433,6 +437,10 @@ public class PageView extends ImageView {
 	
 	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
 		super.onSizeChanged (w, h, oldW, oldH); 
+		// Update paper lines, if any: 
+		if (paperPoints != null) 
+			PaperGenerator.scalePoints (paperPoints, oldW, oldH, w, h); 
+		// Update edits: 
 		if (edit.value != null) synchronized (edit) { 
 			edit.value.setWindowSize (w, h); 
 		} 
@@ -460,6 +468,7 @@ public class PageView extends ImageView {
 	Paint strokePaint = new Paint (); 
 	Paint erasePaint = new Paint (); 
 	
+	float paperPoints [] = null; 
 	Paint paperPaint = new Paint (); // For drawing graph paper, etc. 
 	PaperGenerator paperGenerator = new PaperGenerator (); 
 	
@@ -470,7 +479,9 @@ public class PageView extends ImageView {
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
 		// If the target image is a small version, use it: 
-		switch (knownSmallVersion) { 
+		if (paperPoints != null) { 
+			canvas.drawLines (paperPoints, paperPaint); 
+		} switch (knownSmallVersion) { 
 			case R.drawable.plain_graph_paper_4x4_small: 
 				paperGenerator.drawGraphPaper (canvas, paperPaint); 
 				break; 

@@ -143,4 +143,32 @@ public class PaperGenerator {
 					canvas.getWidth (), y * canvas.getHeight () / pxPaperH, paint); 
 		} 
 	} 
+	float [] makeGraphPaperLines (int width, int height, Paint paint) {
+		int pxPaperW = (int) (mPaperW * mDPI); 
+		int pxPaperH = (int) (mPaperH * mDPI); 
+		int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
+		paint.setStrokeWidth (mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
+									  /* scale to window width */ width / pxPaperW); 
+		paint.setColor (Color.rgb (150, 200, 255)); 
+		int xLines = (pxPaperW - pxSpan / 2) / pxSpan; 
+		int yLines = (pxPaperH - pxSpan / 2) / pxSpan; 
+		float points [] = new float [4 * xLines + 4 * yLines]; 
+		for (int i = 0; i < 4 * xLines; i += 4) { 
+			points[i] = points[i + 2] = (pxSpan * i + pxSpan / 2) * width / pxPaperW; 
+			points[i + 1] = 0; 
+			points[i + 3] = height; 
+		} 
+		for (int i = 0; i < 4 * yLines; i += 4) { 
+			points[i + 0] = 0; 
+			points[i + 2] = width; 
+			points[i + 1] = points[i + 3] = (pxSpan * i + pxSpan / 2) * height / pxPaperH; 
+		} 
+		return points; 
+	} 
+	static void scalePoints (float points [], int oldWidth, int oldHeight, int newWidth, int newHeight) { 
+		float wScale = (float) newWidth / oldWidth; 
+		float hScale = (float) newHeight / oldHeight; 
+		for (int i = 0; i < points.length; i++) 
+			points[i] *= (i % 2 == 0 ? wScale : hScale); 
+	} 
 } 

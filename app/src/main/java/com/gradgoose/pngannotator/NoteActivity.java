@@ -13,11 +13,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
-import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -64,9 +62,10 @@ public class NoteActivity extends Activity {
 	static final String STATE_BROWSING_PATH = "com.gradgoose.pngannotator.browse_path"; 
 	static final String STATE_SCROLL_ITEM = "com.gradgoose.pngannotator.scroll_item"; 
 	static final String STATE_SCROLL_SPACE = "com.gradgoose.pngannotator.scroll_space"; 
+	static final String STATE_SCROLL_FRACTION = "com.gradgoose.pngannotator.scroll_fraction"; 
 	
 	int initialScrollItemPosition = 0; 
-	int initialScrollItemSpace = 0; 
+	float initialScrollFraction = 0; 
 	
 	@Override protected void onCreate (Bundle savedInstanceState) { 
 		super.onCreate (savedInstanceState); 
@@ -94,8 +93,8 @@ public class NoteActivity extends Activity {
 				setBrowsingPaths (savedInstanceState.getStringArray (STATE_BROWSING_PATH)); 
 			if (savedInstanceState.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = savedInstanceState.getInt (STATE_SCROLL_ITEM); 
-			if (savedInstanceState.containsKey (STATE_SCROLL_SPACE)) 
-				initialScrollItemSpace = savedInstanceState.getInt (STATE_SCROLL_SPACE); 
+			if (savedInstanceState.containsKey (STATE_SCROLL_FRACTION)) 
+				initialScrollFraction = savedInstanceState.getInt (STATE_SCROLL_FRACTION); 
 		} 
 		// See if whoever started this activity wanted us to open any particular folder: 
 		Intent sourceIntent = getIntent (); 
@@ -107,8 +106,8 @@ public class NoteActivity extends Activity {
 			} 
 			if (initialScrollItemPosition == 0 && extras.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = extras.getInt (STATE_SCROLL_ITEM); 
-			if (initialScrollItemSpace == 0 && extras.containsKey (STATE_SCROLL_SPACE)) 
-				initialScrollItemSpace = extras.getInt (STATE_SCROLL_SPACE); 
+			if (initialScrollFraction == 0 && extras.containsKey (STATE_SCROLL_FRACTION)) 
+				initialScrollFraction = extras.getInt (STATE_SCROLL_FRACTION); 
 		} 
 		if (mBrowsingFolders == null) // Else use the default of the DCIM folder. 
 		{ 
@@ -123,8 +122,8 @@ public class NoteActivity extends Activity {
 		// Check to see if we have a record of what scroll position we were at last time: 
 		if (initialScrollItemPosition == 0) // (only if we don't have one loaded from onRestore...) 
 			initialScrollItemPosition = leftOff.getInt ("Scroll:" + mBrowsingFolders.get (0).getPath (), 0); 
-		if (initialScrollItemSpace == 0) 
-			initialScrollItemSpace = leftOff.getInt ("ScrollSpace:" + mBrowsingFolders.get (0).getPath (), 0); 
+		if (initialScrollFraction == 0) 
+			initialScrollFraction = leftOff.getFloat ("ScrollFraction:" + mBrowsingFolders.get (0).getPath (), 0); 
 		// Initialize views and the window title and icon: 
 		initUserInterface (); // Views. 
 		initActionBar (); // Title, Icon. 
@@ -135,17 +134,26 @@ public class NoteActivity extends Activity {
 		String paths [] = new String [mBrowsingFolders.size ()]; 
 		for (int i = 0; i < mBrowsingFolders.size (); i++) 
 			paths[i] = mBrowsingFolders.elementAt (i).getAbsolutePath (); 
-		outState.putStringArray (STATE_BROWSING_PATH, paths); 
-		outState.putInt (STATE_SCROLL_ITEM, getPageIndex ()); 
-		outState.putInt (STATE_SCROLL_SPACE, getScrollSpace ()); 
+		outState.putStringArray (STATE_BROWSING_PATH, paths);  
+		int position = mNotesLayoutManager.findFirstVisibleItemPosition (); 
+		outState.putInt (STATE_SCROLL_ITEM, position); 
+		View firstView = mNotesLayoutManager.findViewByPosition (position); 
+		float scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									   mRvBigPages.getWidth (); 
+		outState.putFloat (STATE_SCROLL_FRACTION, scrollFraction); 
 	} 
 	
 	boolean mReloadOnNextResume = false; 
 	@Override public void onPause () {
 		// Update the "last page, left off" value: 
+		int position = mNotesLayoutManager.findFirstVisibleItemPosition (); 
+		View firstView = mNotesLayoutManager.findViewByPosition (position); 
+		float scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									   mRvBigPages.getWidth (); 
 		leftOff.edit () 
-				.putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), getPageIndex ()) 
-				.putInt ("ScrollSpace:" + mBrowsingFolders.elementAt (0).getPath (), getScrollSpace ()) 
+				.putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), position) 
+				.putFloat ("ScrollFraction:" + mBrowsingFolders.elementAt (0).getPath (), 
+						scrollFraction) 
 				.apply (); 
 		mReloadOnNextResume = true; 
 		super.onPause (); 
@@ -208,7 +216,8 @@ public class NoteActivity extends Activity {
 //								}); 
 //							} 
 //						}); 
-				setPageIndex (mNotesAdapter.countImages () - 1); // Scroll to new page. 
+				scrollToItem (mNotesAdapter.countImages () - 1 + 
+					mNotesAdapter.countHeaderViews ()); // Scroll to new page. 
 				break; 
 			case R.id.menu_action_settings: 
 				openSettings (); 
@@ -234,6 +243,9 @@ public class NoteActivity extends Activity {
 		if (index == 0) 
 			mRvBigPages.scrollToPosition (0); 
 		else mRvBigPages.scrollToPosition (index + mNotesAdapter.countHeaderViews ()); 
+	} 
+	void scrollToItem (int itemIndex) { 
+		mNotesLayoutManager.scrollToPositionWithOffset (itemIndex, 0); 
 	} 
 	int getScrollSpace () { 
 		int pageIndex = getPageIndex (); 
@@ -343,7 +355,8 @@ public class NoteActivity extends Activity {
 											 } catch (NumberFormatException err) { 
 												 return; 
 											 } 
-											 setPageIndex (number - 1); 
+											 scrollToItem (number - 1 + 
+											 mNotesAdapter.countHeaderViews ()); 
 										 }
 									 }) 
 									 .setNegativeButton (R.string.label_cancel, null) 
@@ -552,23 +565,14 @@ public class NoteActivity extends Activity {
 			@Override  public void onGlobalLayout () { 
 				// Check if we still need to do this or not (maybe it's the first time, and no need to scroll): 
 				if (initialScrollItemPosition == 0 && 
-						initialScrollItemSpace == 0) return; 
-				// Wait for pre-draw before we update the scroll position again: 
-				mRvBigPages.getViewTreeObserver ().addOnScrollChangedListener ( 
-						new ViewTreeObserver.OnScrollChangedListener () { 
-					@Override public void onScrollChanged () { 
-						// Scroll to the place: 
-						addScrollSpace (initialScrollItemSpace); 
-						// Reset the variable, so we don't confuse ourselves (already scrolled): 
-						initialScrollItemSpace = 0; 
-						// Remove the listener, to avoid extra overhead (done listening): 
-						mRvBigPages.getViewTreeObserver ().removeOnScrollChangedListener (this); 
-					} 
-				}); 
+						initialScrollFraction == 0) return; 
 				// Scroll to the initial scroll position, and forget the scroll position (so we 
 				// don't mess up and reuse it when the user doesn't want us to): 
-				setPageIndex (initialScrollItemPosition); 
+				int initialScrollItemSpace = (int) (mRvBigPages.getWidth () * initialScrollFraction); 
+				mNotesLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 
+						initialScrollItemSpace); 
 				initialScrollItemPosition = 0; 
+				initialScrollFraction = 0; 
 				// Remove the extra layout overhead by removing this listener: 
 				if (Build.VERSION.SDK_INT >= 16) 
 					mRvBigPages.getViewTreeObserver ().removeOnGlobalLayoutListener (this); 

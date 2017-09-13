@@ -319,6 +319,7 @@ public class PageView extends ImageView {
 	String lastLoadedPath = ""; 
 	int mBitmapNaturalWidth = 1; 
 	int mBitmapNaturalHeight = 1; 
+	int knownSmallVersion = 0; 
 	public void setItemFile (final File file) { 
 		itemFile = file; 
 		// Load just the image dimensions first: 
@@ -329,7 +330,7 @@ public class PageView extends ImageView {
 		mBitmapNaturalWidth = options.outWidth; 
 		mBitmapNaturalHeight = options.outHeight; 
 		// If this is one of our known files, grab a small version to load just for display: 
-		int knownSmallVersion = 0; 
+		knownSmallVersion = 0; 
 		try { 
 			String md5 = PngEdit.calculateMD5 (file);
 			Resources res = getResources (); 
@@ -383,7 +384,9 @@ public class PageView extends ImageView {
 		} else { 
 			// If this 'else' bracket was reached, it means that there is a known 
 			// smaller version of the picture. Use IT! 
-			setImageResource (knownSmallVersion); 
+			// We'll actually be drawing the graph paper ourselves, so 
+			// we won't use the blurry small version. 
+			setImageBitmap (null); // Clear any previous bitmap. 
 		} 
 		// Now load our edits for this picture: 
 		try { 
@@ -457,12 +460,21 @@ public class PageView extends ImageView {
 	Paint strokePaint = new Paint (); 
 	Paint erasePaint = new Paint (); 
 	
+	Paint paperPaint = new Paint (); // For drawing graph paper, etc. 
+	PaperGenerator paperGenerator = new PaperGenerator (); 
+	
 	int prevColor = 0; 
 	int prevTool = 0; 
 	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
+		// If the target image is a small version, use it: 
+		switch (knownSmallVersion) { 
+			case R.drawable.plain_graph_paper_4x4_small: 
+				paperGenerator.drawGraphPaper (canvas, paperPaint); 
+				break; 
+		} 
 		// Check if the previous tool and color are different, and if so then 
 		// it's been a while, and we need to clear our temporary path: 
 		if (prevColor != mColor || prevTool != mTool) { 

@@ -103,20 +103,8 @@ public class PaperGenerator {
 				int pxPaperH = (int) (mPaperH * mDPI); 
 				Bitmap bmp = Bitmap.createBitmap (pxPaperW, pxPaperH, Bitmap.Config.ARGB_8888); 
 				Canvas can = new Canvas (bmp); 
-				int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
 				Paint paint = new Paint (); 
-				paint.setStrokeWidth (mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/); 
-				paint.setColor (Color.rgb (150, 200, 255)); 
-				for (int x = pxSpan / 2; 
-						x < pxPaperW; x += pxSpan) 
-				{ 
-					can.drawLine (x, 0, x, pxPaperH, paint); 
-				} 
-				for (int y = pxSpan / 2; 
-						y < pxPaperH; y += pxSpan) 
-				{ 
-					can.drawLine (0, y, pxPaperW, y, paint); 
-				} 
+				drawGraphPaper (can, paint); 
 				
 				try 
 				{ 
@@ -133,5 +121,26 @@ public class PaperGenerator {
 					onComplete.run (); 
 			} 
 		}).start (); 
+	} 
+	public void drawGraphPaper (Canvas canvas, Paint paint) { 
+		int pxPaperW = (int) (mPaperW * mDPI); 
+		int pxPaperH = (int) (mPaperH * mDPI); 
+		int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
+		paint.setStrokeWidth (mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
+									  /* scale to window width */ canvas.getWidth () / pxPaperW); 
+		paint.setColor (Color.rgb (150, 200, 255)); 
+		for (int x = pxSpan / 2;
+			 x < pxPaperW; x += pxSpan)
+		{
+			canvas.drawLine (x * canvas.getWidth () / pxPaperW, 0, 
+					x * canvas.getWidth () / pxPaperW, 
+					canvas.getHeight (), paint); 
+		}
+		for (int y = pxSpan / 2;
+			 y < pxPaperH; y += pxSpan)
+		{
+			canvas.drawLine (0, y * canvas.getHeight () / pxPaperH, 
+					canvas.getWidth (), y * canvas.getHeight () / pxPaperH, paint); 
+		} 
 	} 
 } 

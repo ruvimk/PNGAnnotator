@@ -51,6 +51,16 @@ public class PngEdit {
 		if (width == 0 || height == 0) { 
 			return; // Do nothing if the window has not been measured/laid out yet. 
 		} 
+		// Scale all the points from the old window size to the new window size: 
+		synchronized (mEdits) { 
+			for (LittleEdit edit : mEdits) { 
+				// Scale the coordinates: 
+				for (int i = 0; i < edit.points.length / 2; i++) { 
+					edit.points[2 * i + 0] *= width / windowWidth; 
+					edit.points[2 * i + 1] *= height / windowHeight; 
+				} 
+			} 
+		} 
 		// Change the window size: 
 		windowWidth = width; 
 		windowHeight = height; 
@@ -66,11 +76,6 @@ public class PngEdit {
 			for (LittleEdit edit : mEdits) { 
 				// Scale the brush width: 
 				edit.brushWidth *= width / imageWidth; 
-				// Scale the coordinates: 
-				for (int i = 0; i < edit.points.length / 2; i++) { 
-					edit.points[2 * i + 0] *= width / imageWidth; 
-					edit.points[2 * i + 1] *= height / imageHeight; 
-				} 
 			} 
 		} 
 		// Change the window size: 
@@ -329,7 +334,7 @@ public class PngEdit {
 					littleEdit.brushWidth = brushW * imageWidth; 
 					littleEdit.points = new float [ptCount]; 
 					for (int j = i + 6; j < i + 6 + ptCount; j++) 
-						buf[j] *= (j % 2 == 0 ? imageWidth : imageHeight); 
+						buf[j] *= (j % 2 == 0 ? windowWidth : windowHeight); 
 					System.arraycopy (buf, i + 6, littleEdit.points, 0, ptCount); 
 					// Continue: 
 					mEdits.add (littleEdit); 
@@ -348,8 +353,8 @@ public class PngEdit {
 				int numberCount = dataInput.readInt (); 
 				littleEdit.points = new float[numberCount]; 
 				for (int i = 0; i < numberCount / 2; i++) { 
-					littleEdit.points[2 * i + 0] = imageWidth * dataInput.readFloat (); 
-					littleEdit.points[2 * i + 1] = imageHeight * dataInput.readFloat (); 
+					littleEdit.points[2 * i + 0] = windowWidth * dataInput.readFloat (); 
+					littleEdit.points[2 * i + 1] = windowHeight * dataInput.readFloat (); 
 				} 
 				mEdits.add (littleEdit); 
 			} 
@@ -372,6 +377,7 @@ public class PngEdit {
 				useDifferentialSave = false; 
 			// Open the file for writing, with the append flag set to true if saving differentially: 
 			OutputStream outputStream = new FileOutputStream (mVectorEdits, useDifferentialSave); 
+			float ratioHW = imageHeight / imageWidth; 
 			if (SAVE_VERSION == 1) { 
 				if (!useDifferentialSave) { 
 					// Write magic number: 
@@ -408,7 +414,7 @@ public class PngEdit {
 					buf[index + 5] = countP; 
 					System.arraycopy (edit.points, 0, buf, index + 6, ptCount); 
 					for (int j = index + 6; j < index + 6 + ptCount; j++) 
-						buf[j] /= (j % 2 == 0 ? imageWidth : imageHeight); 
+						buf[j] /= (j % 2 == 0 ? windowWidth : windowHeight); 
 					// Continue: 
 					index += 6 + ptCount; 
 				} 
@@ -428,8 +434,8 @@ public class PngEdit {
 					dataOutput.writeFloat (edit.brushWidth / imageWidth); 
 					dataOutput.writeInt (edit.points.length); 
 					for (int j = 0; j < edit.points.length / 2; j++) { 
-						dataOutput.writeFloat (edit.points[2 * j + 0] / imageWidth); 
-						dataOutput.writeFloat (edit.points[2 * j + 1] / imageHeight); 
+						dataOutput.writeFloat (edit.points[2 * j + 0] / windowWidth); 
+						dataOutput.writeFloat (edit.points[2 * j + 1] / windowHeight); 
 					} 
 				} 
 				useDifferentialSave = true; 

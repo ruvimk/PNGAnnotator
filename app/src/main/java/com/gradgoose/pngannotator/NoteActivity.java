@@ -170,14 +170,18 @@ public class NoteActivity extends Activity {
 		} 
 	} 
 	
+	MenuItem mMenuGoToPage = null; 
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 
 		getMenuInflater ().inflate (R.menu.main_menu, menu); 
 		return true; 
 	} 
 	@Override public boolean onPrepareOptionsMenu (Menu menu) { 
 		super.onPrepareOptionsMenu (menu); 
-		boolean hasImages = PngNotesAdapter.hasImages (mBrowsingFolders); 
-		menu.findItem (R.id.menu_action_goto_page).setVisible (hasImages); 
+		boolean hasImages = mNotesAdapter != null ? 
+									mNotesAdapter.hasImages () : 
+									PngNotesAdapter.hasImages (mBrowsingFolders); 
+		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
+		mMenuGoToPage.setVisible (hasImages); 
 		menu.findItem (R.id.menu_action_pen_mode).setChecked (isPenModeEnabled ()); 
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
 		return true; 
@@ -212,6 +216,8 @@ public class NoteActivity extends Activity {
 //									@Override public void run () { 
 										if (wasEmpty) initUserInterface (); 
 										else mNotesAdapter.reloadList (); 
+				if (mMenuGoToPage != null) // Make sure the 'go to page' menu item is visible. 
+					mMenuGoToPage.setVisible (true); // May not have been if this is the first page. 
 //									} 
 //								}); 
 //							} 

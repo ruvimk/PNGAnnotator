@@ -84,6 +84,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 								// Get the file where to save the thumbnail: 
 								File thumbnail = getThumbnailFile (mContext, picture); 
 								if (thumbnail == null) continue; 
+								// If the picture didn't change, skip updating the thumbnail: 
+								if (thumbnail.exists () && 
+											thumbnail.lastModified () > picture.lastModified ()) 
+									continue; 
 								// Load just the image dimensions first: 
 								final BitmapFactory.Options options = new BitmapFactory.Options (); 
 								options.inJustDecodeBounds = true; 

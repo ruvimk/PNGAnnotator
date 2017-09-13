@@ -26,8 +26,10 @@ public class ZipRenderer {
 	public static File render (Context context, File fromTargets [],
 							   @Nullable String zipFolderName, 
 							   @Nullable OnRenderProgress progressCallback) throws IOException { 
+		File folder = new File (Environment.getExternalStorageDirectory (), "PNG-Annotator"); 
+		if (!folder.exists ()) folder.mkdirs (); 
 		File tmp = File.createTempFile ((zipFolderName != null ? (zipFolderName + "-") : "") + 
-				"Pages", ".zip", Environment.getExternalStorageDirectory ()); 
+				"Pages", ".zip", folder); 
 		FileOutputStream fos = new FileOutputStream (tmp); 
 		ZipOutputStream zos = new ZipOutputStream (fos); 
 		int current = 0; 

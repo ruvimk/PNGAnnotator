@@ -51,21 +51,31 @@ public class PngEdit {
 		if (width == 0 || height == 0) { 
 			return; // Do nothing if the window has not been measured/laid out yet. 
 		} 
+		// Change the window size: 
+		windowWidth = width; 
+		windowHeight = height; 
+	} 
+	float imageWidth = 1; 
+	float imageHeight = 1; 
+	public void setImageSize (float width, float height) { 
+		if (width == 0 || height == 0) { 
+			return; // Do nothing if the window has not been measured/laid out yet. 
+		} 
 		// Scale all the points from the old window size to the new window size: 
 		synchronized (mEdits) { 
 			for (LittleEdit edit : mEdits) { 
 				// Scale the brush width: 
-				edit.brushWidth *= width / windowWidth; 
+				edit.brushWidth *= width / imageWidth; 
 				// Scale the coordinates: 
 				for (int i = 0; i < edit.points.length / 2; i++) { 
-					edit.points[2 * i + 0] *= width / windowWidth; 
-					edit.points[2 * i + 1] *= height / windowHeight; 
+					edit.points[2 * i + 0] *= width / imageWidth; 
+					edit.points[2 * i + 1] *= height / imageHeight; 
 				} 
 			} 
 		} 
 		// Change the window size: 
-		windowWidth = width; 
-		windowHeight = height; 
+		imageWidth = width; 
+		imageHeight = height; 
 	} 
 	
 	public void addEdit (LittleEdit e) { 
@@ -316,10 +326,10 @@ public class PngEdit {
 							(int) (colorR * 255), 
 							(int) (colorG * 255), 
 							(int) (colorB * 255)); 
-					littleEdit.brushWidth = brushW * windowWidth; 
+					littleEdit.brushWidth = brushW * imageWidth; 
 					littleEdit.points = new float [ptCount]; 
 					for (int j = i + 6; j < i + 6 + ptCount; j++) 
-						buf[j] *= (j % 2 == 0 ? windowWidth : windowHeight); 
+						buf[j] *= (j % 2 == 0 ? imageWidth : imageHeight); 
 					System.arraycopy (buf, i + 6, littleEdit.points, 0, ptCount); 
 					// Continue: 
 					mEdits.add (littleEdit); 
@@ -334,12 +344,12 @@ public class PngEdit {
 				LittleEdit littleEdit = new LittleEdit (); 
 				littleEdit.color = dataInput.readInt (); 
 				float relativeBrushWidth = dataInput.readFloat (); 
-				littleEdit.brushWidth = relativeBrushWidth * windowWidth; 
+				littleEdit.brushWidth = relativeBrushWidth * imageWidth; 
 				int numberCount = dataInput.readInt (); 
 				littleEdit.points = new float[numberCount]; 
 				for (int i = 0; i < numberCount / 2; i++) { 
-					littleEdit.points[2 * i + 0] = windowWidth * dataInput.readFloat (); 
-					littleEdit.points[2 * i + 1] = windowHeight * dataInput.readFloat (); 
+					littleEdit.points[2 * i + 0] = imageWidth * dataInput.readFloat (); 
+					littleEdit.points[2 * i + 1] = imageHeight * dataInput.readFloat (); 
 				} 
 				mEdits.add (littleEdit); 
 			} 
@@ -387,7 +397,7 @@ public class PngEdit {
 					float colorR = (float) Color.red (edit.color) / 255f; 
 					float colorG = (float) Color.green (edit.color) / 255f; 
 					float colorB = (float) Color.blue (edit.color) / 255f; 
-					float brushW = edit.brushWidth / windowWidth; 
+					float brushW = edit.brushWidth / imageWidth; 
 					float countP = (float) ptCount; 
 					// Copy things: 
 					buf[index + 0] = colorA; 
@@ -398,7 +408,7 @@ public class PngEdit {
 					buf[index + 5] = countP; 
 					System.arraycopy (edit.points, 0, buf, index + 6, ptCount); 
 					for (int j = index + 6; j < index + 6 + ptCount; j++) 
-						buf[j] /= (j % 2 == 0 ? windowWidth : windowHeight); 
+						buf[j] /= (j % 2 == 0 ? imageWidth : imageHeight); 
 					// Continue: 
 					index += 6 + ptCount; 
 				} 
@@ -415,11 +425,11 @@ public class PngEdit {
 				for (int i = mLastIoEditCount; i < mEdits.size (); i++) { 
 					LittleEdit edit = mEdits.elementAt (i); 
 					dataOutput.writeInt (edit.color); 
-					dataOutput.writeFloat (edit.brushWidth / windowWidth); 
+					dataOutput.writeFloat (edit.brushWidth / imageWidth); 
 					dataOutput.writeInt (edit.points.length); 
 					for (int j = 0; j < edit.points.length / 2; j++) { 
-						dataOutput.writeFloat (edit.points[2 * j + 0] / windowWidth); 
-						dataOutput.writeFloat (edit.points[2 * j + 1] / windowHeight); 
+						dataOutput.writeFloat (edit.points[2 * j + 0] / imageWidth); 
+						dataOutput.writeFloat (edit.points[2 * j + 1] / imageHeight); 
 					} 
 				} 
 				useDifferentialSave = true; 

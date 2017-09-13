@@ -180,4 +180,8 @@ public class PaperGenerator {
 		for (int i = 0; i < points.length; i++) 
 			points[i] *= (i % 2 == 0 ? wScale : hScale); 
 	} 
+	float getScaleFactor (int width) { 
+		int pxPaperW = (int) (mPaperW * mDPI); 
+		return (float) width / pxPaperW; 
+	} 
 } 

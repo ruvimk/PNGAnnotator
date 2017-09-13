@@ -12,6 +12,8 @@ import android.graphics.Path;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -400,6 +402,7 @@ public class PageView extends ImageView {
 			synchronized (edit) { 
 				edit.value = PngEdit.forFile (getContext (), file); 
 				edit.value.setWindowSize (getWidth (), getHeight ()); 
+				edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
 			} 
 		} catch (IOException err) { 
 			// Can't edit: 
@@ -450,6 +453,8 @@ public class PageView extends ImageView {
 		if (edit.value != null) synchronized (edit) { 
 			edit.value.setWindowSize (w, h); 
 		} 
+		// Get display metrics (the object that allows us to convert CM to DP): 
+		metrics = Resources.getSystem ().getDisplayMetrics (); 
 	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 
@@ -481,6 +486,8 @@ public class PageView extends ImageView {
 	int prevColor = 0; 
 	int prevTool = 0; 
 	
+	DisplayMetrics metrics = new DisplayMetrics (); 
+	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
@@ -501,19 +508,22 @@ public class PageView extends ImageView {
 			prevTool = mTool; 
 		} 
 		// Now draw our annotation edits that the user made: 
-		if (edit.value != null) synchronized (edit) {
+		float brushScale = mBitmapNaturalWidth != 0 ? 
+								   (float) canvas.getWidth () / mBitmapNaturalWidth 
+								   : paperGenerator.getScaleFactor (canvas.getWidth ()); 
+		if (edit.value != null) synchronized (edit) { 
 			PngEdit.LittleEdit e; 
 			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
 				e = edit.value.mEdits.elementAt (i); 
 				strokePaint.setColor (e.color); 
-				strokePaint.setStrokeWidth (e.brushWidth); 
+				strokePaint.setStrokeWidth (e.brushWidth * brushScale); 
 				canvas.drawLines (e.points, strokePaint); 
 			} 
 		} 
 		// Finally, draw the currently being written path: 
 		strokePaint.setColor (mNowErasing ? getContext ().getResources () 
 													.getColor (R.color.colorEraser) : mColor); 
-		strokePaint.setStrokeWidth (mBrush); 
+		strokePaint.setStrokeWidth (mBrush * brushScale); 
 		canvas.drawLines (tmpPoints, 0, tmpPointCount, strokePaint); 
 	} 
 	

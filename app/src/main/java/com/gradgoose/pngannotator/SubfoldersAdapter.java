@@ -95,7 +95,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		prepareFileList (); 
 		mStableIds = new HashMap<> (mList.length); 
 		loadIds (mList); 
-		reloadList (); // Load the list for the first time. 
+		notifyDataSetChanged (); 
 		setHasStableIds (true); 
 	} 
 	

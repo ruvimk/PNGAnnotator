@@ -41,9 +41,16 @@ public class PensAdapter extends RecyclerView.Adapter {
 	private void preparePenList () { 
 		mList = new int [] { 
 								   Color.BLACK, 
+								   Color.rgb (255, 51, 153), // Pink. 
 								   Color.RED, 
-								   Color.GREEN, 
-								   Color.BLUE 
+								   Color.rgb (255, 128, 0), // Orange. 
+								   Color.rgb (204, 204, 0), // Dark yellow. 
+								   Color.rgb (153, 76, 0), // Brown. 
+								   Color.rgb (76, 153, 0), // Darker green. 
+								   Color.rgb (0, 204, 204), // Teal. 
+								   Color.BLUE, 
+								   Color.rgb (102, 0, 204), // A dark kind of blue. 
+								   Color.rgb (153, 0, 153) // Purple. 
 		}; 
 	} 
 	

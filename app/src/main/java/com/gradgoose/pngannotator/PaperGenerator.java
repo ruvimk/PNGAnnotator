@@ -143,25 +143,34 @@ public class PaperGenerator {
 					canvas.getWidth (), y * canvas.getHeight () / pxPaperH, paint); 
 		} 
 	} 
-	float [] makeGraphPaperLines (int width, int height, Paint paint) {
+	void setupGraphPaperPaint (int width, Paint paint) { 
 		int pxPaperW = (int) (mPaperW * mDPI); 
 		int pxPaperH = (int) (mPaperH * mDPI); 
 		int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
+		paint.setStyle (Paint.Style.STROKE); 
 		paint.setStrokeWidth (mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
 									  /* scale to window width */ width / pxPaperW); 
 		paint.setColor (Color.rgb (150, 200, 255)); 
-		int xLines = (pxPaperW - pxSpan / 2) / pxSpan; 
-		int yLines = (pxPaperH - pxSpan / 2) / pxSpan; 
+	} 
+	float [] makeGraphPaperLines (int width, int height) { 
+		int pxPaperW = (int) (mPaperW * mDPI); 
+		int pxPaperH = (int) (mPaperH * mDPI); 
+		int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
+		int xLines = (pxPaperW - pxSpan / 2) / pxSpan + 1; 
+		int yLines = (pxPaperH - pxSpan / 2) / pxSpan + 1; 
 		float points [] = new float [4 * xLines + 4 * yLines]; 
-		for (int i = 0; i < 4 * xLines; i += 4) { 
-			points[i] = points[i + 2] = (pxSpan * i + pxSpan / 2) * width / pxPaperW; 
-			points[i + 1] = 0; 
-			points[i + 3] = height; 
+		for (int i = 0; i < xLines; i++) { 
+			points[4 * i] = points[4 * i + 2] = 
+									(float) (pxSpan * i + pxSpan / 2) * width / pxPaperW; 
+			points[4 * i + 1] = 0; 
+			points[4 * i + 3] = height; 
 		} 
-		for (int i = 0; i < 4 * yLines; i += 4) { 
-			points[i + 0] = 0; 
-			points[i + 2] = width; 
-			points[i + 1] = points[i + 3] = (pxSpan * i + pxSpan / 2) * height / pxPaperH; 
+		for (int i = 0; i < yLines; i++) { 
+			points[4 * (i + xLines) + 0] = 0; 
+			points[4 * (i + xLines) + 2] = width; 
+			points[4 * (i + xLines) + 1] = 
+					points[4 * (i + xLines) + 3] = 
+							(float) (pxSpan * i + pxSpan / 2) * height / pxPaperH; 
 		} 
 		return points; 
 	} 

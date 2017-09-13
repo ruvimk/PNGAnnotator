@@ -337,8 +337,11 @@ public class PageView extends ImageView {
 			if (md5.equals (res.getString (R.string.md5_graph_paper))) { 
 				knownSmallVersion = R.drawable.plain_graph_paper_4x4_small; 
 				// Make an array of line segments for drawing graph paper: 
-				paperPoints = paperGenerator.makeGraphPaperLines (getWidth (), getHeight (), 
-						paperPaint); 
+				int width = getWidth (); 
+				int height = getHeight (); 
+				if (width == 0) width = 1; 
+				if (height == 0) height = 1; 
+				paperPoints = paperGenerator.makeGraphPaperLines (width, height); 
 			} 
 			else paperPoints = null; 
 		} catch (IOException err) { 
@@ -438,8 +441,11 @@ public class PageView extends ImageView {
 	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
 		super.onSizeChanged (w, h, oldW, oldH); 
 		// Update paper lines, if any: 
-		if (paperPoints != null) 
-			PaperGenerator.scalePoints (paperPoints, oldW, oldH, w, h); 
+		if (paperPoints != null) { 
+			int fromW = oldW != 0 ? oldW : 1; 
+			int fromH = oldH != 0 ? oldH : 1; 
+			PaperGenerator.scalePoints (paperPoints, fromW, fromH, w, h); 
+		} 
 		// Update edits: 
 		if (edit.value != null) synchronized (edit) { 
 			edit.value.setWindowSize (w, h); 
@@ -480,6 +486,7 @@ public class PageView extends ImageView {
 		super.onDraw (canvas); 
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 
+			paperGenerator.setupGraphPaperPaint (getWidth (), paperPaint); 
 			canvas.drawLines (paperPoints, paperPaint); 
 		} else switch (knownSmallVersion) { 
 			case R.drawable.plain_graph_paper_4x4_small: 

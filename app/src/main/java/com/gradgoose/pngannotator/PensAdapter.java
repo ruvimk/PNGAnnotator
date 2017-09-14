@@ -54,6 +54,13 @@ public class PensAdapter extends RecyclerView.Adapter {
 		}; 
 	} 
 	
+	static File getPensFolder (Context context) { 
+		File folder = new File (context.getFilesDir (), "Colored-Pens"); 
+		if (!folder.exists ()) 
+			folder.mkdirs (); 
+		return folder; 
+	} 
+	
 	public void reloadList () { 
 		preparePenList (); 
 		notifyDataSetChanged (); 

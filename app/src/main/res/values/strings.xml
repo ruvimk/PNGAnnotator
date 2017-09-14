@@ -13,6 +13,7 @@
 	<string name="menu_create_folder">New Folder</string> 
 	<string name="menu_create_page">New Page</string> 
 	<string name="menu_goto_page">Go to page</string> 
+	<string name="menu_recents">Switch to Recent</string> 
 	<string name="menu_annotate">Annotate</string> 
 	<string name="menu_export_pages">Export Pages</string> 
 	<string name="menu_pen_mode">Pen Mode</string> 

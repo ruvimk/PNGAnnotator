@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.util.ArraySet;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 import java.util.Vector;
 
 public class NoteActivity extends Activity { 
@@ -49,8 +51,12 @@ public class NoteActivity extends Activity {
 	
 	static final String PREFS_NAME = "com.gradgoose.pngannotator.NoteActivity.prefs"; 
 	static final String LEFTOFF_NAME = "com.gradgoose.pngannotator.NoteActivity.leftOff"; 
+	static final String RECENTS_NAME = "com.gradgoose.pngannotator.NoteActivity.recents";  
 	SharedPreferences prefs = null; 
 	SharedPreferences leftOff = null; 
+	SharedPreferences recents = null; 
+	
+	Vector<String> recentFolders = null; 
 	
 	static final int TOOL_NONE = 0; 
 	static final int TOOL_PEN = 1; 
@@ -73,6 +79,20 @@ public class NoteActivity extends Activity {
 		// Read the key-value quick options from last time: 
 		prefs = getSharedPreferences (PREFS_NAME, MODE_PRIVATE); 
 		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
+		recents = getSharedPreferences (RECENTS_NAME, MODE_PRIVATE); 
+		Set<String> recentSet; 
+		recentFolders = new Vector<> (10); // Can change 10 to something else later. From settings, eg. 
+		if (recents.contains ("recent-folders") && 
+					(recentSet = recents.getStringSet ("recent-folders", null)) != null) { 
+			int i = 0; 
+			for (String s : recentSet) { 
+				if (i >= recentFolders.capacity ()) 
+					break; // Let's only keep the LENGTH most recent items. 
+				recentFolders.add (s); 
+				i++; 
+			} 
+		} 
+		// Grab the editing state: 
 		currentTool = prefs.getInt ("tool", currentTool); 
 		currentColor = prefs.getInt ("color", currentColor); 
 		// Get the folder where digital camera images are stored: 
@@ -127,6 +147,31 @@ public class NoteActivity extends Activity {
 		// Initialize views and the window title and icon: 
 		initUserInterface (); // Views. 
 		initActionBar (); // Title, Icon. 
+		// Add this thing to the recent folders list: 
+		if (!isBrowsingRootFolder () && mNotesAdapter.hasImages ()) { 
+			String nowBrowsing = ""; 
+			for (File f : mBrowsingFolders) { 
+				if (!nowBrowsing.isEmpty ()) nowBrowsing += "\t"; 
+				nowBrowsing += f.getAbsolutePath (); 
+			} 
+			int foundIndex = -1; 
+			for (int i = 0; i < recentFolders.size (); i++) { 
+				if (!recentFolders.elementAt (i).equals (nowBrowsing)) continue; 
+				foundIndex = i; 
+			} 
+			if (foundIndex == -1) { 
+				if (recentFolders.size () == recentFolders.capacity ()) 
+					recentFolders.remove (recentFolders.size () - 1); 
+				recentFolders.add (0, nowBrowsing); 
+			} else { 
+				recentFolders.remove (foundIndex); 
+				recentFolders.add (0, nowBrowsing); 
+			} 
+			// Save the recent folders list: 
+			recentSet = new ArraySet<> (recentFolders.capacity ()); 
+			recentSet.addAll (recentFolders); 
+			recents.edit ().putStringSet ("recent-folders", recentSet).apply (); 
+		} 
 	} 
 	// Save which folder we're working on, and what scroll position: 
 	@Override protected void onSaveInstanceState (Bundle outState) { 
@@ -182,6 +227,8 @@ public class NoteActivity extends Activity {
 									PngNotesAdapter.hasImages (mBrowsingFolders); 
 		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
 		mMenuGoToPage.setVisible (hasImages); 
+		menu.findItem (R.id.menu_action_recents).setVisible (recentFolders.size () > 1 && 
+			hasImages); 
 		menu.findItem (R.id.menu_action_pen_mode).setChecked (isPenModeEnabled ()); 
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
 		return true; 
@@ -194,6 +241,15 @@ public class NoteActivity extends Activity {
 //				break; 
 			case R.id.menu_action_goto_page: 
 				userSelectPage (); 
+				break; 
+			case R.id.menu_action_recents: 
+				if (recentFolders.size () > 1){ 
+					String folderPaths [] = recentFolders.elementAt (1).split ("\t"); 
+					Intent goRecent = new Intent (this, NoteActivity.class); 
+					goRecent.putExtra (STATE_BROWSING_PATH, folderPaths); 
+					startActivity (goRecent); // Start new activity. 
+					finish (); // Finish this activity. 
+				} 
 				break; 
 			case R.id.menu_action_pen_mode: 
 				item.setChecked (!item.isChecked ()); 

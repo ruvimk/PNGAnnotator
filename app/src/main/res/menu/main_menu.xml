@@ -29,6 +29,13 @@
 		android:title="@string/menu_goto_page"
 		/>
 	
+	<item
+		android:id="@+id/menu_action_recents"
+		android:icon="@drawable/ic_access_time_black_24dp"
+		android:showAsAction="ifRoom"
+		android:title="@string/menu_recents"
+		/> 
+	
 	<item 
 		android:id="@+id/menu_action_export_pages"
 		android:showAsAction="never"

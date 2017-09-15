@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
 
@@ -105,8 +106,25 @@ public class FileListCache {
 		else onFilesChangedListener.onFilesNoChange (now); 
 	} 
 	
+	private void makeMapEntries (Map<String, Vector<File>> map, File list []) { 
+		for (File file : list) 
+			if (!map.containsKey (file.getName ())) { 
+				Vector<File> files = new Vector<> (); 
+				files.add (file);
+				map.put (file.getName (), files); 
+			} else map.get (file.getName ()).add (file); 
+	} 
+	private void make2dList (File list [] [], Map<String, Vector<File>> map) { 
+		int index = 0; 
+		for (String name : map.keySet ()) { 
+			Vector<File> possible = map.get (name); 
+			list[index] = new File[possible.size ()]; 
+			possible.toArray (list[index]); 
+			index++; 
+		} 
+	} 
 	public File [] [] asyncListFiles (final FileFilter filter, final OnFilesChangedListener listener) { 
-		TreeMap<String,Vector<File>> children = new TreeMap<> (); 
+		TreeMap<String, Vector<File>> children = new TreeMap<> (); 
 		boolean noCacheFound = false; 
 		final Vector<File> myFolder = mFolder; 
 		for (File folder : myFolder) { 
@@ -117,12 +135,7 @@ public class FileListCache {
 			} 
 			try { 
 				File list [] = makeFilesArray (readLines (listCache)); 
-				for (File file : list) 
-					if (!children.containsKey (file.getName ())) { 
-						Vector<File> files = new Vector<> (); 
-						files.add (file); 
-						children.put (file.getName (), files); 
-					} else children.get (file.getName ()).add (file); 
+				makeMapEntries (children, list); 
 			} catch (IOException err) { 
 				err.printStackTrace (); 
 				noCacheFound = true; 
@@ -131,13 +144,7 @@ public class FileListCache {
 		} 
 		File list [] [] = new File [children.size ()] []; 
 		if (!noCacheFound) { 
-			int index = 0; 
-			for (String name : children.keySet ()) { 
-				Vector<File> possible = children.get (name); 
-				list[index] = new File[possible.size ()]; 
-				possible.toArray (list[index]); 
-				index++; 
-			} 
+			make2dList (list, children); 
 			final File [] [] oldList = list; 
 			AsyncTask<Void,Void,File [] []> mTask = new AsyncTask<Void, Void, File[][]> () { 
 				@Override protected File[][] doInBackground (Void... voids) { 

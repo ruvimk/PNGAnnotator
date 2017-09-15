@@ -44,13 +44,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	long headerPersistantIdStart = 0; 
 	View mHeaderItemViews [] = null; 
 	
+	FileListCache mCache = null; 
 	File mList [] = null; 
-	
-	static Comparator<File []> mFileComparator = new Comparator<File []> () { 
-		@Override public int compare (File a [], File b []) { 
-			return a[0].compareTo (b[0]); 
-		} 
-	}; 
 	
 	public void setHeaderItemViews (View list []) { 
 		mHeaderItemViews = list; 
@@ -118,28 +113,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				}; 
 		mUpdateThumbnailsTask.execute (mList); 
 	} 
-	public static File [] prepareFileList (Vector<File> browsingFolder) { 
-		HashMap<String,Vector<File>> children = new HashMap<> (); 
-		for (File folder : browsingFolder) { 
-			File list [] = folder.listFiles (mFilterJustImages); 
-			for (File file : list) 
-				if (!children.containsKey (file.getName ())) { 
-					Vector<File> files = new Vector<> (); 
-					files.add (file); 
-					children.put (file.getName (), files); 
-				} else children.get (file.getName ()).add (file); 
-		} 
-		File list [] [] = new File [children.size ()] []; 
-		int index = 0; 
+	static File [] getFlattenedList (File list [] []) { 
 		int total = 0; 
-		for (String name : children.keySet ()) { 
-			Vector<File> possible = children.get (name); 
-			list[index] = new File [possible.size ()]; 
-			possible.toArray (list[index]); 
-			total += list[index].length; 
-			index++; 
-		} 
-		Arrays.sort (list, mFileComparator); 
+		for (File l [] : list) 
+			total += l.length; 
 		File list2 [] = new File [total]; 
 		int c = 0; 
 		for (File [] possible : list) { 
@@ -150,10 +127,21 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		return list2; 
 	} 
-	private void prepareFileList () { 
-		mList = prepareFileList (mBrowsingFolder); 
-		// Update thumbnails: 
-		updateThumbnailCache (); 
+	public File [] prepareFileList () { 
+		File list [] [] = mCache.asyncListFiles (mFilterJustImages, 
+				new FileListCache.OnFilesChangedListener () { 
+					@Override public void onFilesChanged (File [][] list) { 
+						mList = getFlattenedList (list); 
+						// Update thumbnails: 
+						updateThumbnailCache (); 
+						// Update views: 
+						notifyDataSetChanged (); 
+					} 
+					@Override public void onFilesNoChange (File [] [] list) { 
+						
+					} 
+				}); 
+		return mList = getFlattenedList (list); 
 	} 
 	
 	public void reloadList () { 
@@ -199,7 +187,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	boolean hasImages () { 
 		return mList.length > 0; 
 	} 
-	private static FileFilter mFilterJustImages = new FileFilter () { 
+	static FileFilter mFilterJustImages = new FileFilter () { 
 		@Override public boolean accept (File file) { 
 			String lowerName = file.getName ().toLowerCase (); 
 			return file.isFile () && ( 
@@ -215,6 +203,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		super (); 
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 
+		mCache = new FileListCache (browsingDir); 
 		prepareFileList (); 
 		mStableIds = new HashMap<> (mList.length); 
 		loadIds (mList); 

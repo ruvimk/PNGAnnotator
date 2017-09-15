@@ -26,7 +26,9 @@ public class PaperGenerator {
 	static File makeNewPaperFile (File inFolder, @Nullable File insertBefore) { 
 		Vector<File> browsing = new Vector<> (); 
 		browsing.add (inFolder); 
-		File list [] = PngNotesAdapter.prepareFileList (browsing); 
+		File list [] = PngNotesAdapter.getFlattenedList (
+				FileListCache.getFileLists (PngNotesAdapter.mFilterJustImages, browsing) 
+		); 
 		if (insertBefore == null) { 
 			if (list.length == 0) { 
 				// If it's an empty folder, start by adding a file with this numbered name: 

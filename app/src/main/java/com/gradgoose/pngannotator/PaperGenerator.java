@@ -23,6 +23,9 @@ public class PaperGenerator {
 	int mDPI = 300; 
 	float mPaperW = 8.5f; // inches 
 	float mPaperH = 11f; // inches 
+	static float getPxPerMm (float pageW, float pageH) { 
+		return pageW / 8.5f / 25.4f; // Pixels per inch / mm/in = Pixels / mm; 
+	} 
 	static File makeNewPaperFile (File inFolder, @Nullable File insertBefore) { 
 		Vector<File> browsing = new Vector<> (); 
 		browsing.add (inFolder); 

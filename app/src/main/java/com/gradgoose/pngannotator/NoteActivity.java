@@ -609,7 +609,7 @@ public class NoteActivity extends Activity {
 				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
 				mNotesAdapter.mColor = currentColor; 
 				mNotesAdapter.mTool = currentTool; 
-				mNotesAdapter.mBrush = prefs.getFloat ("erase-width", 30.0f); 
+				mNotesAdapter.mBrush = prefs.getFloat ("erase-width", 10.0f); 
 				mNotesAdapter.notifyDataSetChanged (); 
 			} 
 		}); 
@@ -627,7 +627,7 @@ public class NoteActivity extends Activity {
 				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
 				mNotesAdapter.mTool = currentTool; 
 				mNotesAdapter.mColor = currentColor; 
-				mNotesAdapter.mBrush = prefs.getFloat ("write-width", 3.0f); 
+				mNotesAdapter.mBrush = prefs.getFloat ("write-width", 1.0f); 
 				mNotesAdapter.notifyDataSetChanged (); 
 			} 
 		}); 
@@ -646,8 +646,8 @@ public class NoteActivity extends Activity {
 			currentColor = PageView.ERASE_COLOR; 
 		mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
 		mNotesAdapter.mBrush = currentTool == TOOL_ERASER ? 
-									   prefs.getFloat ("erase-width", 30.0f) 
-									   : prefs.getFloat ("write-width", 3.0f); 
+									   prefs.getFloat ("erase-width", 10.0f) 
+									   : prefs.getFloat ("write-width", 1.0f); 
 		mNotesAdapter.mTool = currentTool; 
 		mNotesAdapter.mColor = currentColor; 
 		mNotesAdapter.notifyDataSetChanged (); 

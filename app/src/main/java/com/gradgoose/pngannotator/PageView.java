@@ -48,7 +48,7 @@ public class PageView extends ImageView {
 	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
-	float mBrush = 3.0f; 
+	float mBrush = 1.0f; // in mm 
 	
 	float tmpPoints [] = new float [256]; 
 	int tmpPointCount = 0; 
@@ -72,7 +72,10 @@ public class PageView extends ImageView {
 							for (WriteDetector.Stroke stroke : params) { 
 									PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
 									littleEdit.color = mColor; 
-									littleEdit.brushWidth = mBrush; 
+									littleEdit.brushWidth = mBrush * PaperGenerator.getPxPerMm ( 
+											mBitmapNaturalWidth, 
+											mBitmapNaturalHeight 
+									); 
 									littleEdit.points = new float[(stroke.count () - 1) * 4]; 
 									littleEdit.points[0] = stroke.getX (0); 
 									littleEdit.points[1] = stroke.getY (0); 
@@ -577,7 +580,8 @@ public class PageView extends ImageView {
 		// Finally, draw the currently being written path: 
 		strokePaint.setColor (mNowErasing ? getContext ().getResources () 
 													.getColor (R.color.colorEraser) : mColor); 
-		strokePaint.setStrokeWidth (mBrush * brushScale); 
+		strokePaint.setStrokeWidth (PaperGenerator.getPxPerMm (mBitmapNaturalWidth, 
+				mBitmapNaturalHeight) * mBrush * brushScale); 
 		canvas.drawLines (tmpPoints, 0, tmpPointCount, strokePaint); 
 	} 
 	

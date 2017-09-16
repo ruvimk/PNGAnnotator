@@ -2,6 +2,7 @@ package com.gradgoose.pngannotator;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +12,8 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Environment;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -30,6 +33,8 @@ public class PageView extends ImageView {
 	File itemFile = null; 
 	
 	final EditHolder edit = new EditHolder (); 
+	
+	static SharedPreferences mMd5Cache = null; 
 	
 	static class EditHolder { 
 		PngEdit value = null; 
@@ -322,33 +327,26 @@ public class PageView extends ImageView {
 	int mBitmapNaturalWidth = 1; 
 	int mBitmapNaturalHeight = 1; 
 	int knownSmallVersion = 0; 
-	public void setItemFile (final File file) { 
-		itemFile = file; 
+	private void checkIfMd5Known (String md5) { 
+		Resources res = getResources (); 
+		if (md5.equals (res.getString (R.string.md5_graph_paper))) { 
+			knownSmallVersion = R.drawable.plain_graph_paper_4x4_small; 
+			// Make an array of line segments for drawing graph paper: 
+			int width = getWidth (); 
+			int height = getHeight (); 
+			if (width == 0) width = 1; 
+			if (height == 0) height = 1; 
+			paperPoints = paperGenerator.makeGraphPaperLines (width, height); 
+		} 
+		else paperPoints = null; 
+	} 
+	class Step2Thread extends Thread { 
+		boolean cancel = false; 
+	} 
+	private @Nullable 
+	Step2Thread step2setItemFile (final File file) { 
 		// Load just the image dimensions first: 
 		final BitmapFactory.Options options = new BitmapFactory.Options (); 
-		options.inJustDecodeBounds = true; 
-		BitmapFactory.decodeFile (file.getPath (), options); 
-		// Set our natural width and height variables to better handle onMeasure (): 
-		mBitmapNaturalWidth = options.outWidth; 
-		mBitmapNaturalHeight = options.outHeight; 
-		// If this is one of our known files, grab a small version to load just for display: 
-		knownSmallVersion = 0; 
-		try { 
-			String md5 = PngEdit.calculateMD5 (file);
-			Resources res = getResources (); 
-			if (md5.equals (res.getString (R.string.md5_graph_paper))) { 
-				knownSmallVersion = R.drawable.plain_graph_paper_4x4_small; 
-				// Make an array of line segments for drawing graph paper: 
-				int width = getWidth (); 
-				int height = getHeight (); 
-				if (width == 0) width = 1; 
-				if (height == 0) height = 1; 
-				paperPoints = paperGenerator.makeGraphPaperLines (width, height); 
-			} 
-			else paperPoints = null; 
-		} catch (IOException err) { 
-			// Do nothing. It's okay! 
-		} 
 		if (knownSmallVersion == 0) { 
 			// If this is a different filename from before, 
 			if (!file.getPath ().equals (lastLoadedPath)) { 
@@ -372,8 +370,9 @@ public class PageView extends ImageView {
 				lastLoadedPath = file.getPath (); 
 			} 
 			// Load the bitmap in a separate thread: 
-			(new Thread () { 
-				@Override public void run () { 
+			Step2Thread thread; 
+			(thread = new Step2Thread () { 
+				@Override public void run () {
 					// Calculate the down-sample scale: 
 					options.inSampleSize = 
 							calculateInSampleSize (options.outWidth, 
@@ -383,19 +382,74 @@ public class PageView extends ImageView {
 					// Now actually load the bitmap, down-sampled if needed: 
 					options.inJustDecodeBounds = false; 
 					final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
-					((Activity) getContext ()).runOnUiThread (new Runnable () { 
-						@Override public void run () { 
-							setImageBitmap (myBitmap); 
-						} 
-					}); 
+					if (!cancel) 
+						((Activity) getContext ()).runOnUiThread (new Runnable () { 
+							@Override public void run () { 
+								if (!cancel) 
+									setImageBitmap (myBitmap); 
+							} 
+						}); 
 				} 
 			}).start (); 
+			return thread; 
 		} else { 
 			// If this 'else' bracket was reached, it means that there is a known 
 			// smaller version of the picture. Use IT! 
 			// We'll actually be drawing the graph paper ourselves, so 
 			// we won't use the blurry small version. 
 			setImageBitmap (null); // Clear any previous bitmap. 
+		} 
+		return null; 
+	} 
+	public void setItemFile (final File file) { 
+		itemFile = file; 
+		// Load just the image dimensions first: 
+		final BitmapFactory.Options options = new BitmapFactory.Options (); 
+		options.inJustDecodeBounds = true; 
+		BitmapFactory.decodeFile (file.getPath (), options); 
+		// Set our natural width and height variables to better handle onMeasure (): 
+		mBitmapNaturalWidth = options.outWidth; 
+		mBitmapNaturalHeight = options.outHeight; 
+		// If this is one of our known files, grab a small version to load just for display: 
+		knownSmallVersion = 0; 
+		String md5 = mMd5Cache != null ? 
+							 mMd5Cache.getString (file.getAbsolutePath (), "") 
+							 : ""; 
+		boolean md5notFound = md5.isEmpty (); 
+		if (md5notFound) { 
+			try { 
+				md5 = PngEdit.calculateMD5 (file); 
+				if (mMd5Cache != null) 
+					mMd5Cache.edit ().putString (file.getAbsolutePath (), md5).apply (); 
+				checkIfMd5Known (md5); 
+			} catch (IOException err) { 
+				// It's okay! 
+			} 
+		}
+		final Step2Thread step2 = step2setItemFile (file); 
+		if (!md5notFound) { 
+			// In a separate thread, check if the MD5 cache is out-of-date or not: 
+			final String md5was = md5; 
+			(new Thread () { 
+				@Override public void run () { 
+					try { 
+						String md5now = PngEdit.calculateMD5 (file); 
+						if (!md5now.equals (md5was)) { 
+							if (step2 != null) 
+								step2.cancel = true; 
+							mMd5Cache.edit ().putString (file.getAbsolutePath (), md5now).apply (); 
+							checkIfMd5Known (md5now); 
+							((Activity) getContext ()).runOnUiThread (new Runnable () { 
+								@Override public void run () { 
+									step2setItemFile (file); 
+								} 
+							}); 
+						} 
+					} catch (IOException err) { 
+						// It's okay. Do nothing. 
+					} 
+				} 
+			}).start (); 
 		} 
 		// Now load our edits for this picture: 
 		try { 

@@ -51,7 +51,8 @@ public class NoteActivity extends Activity {
 	
 	static final String PREFS_NAME = "com.gradgoose.pngannotator.NoteActivity.prefs"; 
 	static final String LEFTOFF_NAME = "com.gradgoose.pngannotator.NoteActivity.leftOff"; 
-	static final String RECENTS_NAME = "com.gradgoose.pngannotator.NoteActivity.recents";  
+	static final String RECENTS_NAME = "com.gradgoose.pngannotator.NoteActivity.recents"; 
+	static final String MD5_CACHE_NAME = "com.gradgoose.pngannotator.MD5_cache"; 
 	SharedPreferences prefs = null; 
 	SharedPreferences leftOff = null; 
 	SharedPreferences recents = null; 
@@ -80,6 +81,7 @@ public class NoteActivity extends Activity {
 		prefs = getSharedPreferences (PREFS_NAME, MODE_PRIVATE); 
 		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
 		recents = getSharedPreferences (RECENTS_NAME, MODE_PRIVATE); 
+		PageView.mMd5Cache = getSharedPreferences (MD5_CACHE_NAME, MODE_PRIVATE); 
 		Set<String> recentSet; 
 		recentFolders = new Vector<> (10); // Can change 10 to something else later. From settings, eg. 
 		if (recents.contains ("recent-folders") && 

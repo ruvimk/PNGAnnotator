@@ -127,18 +127,25 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		return list2; 
 	} 
+	
+	FileListCache.OnFilesChangedListener mOnFilesChangedListener = null; 
 	public File [] prepareFileList () { 
 		File list [] [] = mCache.asyncListFiles (mFilterJustImages, 
 				new FileListCache.OnFilesChangedListener () { 
 					@Override public void onFilesChanged (File [][] list) { 
 						mList = getFlattenedList (list); 
+						// Callback: 
+						if (mOnFilesChangedListener != null) 
+							mOnFilesChangedListener.onFilesChanged (list); 
 						// Update thumbnails: 
 						updateThumbnailCache (); 
 						// Update views: 
 						notifyDataSetChanged (); 
 					} 
 					@Override public void onFilesNoChange (File [] [] list) { 
-						
+						// Callback: 
+						if (mOnFilesChangedListener != null) 
+							mOnFilesChangedListener.onFilesNoChange (list); 
 					} 
 				}); 
 		return mList = getFlattenedList (list); 
@@ -199,10 +206,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 	}; 
 	
-	public PngNotesAdapter (Context context, Vector<File> browsingDir) { 
+	public PngNotesAdapter (Context context, Vector<File> browsingDir, 
+							FileListCache.OnFilesChangedListener onFilesChangedListener) { 
 		super (); 
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 
+		mOnFilesChangedListener = onFilesChangedListener; 
 		mCache = new FileListCache (browsingDir, context.getFilesDir ()); 
 		prepareFileList (); 
 		mStableIds = new HashMap<> (mList.length); 

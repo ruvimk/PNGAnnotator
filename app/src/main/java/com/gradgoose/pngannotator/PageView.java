@@ -425,7 +425,7 @@ public class PageView extends ImageView {
 			} catch (IOException err) { 
 				// It's okay! 
 			} 
-		}
+		} else checkIfMd5Known (md5); 
 		final Step2Thread step2 = step2setItemFile (file); 
 		if (!md5notFound) { 
 			// In a separate thread, check if the MD5 cache is out-of-date or not: 

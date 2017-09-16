@@ -266,6 +266,7 @@ public class NoteActivity extends Activity {
 			case R.id.menu_action_new_page: 
 				// Insert a new graph paper at the end of the list: 
 				final boolean wasEmpty = !PngNotesAdapter.hasImages (mBrowsingFolders); 
+				int wasImageCount = mNotesAdapter.countImages (); 
 				mPaperGenerator.copyGraphPaper (this, mBrowsingFolders.elementAt (0), null); 
 //				mPaperGenerator.makeGraphPaper (mBrowsingFolders.elementAt (0), null, 
 //						new Runnable () { 
@@ -280,7 +281,7 @@ public class NoteActivity extends Activity {
 //								}); 
 //							} 
 //						}); 
-				scrollToItem (mNotesAdapter.countImages () - 1 + 
+				scrollToItem (wasImageCount + 
 					mNotesAdapter.countHeaderViews ()); // Scroll to new page. 
 				break; 
 			case R.id.menu_action_settings: 
@@ -309,7 +310,10 @@ public class NoteActivity extends Activity {
 		else mRvBigPages.scrollToPosition (index + mNotesAdapter.countHeaderViews ()); 
 	} 
 	void scrollToItem (int itemIndex) { 
-		mNotesLayoutManager.scrollToPositionWithOffset (itemIndex, 0); 
+		mDoNotResetInitialScrollYet = true; 
+		initialScrollItemPosition = itemIndex; 
+		initialScrollFraction = 0; 
+		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
 	} 
 	int getScrollSpace () { 
 		int pageIndex = getPageIndex (); 
@@ -524,7 +528,22 @@ public class NoteActivity extends Activity {
 						(ViewGroup) findViewById (R.id.vMainRoot), 
 						false); 
 		mSubfoldersAdapter = new SubfoldersAdapter (this, mBrowsingFolders); 
-		mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolders); 
+		mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolders, 
+													new FileListCache.OnFilesChangedListener () { 
+														@Override 
+														public void onFilesChanged (File[][] list) { 
+															mDoNotResetInitialScrollYet = false; 
+															mRvBigPages 
+																	.getViewTreeObserver () 
+																	.addOnGlobalLayoutListener (mOnGlobalLayout); 
+														} 
+														@Override 
+														public void onFilesNoChange (File[][] list) { 
+															mDoNotResetInitialScrollYet = false; 
+															if (!mStillWaitingToScroll) 
+																resetInitialScroll (); 
+														} 
+													}); 
 		if (!wantDisplaySubfoldersAsBig ()) { 
 			// If there ARE images to display, then list the subfolders up above the images: 
 			mSubfoldersLayoutManager = 
@@ -635,24 +654,35 @@ public class NoteActivity extends Activity {
 		// Show the pen options only if there are images available for editing: 
 		mRvPenOptions.setVisibility (canEdit () ? View.VISIBLE : View.GONE); 
 		// Wait for the RecyclerView to finish loading, and then scroll to the right place: 
-		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (new ViewTreeObserver.OnGlobalLayoutListener () { 
-			@Override  public void onGlobalLayout () { 
-				// Check if we still need to do this or not (maybe it's the first time, and no need to scroll): 
-				if (initialScrollItemPosition == 0 && 
-						initialScrollFraction == 0) return; 
+		mDoNotResetInitialScrollYet = true; 
+		mStillWaitingToScroll = true; 
+		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
+	} 
+	boolean mStillWaitingToScroll = false; 
+	ViewTreeObserver.OnGlobalLayoutListener mOnGlobalLayout = new ViewTreeObserver.OnGlobalLayoutListener () { 
+		@Override  public void onGlobalLayout () { 
+			// Check if we still need to do this or not (maybe it's the first time, and no need to scroll): 
+			if (initialScrollItemPosition != 0 || 
+						initialScrollFraction != 0) { 
 				// Scroll to the initial scroll position, and forget the scroll position (so we 
 				// don't mess up and reuse it when the user doesn't want us to): 
 				int initialScrollItemSpace = (int) (mRvBigPages.getWidth () * initialScrollFraction); 
 				mNotesLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 
 						initialScrollItemSpace); 
-				initialScrollItemPosition = 0; 
-				initialScrollFraction = 0; 
-				// Remove the extra layout overhead by removing this listener: 
-				if (Build.VERSION.SDK_INT >= 16) 
-					mRvBigPages.getViewTreeObserver ().removeOnGlobalLayoutListener (this); 
+				if (!mDoNotResetInitialScrollYet) 
+					resetInitialScroll (); 
 			} 
-		}); 
+			mStillWaitingToScroll = false; 
+			// Remove the extra layout overhead by removing this listener: 
+			if (Build.VERSION.SDK_INT >= 16) 
+				mRvBigPages.getViewTreeObserver ().removeOnGlobalLayoutListener (this); 
+		} 
+	}; 
+	private void resetInitialScroll () { 
+		initialScrollItemPosition = 0; 
+		initialScrollFraction = 0; 
 	} 
+	boolean mDoNotResetInitialScrollYet = false; 
 	
 	void initActionBar () { 
 		if (isBrowsingRootFolder ()) 

@@ -362,6 +362,8 @@ public class PngEdit {
 				// Need to RESAVE the whole thing. Different file version. 
 				useDifferentialSave = false; 
 				mLastIoEditCount = 0; 
+				// Let's just SAVE the edits right here and now, so we don't have to worry about it later: 
+				saveEdits (); 
 			} else mLastIoEditCount = mEdits.size (); 
 			dataInput.close (); 
 			inputStream.close (); 

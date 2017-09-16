@@ -4,6 +4,7 @@
 	<string name="title_format">Annotate - [folder]</string> 
 	<string name="title_goto_page">Go to page:</string> 
 	<string name="title_root_dir">My Picture Folders</string> 
+	<string name="title_brush_width">Brush Width</string> 
 	
 	<string name="title_new_folder">New Folder Name</string> 
 	<string name="title_ren_folder">Rename Folder</string> 
@@ -22,13 +23,17 @@
 	<string name="label_ok">OK</string> 
 	<string name="label_cancel">Cancel</string> 
 	<string name="label_new_folder">Untitled</string> 
+	<string name="label_brush_width">[width] mm</string> 
 	
 	<string name="msg_goto_page">You are at page [current] of [total]. </string> 
+	<string name="msg_brush_width">Enter a brush width in millimeters (mm): </string> 
 	<string name="msg_could_not_new_folder">Could not create folder. Try again? </string> 
 	<string name="msg_could_not_ren_folder">Could not rename folder. Try again? </string> 
 	<string name="msg_could_not_ren_file">Could not rename file. Try again? </string> 
 	<string name="msg_could_not_export_io">Could not export ZIP: I/O error</string> 
 	<string name="msg_making_paper">Adding page &#8230;</string> 
+	
+	<string name="label_text_brush_width">(Brush Width)</string> 
 	
 	<string name="access_eraser">Eraser</string> 
 	<string name="access_pen">Pen Color [number]</string> 

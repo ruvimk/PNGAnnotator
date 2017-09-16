@@ -25,6 +25,7 @@ import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -440,6 +441,40 @@ public class NoteActivity extends Activity {
 									 .create (); 
 		dialog.show (); 
 	} 
+	void userChangeBrushWidth () { 
+		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_float, 
+				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+		String currentWidth = String.valueOf (mNotesAdapter.mBrush); 
+		editText.setText (currentWidth); 
+		editText.setSelection (0, currentWidth.length ()); 
+		AlertDialog dialog = new AlertDialog.Builder (this) 
+									 .setTitle (R.string.title_brush_width)
+									 .setMessage (R.string.msg_brush_width) 
+									 .setView (editText) 
+									 .setPositiveButton (R.string.label_ok, new DialogInterface.OnClickListener () {
+										 @Override public void onClick (DialogInterface dialogInterface, int i) {
+											 float number; 
+											 try { 
+												 number = Float.valueOf (editText.getText ().toString ()); 
+											 } catch (NumberFormatException err) { 
+												 return; 
+											 } 
+											 // Send this to the notes adapter: 
+											 mNotesAdapter.mBrush = number; 
+											 mNotesAdapter.notifyDataSetChanged (); 
+											 // Update the view: 
+											 updateBrushWidthTextShowing (); 
+											 // Save this in the quick-preferences: 
+											 prefs.edit ().putFloat ( 
+											 		currentTool == TOOL_ERASER ? 
+															"erase-width" : "brush-width" 
+											 		, number).apply (); 
+										 }
+									 }) 
+									 .setNegativeButton (R.string.label_cancel, null) 
+									 .create (); 
+		dialog.show (); 
+	} 
 	void exportPages () { 
 		mNotesAdapter.reloadList (); // Just in case. 
 		(new AsyncTask<File [], Integer, File> () { 
@@ -509,6 +544,8 @@ public class NoteActivity extends Activity {
 	View eraser = null; 
 	View hand = null; 
 	View eraser_miniHand = null; 
+	View brushWidthButton = null; 
+	TextView brushWidthText = null; 
 	
 	ProgressBar pbMainProgress = null; 
 	
@@ -579,6 +616,8 @@ public class NoteActivity extends Activity {
 				(ViewGroup) findViewById (R.id.vMainRoot), false); 
 		hand = getLayoutInflater ().inflate (R.layout.icon_eraser, 
 				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+		brushWidthButton = getLayoutInflater ().inflate (R.layout.icon_brush_width, 
+				(ViewGroup) findViewById (R.id.vMainRoot), false); 
 		((ImageView) hand.findViewById (R.id.ivEraser)).setImageResource (R.mipmap.ic_hand); 
 		hand.findViewById (R.id.ivMiniHand).setVisibility (View.GONE); 
 		eraser_miniHand = eraser.findViewById (R.id.ivMiniHand); 
@@ -593,7 +632,10 @@ public class NoteActivity extends Activity {
 				// Update the touch event handler for PageView: 
 				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
 				mNotesAdapter.mTool = currentTool; 
+				mNotesAdapter.mBrush = prefs.getFloat ("write-width", 1.0f); 
 				mNotesAdapter.notifyDataSetChanged (); 
+				// Update the brush width text that's displayed to the user at the top: 
+				updateBrushWidthTextShowing (); 
 			} 
 		}); 
 		eraser.setOnClickListener (new View.OnClickListener () { 
@@ -611,6 +653,8 @@ public class NoteActivity extends Activity {
 				mNotesAdapter.mTool = currentTool; 
 				mNotesAdapter.mBrush = prefs.getFloat ("erase-width", 10.0f); 
 				mNotesAdapter.notifyDataSetChanged (); 
+				// Update the brush width text that's displayed to the user at the top: 
+				updateBrushWidthTextShowing (); 
 			} 
 		}); 
 		mPensAdapter.setOnPenColorSelectedListener (new PensAdapter.OnPenColorSelectedListener () { 
@@ -629,9 +673,17 @@ public class NoteActivity extends Activity {
 				mNotesAdapter.mColor = currentColor; 
 				mNotesAdapter.mBrush = prefs.getFloat ("write-width", 1.0f); 
 				mNotesAdapter.notifyDataSetChanged (); 
+				// Update the brush width text that's displayed to the user at the top: 
+				updateBrushWidthTextShowing (); 
 			} 
 		}); 
-		mPensAdapter.setHeaderItemViews (new View [] {hand, eraser}); 
+		brushWidthText = brushWidthButton.findViewById (R.id.tvBrushWidth); 
+		brushWidthButton.setOnClickListener (new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				userChangeBrushWidth (); 
+			} 
+		}); 
+		mPensAdapter.setHeaderItemViews (new View [] {hand, brushWidthButton, eraser}); 
 		// Progress bar: 
 		pbMainProgress = findViewById (R.id.pbMainProgress); 
 		pbMainProgress.setVisibility (View.GONE); 
@@ -651,6 +703,8 @@ public class NoteActivity extends Activity {
 		mNotesAdapter.mTool = currentTool; 
 		mNotesAdapter.mColor = currentColor; 
 		mNotesAdapter.notifyDataSetChanged (); 
+		// Set the brush width text: 
+		updateBrushWidthTextShowing (); 
 		// Initialize the pen mode things: 
 		updateViewsForPenMode (); 
 		// Show the pen options only if there are images available for editing: 
@@ -659,6 +713,10 @@ public class NoteActivity extends Activity {
 		mDoNotResetInitialScrollYet = true; 
 		mStillWaitingToScroll = true; 
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
+	} 
+	void updateBrushWidthTextShowing () { 
+		brushWidthText.setText (getString (R.string.label_brush_width) 
+										.replace ("[width]", String.valueOf (mNotesAdapter.mBrush))); 
 	} 
 	boolean mStillWaitingToScroll = false; 
 	ViewTreeObserver.OnGlobalLayoutListener mOnGlobalLayout = new ViewTreeObserver.OnGlobalLayoutListener () { 

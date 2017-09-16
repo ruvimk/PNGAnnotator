@@ -31,6 +31,8 @@ public class FileListCache {
 	final File mFilesDir; 
 	final Vector<File> mFolder; 
 	
+	static final String LIST_FILENAME = "pictures.list"; 
+	
 	static Comparator<File []> mFileComparator = new Comparator<File []> () { 
 		@Override public int compare (File a [], File b []) { 
 			return a[0].compareTo (b[0]); 
@@ -100,7 +102,7 @@ public class FileListCache {
 			if (!needSave) continue; 
 			changed = true; 
 			try { 
-				writeLines (new File (f, "ls.cache"), lines); 
+				writeLines (new File (f, LIST_FILENAME), lines); 
 			} catch (IOException err) { 
 				err.printStackTrace (); 
 			} 
@@ -184,7 +186,7 @@ public class FileListCache {
 		} 
 		if (list == null) { 
 			for (File folder : myFolder) { 
-				File listCache = new File (folder, "ls.cache"); 
+				File listCache = new File (folder, LIST_FILENAME); 
 				if (!listCache.exists ()) { 
 					noCacheFound = true; 
 					break; 

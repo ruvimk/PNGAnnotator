@@ -1,5 +1,6 @@
 package com.gradgoose.pngannotator;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -26,6 +28,7 @@ import java.util.Vector;
  */
 
 public class FileListCache { 
+	final File mFilesDir; 
 	final Vector<File> mFolder; 
 	
 	static Comparator<File []> mFileComparator = new Comparator<File []> () { 
@@ -39,8 +42,9 @@ public class FileListCache {
 		void onFilesNoChange (File [] [] list); 
 	} 
 	
-	public FileListCache (Vector<File> targetFolder) { 
+	public FileListCache (Vector<File> targetFolder, File appFilesDir) { 
 		mFolder = targetFolder; 
+		mFilesDir = appFilesDir; 
 	} 
 	
 	static void writeLines (File to, Vector<String> lines) throws IOException {
@@ -101,9 +105,29 @@ public class FileListCache {
 				err.printStackTrace (); 
 			} 
 		} 
-		if (changed)
+		try { 
+			// Save the general browse cache (faster to read than per-folder cache): 
+			File browseCacheFile = getBrowseCacheFile (folder); 
+			if (changed || !browseCacheFile.exists ()) { 
+				Vector<String> lines = new Vector<> (now.length); 
+				for (File item[] : now) { 
+					String sItem = ""; 
+					for (File file : item) { 
+						if (!sItem.isEmpty ()) 
+							sItem += "\t"; 
+						sItem += file.getAbsolutePath (); 
+					} 
+					lines.add (sItem); 
+				} 
+				writeLines (browseCacheFile, lines); 
+			} 
+		} catch (IOException err) { 
+			err.printStackTrace (); 
+		} 
+		if (changed) { 
+			// Call the on-changed listener: 
 			onFilesChangedListener.onFilesChanged (now); 
-		else onFilesChangedListener.onFilesNoChange (now); 
+		} else onFilesChangedListener.onFilesNoChange (now); 
 	} 
 	
 	private void makeMapEntries (Map<String, Vector<File>> map, File list []) { 
@@ -123,28 +147,63 @@ public class FileListCache {
 			index++; 
 		} 
 	} 
+	private File getBrowseCacheFile (Vector<File> myFolder) throws IOException { 
+		String browseCacheFilename = ""; 
+		for (File folder : myFolder) { 
+			if (!browseCacheFilename.isEmpty ()) 
+				browseCacheFilename += "+"; 
+			browseCacheFilename += folder.getAbsolutePath ().replace ('/', '-'); 
+		} 
+		browseCacheFilename += ".cache.csv"; 
+		File browseCacheDir = new File (mFilesDir, "Dir-Cache"); 
+		if (!browseCacheDir.exists () && !browseCacheDir.mkdirs ()) 
+			throw new IOException ("Could not create directory: " + browseCacheDir.getAbsolutePath ()); 
+		return new File (browseCacheDir, browseCacheFilename); 
+	} 
 	public File [] [] asyncListFiles (final FileFilter filter, final OnFilesChangedListener listener) { 
 		TreeMap<String, Vector<File>> children = new TreeMap<> (); 
 		boolean noCacheFound = false; 
 		final Vector<File> myFolder = mFolder; 
-		for (File folder : myFolder) { 
-			File listCache = new File (folder, "ls.cache"); 
-			if (!listCache.exists ()) { 
-				noCacheFound = true; 
-				break; 
+		File list [] [] = null; 
+		try { 
+			File browseCacheFile = getBrowseCacheFile (myFolder); 
+			if (browseCacheFile.exists ()) { 
+				Vector<String> lines = readLines (browseCacheFile); 
+				list = new File[lines.size ()][]; 
+				int i = 0; 
+				for (String line : lines) { 
+					String parts[] = line.split ("\t"); 
+					list[i] = new File[parts.length]; 
+					for (int j = 0; j < parts.length; j++) 
+						list[i][j] = new File (parts[j]); 
+					i++; 
+				} 
 			} 
-			try { 
-				File list [] = makeFilesArray (readLines (listCache)); 
-				makeMapEntries (children, list); 
-			} catch (IOException err) { 
-				err.printStackTrace (); 
-				noCacheFound = true; 
-				break; 
+		} catch (IOException err) { 
+			err.printStackTrace (); 
+		} 
+		if (list == null) { 
+			for (File folder : myFolder) { 
+				File listCache = new File (folder, "ls.cache"); 
+				if (!listCache.exists ()) { 
+					noCacheFound = true; 
+					break; 
+				} 
+				try { 
+					File myList[] = makeFilesArray (readLines (listCache)); 
+					makeMapEntries (children, myList); 
+				} catch (IOException err) { 
+					err.printStackTrace (); 
+					noCacheFound = true; 
+					break; 
+				} 
+			} 
+			if (!noCacheFound) { 
+				list = new File[children.size ()][]; 
+				make2dList (list, children); 
 			} 
 		} 
-		File list [] [] = new File [children.size ()] []; 
 		if (!noCacheFound) { 
-			make2dList (list, children); 
 			final File [] [] oldList = list; 
 			AsyncTask<Void,Void,File [] []> mTask = new AsyncTask<Void, Void, File[][]> () { 
 				@Override protected File[][] doInBackground (Void... voids) { 

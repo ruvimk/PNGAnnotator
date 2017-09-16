@@ -203,7 +203,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		super (); 
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 
-		mCache = new FileListCache (browsingDir); 
+		mCache = new FileListCache (browsingDir, context.getFilesDir ()); 
 		prepareFileList (); 
 		mStableIds = new HashMap<> (mList.length); 
 		loadIds (mList); 

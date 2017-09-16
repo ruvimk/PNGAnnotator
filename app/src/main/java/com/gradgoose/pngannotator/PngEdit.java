@@ -36,6 +36,8 @@ import java.util.Vector;
 public class PngEdit { 
 	private static final String TAG = "PngEdit"; 
 	
+	static final boolean SAVE_EDITS_ON_LOAD_IF_VERSION_OUTDATED = false; 
+	
 	final Context mContext; 
 	File mTarget = null; 
 	
@@ -362,8 +364,10 @@ public class PngEdit {
 				// Need to RESAVE the whole thing. Different file version. 
 				useDifferentialSave = false; 
 				mLastIoEditCount = 0; 
-				// Let's just SAVE the edits right here and now, so we don't have to worry about it later: 
-				saveEdits (); 
+				if (SAVE_EDITS_ON_LOAD_IF_VERSION_OUTDATED) { 
+					// Let's just SAVE the edits right here and now, so we don't have to worry about it later: 
+					saveEdits (); 
+				} 
 			} else mLastIoEditCount = mEdits.size (); 
 			dataInput.close (); 
 			inputStream.close (); 

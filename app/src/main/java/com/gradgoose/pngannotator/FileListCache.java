@@ -102,7 +102,12 @@ public class FileListCache {
 			if (!needSave) continue; 
 			changed = true; 
 			try { 
-				writeLines (new File (f, LIST_FILENAME), lines); 
+				File ls = new File (f, LIST_FILENAME); 
+				if (lines.isEmpty ()) { 
+					// Remove, but if can't remove, then overwrite: 
+					if (ls.exists () && !ls.delete ()) 
+						writeLines (ls, lines); 
+				} else writeLines (ls, lines); 
 			} catch (IOException err) { 
 				err.printStackTrace (); 
 			} 

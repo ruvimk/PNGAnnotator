@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 
@@ -82,17 +83,13 @@ public class NoteActivity extends Activity {
 		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
 		recents = getSharedPreferences (RECENTS_NAME, MODE_PRIVATE); 
 		PageView.mMd5Cache = getSharedPreferences (MD5_CACHE_NAME, MODE_PRIVATE); 
-		Set<String> recentSet; 
+		String recentText; 
 		recentFolders = new Vector<> (10); // Can change 10 to something else later. From settings, eg. 
 		if (recents.contains ("recent-folders") && 
-					(recentSet = recents.getStringSet ("recent-folders", null)) != null) { 
-			int i = 0; 
-			for (String s : recentSet) { 
-				if (i >= recentFolders.capacity ()) 
-					break; // Let's only keep the LENGTH most recent items. 
-				recentFolders.add (s); 
-				i++; 
-			} 
+					(recentText = recents.getString ("recent-folders", null)) != null) { 
+			String lines [] = recentText.split ("\\\\n"); 
+			for (String line : lines) 
+				recentFolders.add (line); 
 		} 
 		// Grab the editing state: 
 		currentTool = prefs.getInt ("tool", currentTool); 
@@ -170,9 +167,13 @@ public class NoteActivity extends Activity {
 				recentFolders.add (0, nowBrowsing); 
 			} 
 			// Save the recent folders list: 
-			recentSet = new ArraySet<> (recentFolders.capacity ()); 
-			recentSet.addAll (recentFolders); 
-			recents.edit ().putStringSet ("recent-folders", recentSet).apply (); 
+			StringBuilder sb = new StringBuilder (recentFolders.elementAt (0).length () * 
+				recentFolders.size () * 2); 
+			for (int i = 0; i < recentFolders.size (); i++) { 
+				if (i > 0) sb.append ("\\n"); 
+				sb.append (recentFolders.elementAt (i)); 
+			} 
+			recents.edit ().putString ("recent-folders", sb.toString ()).apply (); 
 		} 
 	} 
 	// Save which folder we're working on, and what scroll position: 
@@ -533,7 +534,8 @@ public class NoteActivity extends Activity {
 														@Override 
 														public void onFilesChanged (File[][] list) { 
 															mDoNotResetInitialScrollYet = false; 
-															mRvBigPages 
+															if (mRvBigPages != null) 
+																mRvBigPages 
 																	.getViewTreeObserver () 
 																	.addOnGlobalLayoutListener (mOnGlobalLayout); 
 														} 

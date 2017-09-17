@@ -126,7 +126,7 @@ public class NoteActivity extends Activity {
 			if (savedInstanceState.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = savedInstanceState.getInt (STATE_SCROLL_ITEM); 
 			if (savedInstanceState.containsKey (STATE_SCROLL_FRACTION)) 
-				initialScrollFraction = savedInstanceState.getInt (STATE_SCROLL_FRACTION); 
+				initialScrollFraction = savedInstanceState.getFloat (STATE_SCROLL_FRACTION); 
 		} 
 		// See if whoever started this activity wanted us to open any particular folder: 
 		Intent sourceIntent = getIntent (); 
@@ -143,7 +143,7 @@ public class NoteActivity extends Activity {
 			if (initialScrollItemPosition == 0 && extras.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = extras.getInt (STATE_SCROLL_ITEM); 
 			if (initialScrollFraction == 0 && extras.containsKey (STATE_SCROLL_FRACTION)) 
-				initialScrollFraction = extras.getInt (STATE_SCROLL_FRACTION); 
+				initialScrollFraction = extras.getFloat (STATE_SCROLL_FRACTION); 
 		} 
 		if (mBrowsingFolders == null) // Else use the default of the DCIM folder. 
 		{ 

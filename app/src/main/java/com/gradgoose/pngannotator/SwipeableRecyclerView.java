@@ -183,7 +183,9 @@ public class SwipeableRecyclerView extends RecyclerView {
 					int nextIndex = (currentIndex + 1) % mParentSubfolders.length; 
 					go (nextIndex); 
 				} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE) { 
-					int nextIndex = (currentIndex - 1) % mParentSubfolders.length; 
+					int nextIndex = currentIndex - 1; 
+					if (nextIndex < 0) 
+						nextIndex = mParentSubfolders.length - 1; 
 					go (nextIndex); 
 				} 
 				finishScrollAnimation (); 

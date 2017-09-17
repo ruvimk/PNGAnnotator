@@ -222,6 +222,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		setHasStableIds (true); 
 	} 
 	
+	Vector<PageView> mAllPageViews = new Vector<> (); 
+	
 	public class Plain extends RecyclerView.ViewHolder { 
 		public Plain (View root) { 
 			super (root); 
@@ -234,6 +236,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			super (root); 
 			pageView = root.findViewById (R.id.pvBigPage); 
 			titleView = root.findViewById (R.id.tvPageTitle); 
+			mAllPageViews.add (pageView); 
 		} 
 		public void bind (File itemFile) { 
 			titleView.setText (itemFile.getName ()); 
@@ -245,6 +248,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.mColor = mColor; 
 			pageView.mBrush = mBrush; 
 		} 
+	} 
+	
+	void recycleBitmaps () { 
+		for (PageView pageView : mAllPageViews) 
+			pageView.setImageBitmap (null); // This will recycle the previous bitmap. 
 	} 
 	
 	@Override public RecyclerView.ViewHolder onCreateViewHolder (ViewGroup parent, int viewType) { 

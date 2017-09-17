@@ -855,5 +855,11 @@ public class NoteActivity extends Activity {
 		return mNotesAdapter.hasImages (); 
 	} 
 	
+	@Override public void finish () { 
+		if (mNotesAdapter != null) 
+			mNotesAdapter.recycleBitmaps (); 
+		super.finish (); 
+	} 
+	
 	
 } 

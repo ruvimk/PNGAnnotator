@@ -3,8 +3,6 @@ package com.gradgoose.pngannotator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Canvas;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
@@ -18,7 +16,6 @@ import android.widget.LinearLayout;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Vector;
-import java.util.concurrent.RunnableFuture;
 
 /**
  * Created by Ruvim Kondratyev on 9/16/2017.
@@ -35,7 +32,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 		super (context, attributeSet);
 		MIN_DELTA_TO_SWIPE = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
 				getResources ().getDisplayMetrics ()); 
-		MIN_DELTA_TO_SHOW = MIN_DELTA_TO_SWIPE / 6; 
+		MIN_DISPLACEMENT_TO_SCROLL = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
+				getResources ().getDisplayMetrics ()); 
 	} 
 	public void setParentFolder (Vector<File> browsingParentFolder, String nowBrowsingFolderName) { 
 		mParentFolder = browsingParentFolder; 
@@ -124,8 +122,9 @@ public class SwipeableRecyclerView extends RecyclerView {
 	boolean stillSwiping = false; 
 	boolean stillAnimating = false; 
 	boolean manualScroll = false; 
+	boolean usingSuper = false; 
 	float MIN_DELTA_TO_SWIPE; 
-	float MIN_DELTA_TO_SHOW; 
+	float MIN_DISPLACEMENT_TO_SCROLL; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
 		if (canSwipe ()) { 
 			float x = event.getX (); 
@@ -133,6 +132,12 @@ public class SwipeableRecyclerView extends RecyclerView {
 			boolean horizontal = isHorizontalOrientation (); 
 			float coordinate = horizontal ? event.getY () + getTop () 
 									   : event.getX () + getLeft (); 
+			boolean wasUsingSuperBefore = usingSuper; 
+			usingSuper = firstY != 0 && 
+								 Math.abs (y - firstY) > Math.abs (x - firstX) && 
+										 Math.sqrt ((x - firstX) * (x - firstX) + 
+															(y - firstY) * (y - firstY)) 
+												 >= MIN_DISPLACEMENT_TO_SCROLL; 
 			int action = event.getAction (); 
 			if (action == MotionEvent.ACTION_DOWN || 
 						(action == MotionEvent.ACTION_MOVE && !stillSwiping)) { 
@@ -148,6 +153,21 @@ public class SwipeableRecyclerView extends RecyclerView {
 				swipeDelta = firstCoordinate - currentCoordinate; 
 				long now = System.currentTimeMillis (); 
 				float dt = (float) (now - prevT) / 1e3f; 
+				if (!usingSuper) { 
+					if (wasUsingSuperBefore != usingSuper) { 
+						if (horizontal) 
+							scrollBy ((int) (firstX - x), 0); 
+						else scrollBy (0, (int) (firstY - y)); 
+					} else { 
+						if (horizontal) 
+							scrollBy ((int) (prevX - x), 0); 
+						else scrollBy (0, (int) (prevY - y)); 
+					} 
+				} else if (wasUsingSuperBefore != usingSuper) { 
+					if (horizontal) 
+						scrollBy ((int) (x - firstX), 0); 
+					else scrollBy (0, (int) (y - firstY)); 
+				} 
 				scrollVX = horizontal ? (prevX - x) / dt : 0; 
 				scrollVY = horizontal ? 0 :  (prevY - y) / dt; 
 				prevX = x; 
@@ -168,8 +188,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 				} 
 				finishScrollAnimation (); 
 			} 
-			if (Math.abs (y - firstY) > Math.abs (x - firstX) && 
-					Math.abs (y - firstY) >= MIN_DELTA_TO_SHOW) 
+			if (usingSuper) 
 				super.onTouchEvent (event); 
 			getParent ().requestDisallowInterceptTouchEvent (true); 
 			return true; 

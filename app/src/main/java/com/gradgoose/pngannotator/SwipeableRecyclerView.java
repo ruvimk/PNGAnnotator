@@ -212,30 +212,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 				swipeDelta = 0; 
 				updateSwipePosition (); 
 			} 
-			if (usingSuper) {
-				MotionEvent.PointerProperties properties [] = 
-						new MotionEvent.PointerProperties [event.getPointerCount ()];
-				MotionEvent.PointerCoords coords [] = new MotionEvent.PointerCoords [event.getPointerCount ()]; 
-				for (int i = 0; i < properties.length; i++) { 
-					properties[i] = new MotionEvent.PointerProperties (); 
-					event.getPointerProperties (i, properties[i]); 
-					coords[i] = new MotionEvent.PointerCoords (); 
-					event.getPointerCoords (i, coords[i]); 
-				} 
-				MotionEvent copy = MotionEvent.obtain (event.getDownTime (), 
-						event.getEventTime (), 
-						event.getAction (), 
-						event.getPointerCount (), 
-						properties, coords, event.getMetaState (), 
-						event.getButtonState (), 
-						event.getXPrecision (), 
-						event.getYPrecision (), 
-						event.getDeviceId (), 
-						event.getEdgeFlags (), 
-						event.getSource (), 
-						event.getFlags ()); 
-				super.onTouchEvent (copy); 
-				copy.recycle (); 
+			if (usingSuper) { 
+				super.onTouchEvent (event); 
 			} 
 			getParent ().requestDisallowInterceptTouchEvent (true); 
 			return true; 

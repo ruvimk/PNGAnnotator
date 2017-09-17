@@ -1,5 +1,6 @@
 package com.gradgoose.pngannotator;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
@@ -70,7 +71,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 			float dt = 0.001f * (now - lastAnimatedT); 
 			float deltaX = scrollVX * dt; 
 			float deltaY = scrollVY * dt; 
-			scrollBy ((int) deltaX, (int) deltaY); 
 			float scale = (float) Math.pow (decayRate, dt); 
 			scrollVX *= scale; 
 			scrollVY *= scale; 
@@ -146,9 +146,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 				swipeDelta = firstCoordinate - currentCoordinate; 
 				float x = event.getX (); 
 				float y = event.getY (); 
-				if (horizontal) 
-					scrollBy ((int) (prevX - x), 0); 
-				else scrollBy (0, (int) (prevY - y)); 
 				long now = System.currentTimeMillis (); 
 				float dt = (float) (now - prevT) / 1e3f; 
 				scrollVX = horizontal ? (prevX - x) / dt : 0; 
@@ -171,6 +168,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 				} 
 				finishScrollAnimation (); 
 			} 
+			super.onTouchEvent (event); 
 			getParent ().requestDisallowInterceptTouchEvent (true); 
 			return true; 
 		} else return super.onTouchEvent (event); 
@@ -202,7 +200,9 @@ public class SwipeableRecyclerView extends RecyclerView {
 			parent[i] = mParentFolder.elementAt (i).getAbsolutePath (); 
 		intent.putExtra (NoteActivity.STATE_BROWSING_PATH, current); 
 		intent.putExtra (NoteActivity.STATE_PARENT_BROWSE, parent); 
-		getContext ().startActivity (intent); 
+		Activity activity = (Activity) getContext (); 
+//		activity.startActivity (intent); 
+//		activity.finish (); 
 	} 
 	public boolean canSwipe () { 
 		return mParentFolder != null && mParentSubfolders != null && 

@@ -1,6 +1,7 @@
 package com.gradgoose.pngannotator;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -59,7 +60,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 			} 
 		}).start (); 
 	} 
-	float decayRate = 0.1f; 
+	float decayRate = 0.2f; 
 	long timestep = 20; 
 	long lastAnimatedT = 0; 
 	Runnable mStepAnimation = new Runnable () { 
@@ -73,7 +74,9 @@ public class SwipeableRecyclerView extends RecyclerView {
 			float scale = (float) Math.pow (decayRate, dt); 
 			scrollVX *= scale; 
 			scrollVY *= scale; 
-			swipeDelta *= scale; 
+			if (Math.abs (swipeDelta) >= MIN_DELTA_TO_SWIPE) 
+				swipeDelta /= scale; 
+			else swipeDelta *= scale; 
 			updateSwipePosition (); 
 			// Continue: 
 			lastAnimatedT = now; 
@@ -120,6 +123,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float swipeDelta = 0; 
 	boolean stillSwiping = false; 
 	boolean stillAnimating = false; 
+	boolean manualScroll = false; 
 	float MIN_DELTA_TO_SWIPE; 
 	float MIN_DELTA_TO_SHOW; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
@@ -158,6 +162,13 @@ public class SwipeableRecyclerView extends RecyclerView {
 			} else if (action == MotionEvent.ACTION_UP) { 
 				stillSwiping = false; 
 				stillAnimating = true; 
+				if (swipeDelta >= MIN_DELTA_TO_SWIPE) { 
+					int nextIndex = (currentIndex + 1) % mParentSubfolders.length; 
+					go (nextIndex); 
+				} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE) { 
+					int nextIndex = (currentIndex - 1) % mParentSubfolders.length; 
+					go (nextIndex); 
+				} 
 				finishScrollAnimation (); 
 			} 
 			getParent ().requestDisallowInterceptTouchEvent (true); 
@@ -180,6 +191,18 @@ public class SwipeableRecyclerView extends RecyclerView {
 			isHorizontalScrollOrientation = ((LinearLayoutManager) manager).getOrientation () 
 													== LinearLayoutManager.HORIZONTAL; 
 		return isHorizontalScrollOrientation; 
+	} 
+	void go (int index) {
+		Intent intent = new Intent (getContext (), NoteActivity.class); 
+		String current [] = new String [mParentSubfolders.length]; 
+		String parent [] = new String [mParentFolder.size ()]; 
+		for (int i = 0; i < mParentSubfolders[index].length; i++) 
+			current[i] = mParentSubfolders[index][i].getAbsolutePath (); 
+		for (int i = 0; i < mParentFolder.size (); i++) 
+			parent[i] = mParentFolder.elementAt (i).getAbsolutePath (); 
+		intent.putExtra (NoteActivity.STATE_BROWSING_PATH, current); 
+		intent.putExtra (NoteActivity.STATE_PARENT_BROWSE, parent); 
+		getContext ().startActivity (intent); 
 	} 
 	public boolean canSwipe () { 
 		return mParentFolder != null && mParentSubfolders != null && 

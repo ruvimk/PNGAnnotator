@@ -35,7 +35,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 		super (context, attributeSet);
 		MIN_DELTA_TO_SWIPE = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
 				getResources ().getDisplayMetrics ()); 
-		MIN_DELTA_TO_SHOW = MIN_DELTA_TO_SWIPE / 4; 
+		MIN_DELTA_TO_SHOW = MIN_DELTA_TO_SWIPE / 6; 
 	} 
 	public void setParentFolder (Vector<File> browsingParentFolder, String nowBrowsingFolderName) { 
 		mParentFolder = browsingParentFolder; 
@@ -128,6 +128,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float MIN_DELTA_TO_SHOW; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
 		if (canSwipe ()) { 
+			float x = event.getX (); 
+			float y = event.getY (); 
 			boolean horizontal = isHorizontalOrientation (); 
 			float coordinate = horizontal ? event.getY () + getTop () 
 									   : event.getX () + getLeft (); 
@@ -144,8 +146,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 			} else if (action == MotionEvent.ACTION_MOVE) { 
 				currentCoordinate = coordinate; 
 				swipeDelta = firstCoordinate - currentCoordinate; 
-				float x = event.getX (); 
-				float y = event.getY (); 
 				long now = System.currentTimeMillis (); 
 				float dt = (float) (now - prevT) / 1e3f; 
 				scrollVX = horizontal ? (prevX - x) / dt : 0; 
@@ -168,7 +168,9 @@ public class SwipeableRecyclerView extends RecyclerView {
 				} 
 				finishScrollAnimation (); 
 			} 
-			super.onTouchEvent (event); 
+			if (Math.abs (y - firstY) > Math.abs (x - firstX) && 
+					Math.abs (y - firstY) >= MIN_DELTA_TO_SHOW) 
+				super.onTouchEvent (event); 
 			getParent ().requestDisallowInterceptTouchEvent (true); 
 			return true; 
 		} else return super.onTouchEvent (event); 

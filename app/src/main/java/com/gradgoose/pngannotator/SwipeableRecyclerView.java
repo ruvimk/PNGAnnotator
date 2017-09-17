@@ -186,9 +186,21 @@ public class SwipeableRecyclerView extends RecyclerView {
 				stillSwiping = false; 
 				stillAnimating = true; 
 				if (swipeDelta >= MIN_DELTA_TO_SWIPE) { 
+					// Restore the scroll: 
+					if (horizontal) 
+						scrollBy ((int) (x - firstX), 0); 
+					else scrollBy (0, (int) (y - firstY)); 
+					usingSuper = false; 
+					// Open the next folder inside this folder's parent: 
 					int nextIndex = (currentIndex + 1) % mParentSubfolders.length; 
 					go (nextIndex); 
 				} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE) { 
+					// Restore the scroll: 
+					if (horizontal) 
+						scrollBy ((int) (x - firstX), 0); 
+					else scrollBy (0, (int) (y - firstY)); 
+					usingSuper = false; 
+					// Open the previous folder inside this folder's parent: 
 					int nextIndex = currentIndex - 1; 
 					if (nextIndex < 0) 
 						nextIndex = mParentSubfolders.length - 1; 

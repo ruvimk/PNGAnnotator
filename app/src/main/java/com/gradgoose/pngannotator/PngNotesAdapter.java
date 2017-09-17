@@ -41,6 +41,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	int mColor = Color.BLACK; 
 	float mBrush = 3.0f; 
 	
+	PageView.ErrorCallback mErrorCallback = null; 
+	
 	long headerPersistantIdStart = 0; 
 	View mHeaderItemViews [] = null; 
 	
@@ -235,6 +237,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		public void bind (File itemFile) { 
 			titleView.setText (itemFile.getName ()); 
+			pageView.mErrorCallback = mErrorCallback; 
 			pageView.setItemFile (itemFile); 
 			pageView.setPenMode (mPenMode); 
 			pageView.setToolMode (mToolMode); 

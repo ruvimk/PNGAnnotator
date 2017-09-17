@@ -42,6 +42,8 @@ public class NoteActivity extends Activity {
 	File mSdDCIM = null; 
 	File mSdPictures = null; 
 	
+	boolean mPaused = false; 
+	
 	Vector<File> mBrowsingFolders = null; 
 	private void setBrowsingPaths (@Nullable String browsingPaths []) { 
 		if (browsingPaths == null) return; 
@@ -239,10 +241,12 @@ public class NoteActivity extends Activity {
 						scrollFraction) 
 				.apply (); 
 		mReloadOnNextResume = true; 
+		mPaused = true; 
 		super.onPause (); 
 	} 
 	@Override public void onResume () { 
 		super.onResume (); 
+		mPaused = false; 
 		// Only reload if this is following an onPause (): 
 		if (mReloadOnNextResume) { 
 			mSubfoldersAdapter.reloadList (); 
@@ -601,6 +605,7 @@ public class NoteActivity extends Activity {
 		return !mNotesAdapter.hasImages () || 
 					   isBrowsingRootFolder (); 
 	} 
+	boolean mAlreadyHandling_OutOfMem = false; 
 	void initUserInterface () { 
 		// Subfolder browser RecyclerView: 
 		mRvSubfolderBrowser = (RecyclerView) getLayoutInflater () 
@@ -625,6 +630,33 @@ public class NoteActivity extends Activity {
 																resetInitialScroll (); 
 														} 
 													}); 
+		mNotesAdapter.mErrorCallback = new PageView.ErrorCallback () { 
+			@Override public void onBitmapOutOfMemory () { 
+				if (mAlreadyHandling_OutOfMem) return; 
+				mAlreadyHandling_OutOfMem = true; 
+				Bundle extras = getIntent ().getExtras (); 
+				boolean alreadyRestartedByError = extras.getBoolean ("memory-error", false); 
+				if (alreadyRestartedByError) { 
+					new AlertDialog.Builder (NoteActivity.this) 
+							.setTitle (R.string.title_out_of_mem) 
+							.setMessage (R.string.msg_out_of_mem) 
+							.create ().show (); 
+				} else { 
+					String current [] = new String [mBrowsingFolders.size ()]; 
+					String parent [] = new String [mParentFolder.size ()]; 
+					for (int i = 0; i < current.length; i++) 
+						current[i] = mBrowsingFolders.elementAt (i).getAbsolutePath (); 
+					for (int i = 0; i < parent.length; i++) 
+						parent[i] = mParentFolder.elementAt (i).getAbsolutePath (); 
+					Intent intent = new Intent (NoteActivity.this, NoteActivity.class); 
+					intent.putExtra (STATE_BROWSING_PATH, current); 
+					intent.putExtra (STATE_PARENT_BROWSE, parent); 
+					intent.putExtra ("memory-error", true); 
+					startActivity (intent); 
+					finish (); 
+				} 
+			} 
+		}; 
 		if (!wantDisplaySubfoldersAsBig ()) { 
 			// If there ARE images to display, then list the subfolders up above the images: 
 			mSubfoldersLayoutManager = 

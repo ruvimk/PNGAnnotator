@@ -13,6 +13,7 @@ import android.graphics.PorterDuffColorFilter;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -72,7 +73,13 @@ public class PenIcon extends ImageView {
 			mPenHeight = options.outHeight; 
 		} 
 		if (options != null) { 
-			setImageURI (Uri.fromFile (penImage)); 
+			try {
+				setImageURI (Uri.fromFile (penImage));
+			} catch (OutOfMemoryError err) { 
+				Toast.makeText (getContext (), R.string.title_out_of_mem, 
+						Toast.LENGTH_SHORT).show (); 
+				err.printStackTrace (); 
+			} 
 			requestLayout (); 
 			invalidate (); 
 			mUseCachedBitmap = true; 

@@ -10,6 +10,7 @@
 	<string name="title_ren_folder">Rename Folder</string> 
 	<string name="title_ren_file">Rename File</string> 
 	<string name="title_send_zip_to">Send notes to</string> 
+	<string name="title_out_of_mem">Out of Memory</string> 
 	
 	<string name="menu_create_folder">New Folder</string> 
 	<string name="menu_create_page">New Page</string> 
@@ -32,6 +33,8 @@
 	<string name="msg_could_not_ren_file">Could not rename file. Try again? </string> 
 	<string name="msg_could_not_export_io">Could not export ZIP: I/O error</string> 
 	<string name="msg_making_paper">Adding page &#8230;</string> 
+	<string name="msg_out_of_mem">The system ran out of memory, so pictures may load very blurry or 
+	even not load at all. Try re-opening the app to see if that helps. Sorry for the inconvenience!</string> 
 	
 	<string name="label_text_brush_width">(Brush Width)</string> 
 	

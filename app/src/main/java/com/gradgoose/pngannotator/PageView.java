@@ -1,6 +1,7 @@
 package com.gradgoose.pngannotator;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -39,6 +40,12 @@ public class PageView extends ImageView {
 	static class EditHolder { 
 		PngEdit value = null; 
 	} 
+	
+	public interface ErrorCallback { 
+		void onBitmapOutOfMemory (); 
+	} 
+	
+	ErrorCallback mErrorCallback = null; 
 	
 	boolean mToolMode = false; 
 	WriteDetector mWriteDetector; 
@@ -346,8 +353,22 @@ public class PageView extends ImageView {
 	class Step2Thread extends Thread { 
 		boolean cancel = false; 
 	} 
+	
+	Bitmap mPreviousSetBitmap = null; 
+	@Override public void setImageBitmap (Bitmap bmp) { 
+		if (mPreviousSetBitmap != null) { 
+			mPreviousSetBitmap.recycle (); 
+		} 
+		mPreviousSetBitmap = bmp; 
+		super.setImageBitmap (bmp); 
+	} 
+	
 	private @Nullable 
 	Step2Thread step2setItemFile (final File file) { 
+		return step2setItemFile (file, 1); 
+	} 
+	private @Nullable 
+	Step2Thread step2setItemFile (final File file, final int attemptNumber) { 
 		// Load just the image dimensions first: 
 		final BitmapFactory.Options options = new BitmapFactory.Options (); 
 		if (knownSmallVersion == 0) { 
@@ -359,16 +380,22 @@ public class PageView extends ImageView {
 				// recycled view): 
 				Bitmap littleBitmap; 
 				File thumbnail = PngNotesAdapter.getThumbnailFile (getContext (), file); 
-				if (thumbnail != null && thumbnail.exists ()) { 
-					littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
-				} else { 
-					options.inJustDecodeBounds = false; 
-					options.inSampleSize = calculateInSampleSize (options.outWidth, 
-							options.outHeight, 
-							16, 16); 
-					littleBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+				try { 
+					if (thumbnail != null && thumbnail.exists ()) { 
+						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
+					} else { 
+						options.inJustDecodeBounds = false; 
+						options.inSampleSize = calculateInSampleSize (options.outWidth, 
+								options.outHeight, 
+								16, 16); 
+						littleBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+					} 
+					setImageBitmap (littleBitmap); 
+				} catch (OutOfMemoryError err) { 
+					Toast.makeText (getContext (), R.string.title_out_of_mem, Toast.LENGTH_SHORT) 
+							.show (); 
+					err.printStackTrace (); 
 				} 
-				setImageBitmap (littleBitmap); 
 				// Update the last loaded path: 
 				lastLoadedPath = file.getPath (); 
 			} 
@@ -384,14 +411,36 @@ public class PageView extends ImageView {
 									0); 
 					// Now actually load the bitmap, down-sampled if needed: 
 					options.inJustDecodeBounds = false; 
-					final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
-					if (!cancel) 
-						((Activity) getContext ()).runOnUiThread (new Runnable () { 
-							@Override public void run () { 
-								if (!cancel) 
-									setImageBitmap (myBitmap); 
-							} 
-						}); 
+					try { 
+						final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+						if (!cancel) 
+							((Activity) getContext ()).runOnUiThread (new Runnable () {
+								@Override
+								public void run () {
+									if (!cancel) 
+										setImageBitmap (myBitmap); 
+								}
+							}); 
+					} catch (OutOfMemoryError err) { 
+						// Print an error stack trace into the log: 
+						err.printStackTrace (); 
+						if (attemptNumber == 1) { 
+							// Try again later ... 
+							postDelayed (new Runnable () { 
+								@Override 
+								public void run () { 
+									NoteActivity activity = (NoteActivity) getContext (); 
+									if (activity.mPaused) 
+										return; // No need to load to a paused activity. 
+									step2setItemFile (file, attemptNumber + 1); // Try again. 
+								} 
+							}, 1000); 
+						} else { 
+							// Otherwise, get back to the activity ... 
+							if (mErrorCallback != null) 
+								mErrorCallback.onBitmapOutOfMemory (); 
+						} 
+					} 
 				} 
 			}).start (); 
 			return thread; 

@@ -113,6 +113,10 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		for (int i = 0; i < target.length; i++) 
 			paths[i] = target[i].getAbsolutePath (); 
 		intent.putExtra (NoteActivity.STATE_BROWSING_PATH, paths); 
+		String parent [] = new String [mBrowsingFolder.size ()]; 
+		for (int i = 0; i < parent.length; i++) 
+			parent[i] = mBrowsingFolder.elementAt (i).getAbsolutePath (); 
+		intent.putExtra (NoteActivity.STATE_PARENT_BROWSE, parent); 
 		mContext.startActivity (intent); 
 	} 
 	private View.OnClickListener mOnClick = new View.OnClickListener () { 

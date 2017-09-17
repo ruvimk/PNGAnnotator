@@ -112,6 +112,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float currentCoordinate = 0; 
 	float firstX = 0; 
 	float firstY = 0; 
+	float lastJumpX = 0; 
+	float lastJumpY = 0; 
 	float prevX = 0; 
 	float prevY = 0; 
 	long prevT = 0; 
@@ -142,8 +144,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 			if (action == MotionEvent.ACTION_DOWN || 
 						(action == MotionEvent.ACTION_MOVE && !stillSwiping)) { 
 				firstCoordinate = coordinate; 
-				firstX = prevX = event.getX (); 
-				firstY = prevY = event.getY (); 
+				firstX = lastJumpX = prevX = event.getX (); 
+				firstY = lastJumpY = prevY = event.getY (); 
 				prevT = System.currentTimeMillis (); 
 				Log.d (TAG, "First coordinate: " + coordinate); 
 				stillSwiping = true; 
@@ -156,8 +158,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 				if (!usingSuper) { 
 					if (wasUsingSuperBefore != usingSuper) { 
 						if (horizontal) 
-							scrollBy ((int) (firstX - x), 0); 
-						else scrollBy (0, (int) (firstY - y)); 
+							scrollBy ((int) (lastJumpX - x), 0); 
+						else scrollBy (0, (int) (lastJumpY - y)); 
+						lastJumpX = x; 
+						lastJumpY = y; 
 					} else { 
 						if (horizontal) 
 							scrollBy ((int) (prevX - x), 0); 
@@ -165,8 +169,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 					} 
 				} else if (wasUsingSuperBefore != usingSuper) { 
 					if (horizontal) 
-						scrollBy ((int) (x - firstX), 0); 
-					else scrollBy (0, (int) (y - firstY)); 
+						scrollBy ((int) (x - lastJumpX), 0); 
+					else scrollBy (0, (int) (y - lastJumpY)); 
+					lastJumpX = x; 
+					lastJumpY = y; 
 				} 
 				scrollVX = horizontal ? (prevX - x) / dt : 0; 
 				scrollVY = horizontal ? 0 :  (prevY - y) / dt; 

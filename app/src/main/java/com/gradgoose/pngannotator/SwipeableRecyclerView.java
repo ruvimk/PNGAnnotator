@@ -207,12 +207,55 @@ public class SwipeableRecyclerView extends RecyclerView {
 					go (nextIndex); 
 				} 
 				finishScrollAnimation (); 
+			} else if (action == MotionEvent.ACTION_CANCEL) { 
+				usingSuper = false; 
+				swipeDelta = 0; 
+				updateSwipePosition (); 
 			} 
-			if (usingSuper) 
-				super.onTouchEvent (event); 
+			if (usingSuper) {
+				MotionEvent.PointerProperties properties [] = 
+						new MotionEvent.PointerProperties [event.getPointerCount ()];
+				MotionEvent.PointerCoords coords [] = new MotionEvent.PointerCoords [event.getPointerCount ()]; 
+				for (int i = 0; i < properties.length; i++) { 
+					properties[i] = new MotionEvent.PointerProperties (); 
+					event.getPointerProperties (i, properties[i]); 
+					coords[i] = new MotionEvent.PointerCoords (); 
+					event.getPointerCoords (i, coords[i]); 
+				} 
+				MotionEvent copy = MotionEvent.obtain (event.getDownTime (), 
+						event.getEventTime (), 
+						event.getAction (), 
+						event.getPointerCount (), 
+						properties, coords, event.getMetaState (), 
+						event.getButtonState (), 
+						event.getXPrecision (), 
+						event.getYPrecision (), 
+						event.getDeviceId (), 
+						event.getEdgeFlags (), 
+						event.getSource (), 
+						event.getFlags ()); 
+				super.onTouchEvent (copy); 
+				copy.recycle (); 
+			} 
 			getParent ().requestDisallowInterceptTouchEvent (true); 
 			return true; 
 		} else return super.onTouchEvent (event); 
+	} 
+	float firstInterceptX = 0; 
+	float firstInterceptY = 0; 
+	@Override public boolean onInterceptTouchEvent (MotionEvent event) {
+		float x = event.getX (); 
+		float y = event.getY (); 
+		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
+			firstInterceptX = x; 
+			firstInterceptY = y; 
+		} 
+		return (canSwipe () && 
+						Math.abs (x - firstInterceptX) > Math.abs (y - firstInterceptY) && 
+							 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 
+												(y - firstInterceptY) * (y - firstInterceptY)) 
+									 >= MIN_DISPLACEMENT_TO_SCROLL) || 
+					   super.onInterceptTouchEvent (event); 
 	} 
 //	@Override public void onDraw (Canvas canvas) { 
 //		canvas.save (); 

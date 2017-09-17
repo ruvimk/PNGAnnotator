@@ -513,7 +513,7 @@ public class NoteActivity extends Activity {
 											 // Save this in the quick-preferences: 
 											 prefs.edit ().putFloat ( 
 											 		currentTool == TOOL_ERASER ? 
-															"erase-width" : "brush-width" 
+															"erase-width" : "write-width" 
 											 		, number).apply (); 
 										 }
 									 }) 

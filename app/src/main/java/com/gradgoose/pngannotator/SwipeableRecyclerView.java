@@ -192,7 +192,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 	} 
 	void go (int index) {
 		Intent intent = new Intent (getContext (), NoteActivity.class); 
-		String current [] = new String [mParentSubfolders.length]; 
+		String current [] = new String [mParentSubfolders[index].length]; 
 		String parent [] = new String [mParentFolder.size ()]; 
 		for (int i = 0; i < mParentSubfolders[index].length; i++) 
 			current[i] = mParentSubfolders[index][i].getAbsolutePath (); 
@@ -201,8 +201,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 		intent.putExtra (NoteActivity.STATE_BROWSING_PATH, current); 
 		intent.putExtra (NoteActivity.STATE_PARENT_BROWSE, parent); 
 		Activity activity = (Activity) getContext (); 
-//		activity.startActivity (intent); 
-//		activity.finish (); 
+		activity.startActivity (intent); 
+		activity.finish (); 
 	} 
 	public boolean canSwipe () { 
 		return mParentFolder != null && mParentSubfolders != null && 

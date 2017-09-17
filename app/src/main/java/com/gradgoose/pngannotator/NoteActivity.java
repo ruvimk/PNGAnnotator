@@ -181,18 +181,25 @@ public class NoteActivity extends Activity {
 				if (!nowBrowsing.isEmpty ()) nowBrowsing += "\t"; 
 				nowBrowsing += f.getAbsolutePath (); 
 			} 
+			String prefix = nowBrowsing + ";parent:"; 
+			String parentText = ""; 
+			for (File f : mParentFolder) { 
+				if (!parentText.isEmpty ()) parentText += "\t"; 
+				parentText += f.getAbsolutePath (); 
+			} 
+			String fullEntry = prefix + parentText; 
 			int foundIndex = -1; 
 			for (int i = 0; i < recentFolders.size (); i++) { 
-				if (!recentFolders.elementAt (i).equals (nowBrowsing)) continue; 
+				if (!recentFolders.elementAt (i).startsWith (prefix)) continue; 
 				foundIndex = i; 
 			} 
 			if (foundIndex == -1) { 
 				if (recentFolders.size () == recentFolders.capacity ()) 
 					recentFolders.remove (recentFolders.size () - 1); 
-				recentFolders.add (0, nowBrowsing); 
+				recentFolders.add (0, fullEntry); 
 			} else { 
 				recentFolders.remove (foundIndex); 
-				recentFolders.add (0, nowBrowsing); 
+				recentFolders.add (0, fullEntry); 
 			} 
 			// Save the recent folders list: 
 			StringBuilder sb = new StringBuilder (recentFolders.elementAt (0).length () * 
@@ -275,9 +282,13 @@ public class NoteActivity extends Activity {
 				break; 
 			case R.id.menu_action_recents: 
 				if (recentFolders.size () > 1){ 
-					String folderPaths [] = recentFolders.elementAt (1).split ("\t"); 
+					String parts [] = recentFolders.elementAt (1).split (";parent:"); 
+					String folderPaths [] = parts[0].split ("\t"); 
+					String parentPaths [] = parts[1] != null ? parts[1].split ("\t") 
+							: new String [0]; 
 					Intent goRecent = new Intent (this, NoteActivity.class); 
 					goRecent.putExtra (STATE_BROWSING_PATH, folderPaths); 
+					goRecent.putExtra (STATE_PARENT_BROWSE, parentPaths); 
 					startActivity (goRecent); // Start new activity. 
 					finish (); // Finish this activity. 
 				} 

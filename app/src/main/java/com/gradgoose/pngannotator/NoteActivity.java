@@ -51,6 +51,15 @@ public class NoteActivity extends Activity {
 		mBrowsingFolders = files; 
 	} 
 	
+	Vector<File> mParentFolder = null; 
+	private void setParentPaths (@Nullable String paths []) { 
+		if (paths == null) return; 
+		Vector<File> files = new Vector<> (); 
+		for (String path : paths) 
+			files.add (new File (path)); 
+		mParentFolder = files; 
+	} 
+	
 	static final String PREFS_NAME = "com.gradgoose.pngannotator.NoteActivity.prefs"; 
 	static final String LEFTOFF_NAME = "com.gradgoose.pngannotator.NoteActivity.leftOff"; 
 	static final String RECENTS_NAME = "com.gradgoose.pngannotator.NoteActivity.recents"; 
@@ -69,6 +78,7 @@ public class NoteActivity extends Activity {
 	int currentColor = Color.TRANSPARENT; 
 	
 	static final String STATE_BROWSING_PATH = "com.gradgoose.pngannotator.browse_path"; 
+	static final String STATE_PARENT_BROWSE = "com.gradgoose.pngannotator.parent_browse"; 
 	static final String STATE_SCROLL_ITEM = "com.gradgoose.pngannotator.scroll_item"; 
 	static final String STATE_SCROLL_SPACE = "com.gradgoose.pngannotator.scroll_space"; 
 	static final String STATE_SCROLL_FRACTION = "com.gradgoose.pngannotator.scroll_fraction"; 
@@ -111,6 +121,8 @@ public class NoteActivity extends Activity {
 		if (savedInstanceState != null) { 
 			if (savedInstanceState.containsKey (STATE_BROWSING_PATH)) 
 				setBrowsingPaths (savedInstanceState.getStringArray (STATE_BROWSING_PATH)); 
+			if (savedInstanceState.containsKey (STATE_PARENT_BROWSE)) 
+				setParentPaths (savedInstanceState.getStringArray (STATE_PARENT_BROWSE)); 
 			if (savedInstanceState.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = savedInstanceState.getInt (STATE_SCROLL_ITEM); 
 			if (savedInstanceState.containsKey (STATE_SCROLL_FRACTION)) 
@@ -123,6 +135,10 @@ public class NoteActivity extends Activity {
 			if (mBrowsingFolders == null) { /* If the above did not give us a folder ... */
 				if (extras.containsKey (STATE_BROWSING_PATH)) 
 					setBrowsingPaths (extras.getStringArray (STATE_BROWSING_PATH)); 
+			} 
+			if (mParentFolder == null) { 
+				if (extras.containsKey (STATE_PARENT_BROWSE)) 
+					setParentPaths (extras.getStringArray (STATE_PARENT_BROWSE)); 
 			} 
 			if (initialScrollItemPosition == 0 && extras.containsKey (STATE_SCROLL_ITEM)) 
 				initialScrollItemPosition = extras.getInt (STATE_SCROLL_ITEM); 
@@ -138,6 +154,17 @@ public class NoteActivity extends Activity {
 				mBrowsingFolders.add (mSdDCIM); 
 			if (mSdPictures.exists ()) 
 				mBrowsingFolders.add (mSdPictures); 
+		} 
+		if (mParentFolder == null) { // Use the parents of mBrowsingFolders ... 
+			mParentFolder = new Vector<> (mBrowsingFolders.capacity ()); 
+			if (!isBrowsingRootFolder ()) { 
+				// Only do this if this is not the root folder. 
+				for (File file : mBrowsingFolders) { 
+					File parent = file.getParentFile (); 
+					if (!mParentFolder.contains (parent)) // Check this, just in case. 
+						mParentFolder.add (parent); 
+				} 
+			} 
 		} 
 		// Check to see if we have a record of what scroll position we were at last time: 
 		if (initialScrollItemPosition == 0) // (only if we don't have one loaded from onRestore...) 
@@ -374,7 +401,11 @@ public class NoteActivity extends Activity {
 													 Intent intent = new Intent (NoteActivity.this, 
 																						NoteActivity.class); 
 													 String [] toOpen = new String [] {nowFile.getPath ()}; 
+													 String [] was = new String [mBrowsingFolders.size ()]; 
+													 for (int j = 0; j < mBrowsingFolders.size (); j++) 
+													 	was[j] = mBrowsingFolders.elementAt (j).getAbsolutePath (); 
 													 intent.putExtra (STATE_BROWSING_PATH, toOpen); 
+													 intent.putExtra (STATE_PARENT_BROWSE, was); 
 													 startActivity (intent); 
 												 } else { 
 													 // Try create again? 
@@ -533,7 +564,7 @@ public class NoteActivity extends Activity {
 	SubfoldersAdapter mSubfoldersAdapter = null; 
 	RecyclerView.LayoutManager mSubfoldersLayoutManager = null; 
 	
-	RecyclerView mRvBigPages = null; 
+	SwipeableRecyclerView mRvBigPages = null; 
 	PngNotesAdapter mNotesAdapter = null; 
 	LinearLayoutManager mNotesLayoutManager = null; 
 	
@@ -600,7 +631,8 @@ public class NoteActivity extends Activity {
 		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter); 
 		
 		// Image annotation RecyclerView: 
-		mRvBigPages = findViewById (R.id.rvBigPages); 
+		mRvBigPages = findViewById (R.id.rvBigPages);
+		mRvBigPages.setParentFolder (mParentFolder, mBrowsingFolders.elementAt (0).getName ()); 
 		mRvBigPages.setLayoutManager (mNotesLayoutManager = 
 						new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false)); 
 		mRvBigPages.setAdapter (mNotesAdapter); 

@@ -27,7 +27,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	
 	File mList [] [] = null; 
 	
-	Comparator<File []> mFileComparator = new Comparator<File []> () { 
+	static Comparator<File []> mFileComparator = new Comparator<File []> () { 
 		@Override public int compare (File a [], File b []) { 
 			return a[0].getName ().compareTo (b[0].getName ()); 
 		} 
@@ -82,7 +82,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		loadIds (mList); 
 	} 
 	
-	private FileFilter mFilterJustFolders = new FileFilter () { 
+	static FileFilter mFilterJustFolders = new FileFilter () { 
 		@Override public boolean accept (File file) { 
 			return file.isDirectory (); 
 		} 

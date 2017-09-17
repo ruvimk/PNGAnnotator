@@ -16,7 +16,7 @@
 		android:background="@drawable/pen_selection_background"
 		/>
 	
-	<android.support.v7.widget.RecyclerView
+	<com.gradgoose.pngannotator.SwipeableRecyclerView
 		android:id="@+id/rvBigPages"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"

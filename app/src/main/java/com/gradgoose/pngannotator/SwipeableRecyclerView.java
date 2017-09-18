@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -24,16 +25,24 @@ import java.util.Vector;
 public class SwipeableRecyclerView extends RecyclerView { 
 	static final String TAG = "SwipeRV"; 
 	
+	final float MAX_DISPLACEMENT_FOR_CLICK; 
+	final float MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN; 
+	
 	String mNowBrowsingName = ""; 
 	Vector<File> mParentFolder = null; 
 	File mParentSubfolders [] [] = null; 
 	int currentIndex = 0; 
 	public SwipeableRecyclerView (Context context, AttributeSet attributeSet) { 
-		super (context, attributeSet);
+		super (context, attributeSet); 
+		DisplayMetrics metrics = getResources ().getDisplayMetrics (); 
 		MIN_DELTA_TO_SWIPE = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
-				getResources ().getDisplayMetrics ()); 
+				metrics); 
 		MIN_DISPLACEMENT_TO_SCROLL = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
-				getResources ().getDisplayMetrics ()); 
+				metrics); 
+		MAX_DISPLACEMENT_FOR_CLICK = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.5f, 
+				metrics); 
+		MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 
+				0.8f, metrics); 
 	} 
 	public void setParentFolder (Vector<File> browsingParentFolder, String nowBrowsingFolderName) { 
 		mParentFolder = browsingParentFolder; 
@@ -119,15 +128,15 @@ public class SwipeableRecyclerView extends RecyclerView {
 	long prevT = 0; 
 	float scrollVX = 0; 
 	float scrollVY = 0; 
+	float touchTraveledDistance = 0; 
 	// Swipe data: 
 	float swipeDelta = 0; 
 	boolean stillSwiping = false; 
 	boolean stillAnimating = false; 
-	boolean manualScroll = false; 
 	float MIN_DELTA_TO_SWIPE; 
 	float MIN_DISPLACEMENT_TO_SCROLL; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
-		if (canSwipe ()) { 
+		if (handleTouch ()) { 
 			float x = event.getX (); 
 			float y = event.getY (); 
 			boolean horizontal = isHorizontalOrientation (); 
@@ -140,26 +149,30 @@ public class SwipeableRecyclerView extends RecyclerView {
 				firstX = lastJumpX = prevX = event.getX (); 
 				firstY = lastJumpY = prevY = event.getY (); 
 				prevT = System.currentTimeMillis (); 
+				touchTraveledDistance = 0; // I know we may have multi-touch, but for simplicity assume one. 
 				Log.d (TAG, "First coordinate: " + coordinate); 
 				stillSwiping = true; 
 				stillAnimating = false; 
 			} else if (action == MotionEvent.ACTION_MOVE) { 
 				currentCoordinate = coordinate; 
-				swipeDelta = firstCoordinate - currentCoordinate; 
+				swipeDelta = canSwipe () ? firstCoordinate - currentCoordinate : 0; 
 				long now = System.currentTimeMillis (); 
 				float dt = (float) (now - prevT) / 1e3f; 
 				scrollVX = horizontal ? (prevX - x) / dt : 0; 
 				scrollVY = horizontal ? 0 :  (prevY - y) / dt; 
+				touchTraveledDistance += (float) Math.sqrt ((x - prevX) * (x - prevX) + 
+																	(y - prevY) * (y - prevY)); 
 				prevX = x; 
 				prevY = y; 
 				prevT = now; 
 				Log.d (TAG, "Swipe delta: " + swipeDelta + " = " + firstCoordinate + " - " + 
 					currentCoordinate); 
-				updateSwipePosition (); 
+				if (canSwipe ()) 
+					updateSwipePosition (); 
 			} else if (action == MotionEvent.ACTION_UP) { 
 				stillSwiping = false; 
 				stillAnimating = true; 
-				if (swipeDelta >= MIN_DELTA_TO_SWIPE) { 
+				if (swipeDelta >= MIN_DELTA_TO_SWIPE && canSwipe ()) { 
 					// Restore the scroll: 
 					if (horizontal) 
 						scrollBy ((int) (x - firstX), 0); 
@@ -167,7 +180,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 					// Open the next folder inside this folder's parent: 
 					int nextIndex = (currentIndex + 1) % mParentSubfolders.length; 
 					go (nextIndex); 
-				} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE) { 
+				} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE && canSwipe ()) { 
 					// Restore the scroll: 
 					if (horizontal) 
 						scrollBy ((int) (x - firstX), 0); 
@@ -177,6 +190,28 @@ public class SwipeableRecyclerView extends RecyclerView {
 					if (nextIndex < 0) 
 						nextIndex = mParentSubfolders.length - 1; 
 					go (nextIndex); 
+				} 
+				else if (touchTraveledDistance < MAX_DISPLACEMENT_FOR_CLICK && 
+							 System.currentTimeMillis () - event.getDownTime () < 500 /*ms*/) { 
+					View child = getLayoutManager ().getChildAt (1); 
+					if (child == null) 
+						child = getLayoutManager ().getChildAt (0); 
+					// Consider this a tap. 
+					if (y < MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN) { 
+						// Tap was at the top of the view. PAGE UP. 
+						if (child != null) { 
+							if (horizontal) 
+								scrollBy (-child.getWidth (), 0); 
+							else scrollBy (0, -child.getHeight ()); 
+						} 
+					} else if (y >= getHeight () - MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN) { 
+						// Tap was at the bottom of the view. PAGE DOWN. 
+						if (child != null) { 
+							if (horizontal) 
+								scrollBy (child.getWidth (), 0); 
+							else scrollBy (0, child.getHeight ()); 
+						} 
+					} 
 				} 
 				finishScrollAnimation (); 
 			} else if (action == MotionEvent.ACTION_CANCEL) { 
@@ -196,6 +231,22 @@ public class SwipeableRecyclerView extends RecyclerView {
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
 			firstInterceptX = x; 
 			firstInterceptY = y; 
+		} 
+		if (touchTraveledDistance < MAX_DISPLACEMENT_FOR_CLICK && 
+					System.currentTimeMillis () - event.getDownTime () < 500 /*ms*/) { 
+			View child = getLayoutManager ().getChildAt (1); 
+			if (child == null) 
+				child = getLayoutManager ().getChildAt (0); 
+			// Consider this a tap. 
+			if (y < MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN) { 
+				// Tap was at the top of the view. PAGE UP. 
+				if (child != null) 
+					return true; 
+			} else if (y >= getHeight () - MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN) { 
+				// Tap was at the bottom of the view. PAGE DOWN. 
+				if (child != null) 
+					return true; 
+			} 
 		} 
 		return (canSwipe () && 
 						Math.abs (x - firstInterceptX) > Math.abs (y - firstInterceptY) && 
@@ -238,5 +289,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 	public boolean canSwipe () { 
 		return mParentFolder != null && mParentSubfolders != null && 
 					   mParentSubfolders.length > 1; 
+	} 
+	protected boolean handleTouch () { 
+		return true; 
 	} 
 } 

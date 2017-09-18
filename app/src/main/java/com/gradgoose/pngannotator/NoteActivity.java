@@ -242,6 +242,8 @@ public class NoteActivity extends Activity {
 				.apply (); 
 		mReloadOnNextResume = true; 
 		mPaused = true; 
+		if (mNotesAdapter != null) 
+			mNotesAdapter.recycleBitmaps (); 
 		super.onPause (); 
 	} 
 	@Override public void onResume () { 

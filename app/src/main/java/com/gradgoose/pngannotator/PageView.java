@@ -411,6 +411,8 @@ public class PageView extends ImageView {
 									0); 
 					// Now actually load the bitmap, down-sampled if needed: 
 					options.inJustDecodeBounds = false; 
+					if (cancel) 
+						return; 
 					try { 
 						final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
 						if (!cancel) 
@@ -419,8 +421,10 @@ public class PageView extends ImageView {
 								public void run () {
 									if (!cancel) 
 										setImageBitmap (myBitmap); 
+									else myBitmap.recycle (); 
 								}
 							}); 
+						else myBitmap.recycle (); 
 					} catch (OutOfMemoryError err) { 
 						// Print an error stack trace into the log: 
 						err.printStackTrace (); 

@@ -135,11 +135,12 @@ public class SwipeableRecyclerView extends RecyclerView {
 			float coordinate = horizontal ? event.getY () + getTop () 
 									   : event.getX () + getLeft (); 
 			boolean wasUsingSuperBefore = usingSuper; 
-			usingSuper = firstY != 0 && 
-								 Math.abs (y - firstY) > Math.abs (x - firstX) && 
-										 Math.sqrt ((x - firstX) * (x - firstX) + 
-															(y - firstY) * (y - firstY)) 
-												 >= MIN_DISPLACEMENT_TO_SCROLL; 
+//			usingSuper = firstY != 0 && 
+//								 Math.abs (y - firstY) > Math.abs (x - firstX) && 
+//										 Math.sqrt ((x - firstX) * (x - firstX) + 
+//															(y - firstY) * (y - firstY)) 
+//												 >= MIN_DISPLACEMENT_TO_SCROLL; 
+			usingSuper = true; 
 			int action = event.getAction (); 
 			if (action == MotionEvent.ACTION_DOWN || 
 						(action == MotionEvent.ACTION_MOVE && !stillSwiping)) { 

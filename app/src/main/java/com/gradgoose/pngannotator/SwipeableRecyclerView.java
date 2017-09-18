@@ -191,28 +191,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 						nextIndex = mParentSubfolders.length - 1; 
 					go (nextIndex); 
 				} 
-				else if (touchTraveledDistance < MAX_DISPLACEMENT_FOR_CLICK && 
-							 System.currentTimeMillis () - event.getDownTime () < 500 /*ms*/) { 
-					View child = getLayoutManager ().getChildAt (1); 
-					if (child == null) 
-						child = getLayoutManager ().getChildAt (0); 
-					// Consider this a tap. 
-					if (y < MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN) { 
-						// Tap was at the top of the view. PAGE UP. 
-						if (child != null) { 
-							if (horizontal) 
-								scrollBy (-child.getWidth (), 0); 
-							else scrollBy (0, -child.getHeight ()); 
-						} 
-					} else if (y >= getHeight () - MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN) { 
-						// Tap was at the bottom of the view. PAGE DOWN. 
-						if (child != null) { 
-							if (horizontal) 
-								scrollBy (child.getWidth (), 0); 
-							else scrollBy (0, child.getHeight ()); 
-						} 
-					} 
-				} 
 				finishScrollAnimation (); 
 			} else if (action == MotionEvent.ACTION_CANCEL) { 
 				swipeDelta = 0; 
@@ -232,22 +210,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 			firstInterceptX = x; 
 			firstInterceptY = y; 
 		} 
-		if (touchTraveledDistance < MAX_DISPLACEMENT_FOR_CLICK && 
-					System.currentTimeMillis () - event.getDownTime () < 500 /*ms*/) { 
-			View child = getLayoutManager ().getChildAt (1); 
-			if (child == null) 
-				child = getLayoutManager ().getChildAt (0); 
-			// Consider this a tap. 
-			if (y < MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN) { 
-				// Tap was at the top of the view. PAGE UP. 
-				if (child != null) 
-					return true; 
-			} else if (y >= getHeight () - MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN) { 
-				// Tap was at the bottom of the view. PAGE DOWN. 
-				if (child != null) 
-					return true; 
-			} 
-		} 
 		return (canSwipe () && 
 						Math.abs (x - firstInterceptX) > Math.abs (y - firstInterceptY) && 
 							 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 
@@ -255,15 +217,29 @@ public class SwipeableRecyclerView extends RecyclerView {
 									 >= MIN_DISPLACEMENT_TO_SCROLL) || 
 					   super.onInterceptTouchEvent (event); 
 	} 
-//	@Override public void onDraw (Canvas canvas) { 
-//		canvas.save (); 
-//		boolean horizontal = isHorizontalOrientation (); 
-//		if (horizontal) 
-//			canvas.translate (0, -swipeDelta); 
-//		else canvas.translate (-swipeDelta, 0); 
-//		super.onDraw (canvas); 
-//		canvas.restore (); 
-//	} 
+	public void pageUp () { 
+		LayoutManager lm = getLayoutManager (); 
+		if (lm.getChildCount () == 0) 
+			return; 
+		View child = lm.getChildCount () > 1 ? 
+							 lm.getChildAt (1) 
+							 : lm.getChildAt (0); 
+		pageScroll (-child.getWidth (), -child.getHeight ()); 
+	} 
+	public void pageDown () { 
+		LayoutManager lm = getLayoutManager (); 
+		if (lm.getChildCount () == 0) 
+			return; 
+		View child = lm.getChildCount () > 1 ? 
+							 lm.getChildAt (1) 
+							 : lm.getChildAt (0); 
+		pageScroll (child.getWidth (), child.getHeight ()); 
+	} 
+	public void pageScroll (int width, int height) { 
+		if (isHorizontalOrientation ()) 
+			scrollBy (width, 0); 
+		else scrollBy (0, height); 
+	} 
 	boolean isHorizontalOrientation () { 
 		LayoutManager manager = getLayoutManager (); 
 		boolean isHorizontalScrollOrientation = false; 
@@ -291,6 +267,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 					   mParentSubfolders.length > 1; 
 	} 
 	protected boolean handleTouch () { 
-		return true; 
+		return canSwipe (); 
 	} 
 } 

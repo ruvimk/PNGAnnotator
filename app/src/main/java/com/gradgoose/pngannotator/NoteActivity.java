@@ -360,6 +360,7 @@ public class NoteActivity extends Activity {
 		initialScrollItemPosition = itemIndex; 
 		initialScrollFraction = 0; 
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
+		mNotesAdapter.notifyDataSetChanged (); 
 	} 
 	int getScrollSpace () { 
 		int pageIndex = getPageIndex (); 

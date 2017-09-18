@@ -124,7 +124,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 	boolean stillSwiping = false; 
 	boolean stillAnimating = false; 
 	boolean manualScroll = false; 
-	boolean usingSuper = false; 
 	float MIN_DELTA_TO_SWIPE; 
 	float MIN_DISPLACEMENT_TO_SCROLL; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
@@ -134,13 +133,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 			boolean horizontal = isHorizontalOrientation (); 
 			float coordinate = horizontal ? event.getY () + getTop () 
 									   : event.getX () + getLeft (); 
-			boolean wasUsingSuperBefore = usingSuper; 
-//			usingSuper = firstY != 0 && 
-//								 Math.abs (y - firstY) > Math.abs (x - firstX) && 
-//										 Math.sqrt ((x - firstX) * (x - firstX) + 
-//															(y - firstY) * (y - firstY)) 
-//												 >= MIN_DISPLACEMENT_TO_SCROLL; 
-			usingSuper = true; 
 			int action = event.getAction (); 
 			if (action == MotionEvent.ACTION_DOWN || 
 						(action == MotionEvent.ACTION_MOVE && !stillSwiping)) { 
@@ -156,25 +148,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 				swipeDelta = firstCoordinate - currentCoordinate; 
 				long now = System.currentTimeMillis (); 
 				float dt = (float) (now - prevT) / 1e3f; 
-				if (!usingSuper) { 
-					if (wasUsingSuperBefore != usingSuper) { 
-						if (horizontal) 
-							scrollBy ((int) (lastJumpX - x), 0); 
-						else scrollBy (0, (int) (lastJumpY - y)); 
-						lastJumpX = x; 
-						lastJumpY = y; 
-					} else { 
-						if (horizontal) 
-							scrollBy ((int) (prevX - x), 0); 
-						else scrollBy (0, (int) (prevY - y)); 
-					} 
-				} else if (wasUsingSuperBefore != usingSuper) { 
-					if (horizontal) 
-						scrollBy ((int) (x - lastJumpX), 0); 
-					else scrollBy (0, (int) (y - lastJumpY)); 
-					lastJumpX = x; 
-					lastJumpY = y; 
-				} 
 				scrollVX = horizontal ? (prevX - x) / dt : 0; 
 				scrollVY = horizontal ? 0 :  (prevY - y) / dt; 
 				prevX = x; 
@@ -191,7 +164,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 					if (horizontal) 
 						scrollBy ((int) (x - firstX), 0); 
 					else scrollBy (0, (int) (y - firstY)); 
-					usingSuper = false; 
 					// Open the next folder inside this folder's parent: 
 					int nextIndex = (currentIndex + 1) % mParentSubfolders.length; 
 					go (nextIndex); 
@@ -200,7 +172,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 					if (horizontal) 
 						scrollBy ((int) (x - firstX), 0); 
 					else scrollBy (0, (int) (y - firstY)); 
-					usingSuper = false; 
 					// Open the previous folder inside this folder's parent: 
 					int nextIndex = currentIndex - 1; 
 					if (nextIndex < 0) 
@@ -209,13 +180,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 				} 
 				finishScrollAnimation (); 
 			} else if (action == MotionEvent.ACTION_CANCEL) { 
-				usingSuper = false; 
 				swipeDelta = 0; 
 				updateSwipePosition (); 
 			} 
-			if (usingSuper) { 
-				super.onTouchEvent (event); 
-			} 
+			super.onTouchEvent (event); 
 			getParent ().requestDisallowInterceptTouchEvent (true); 
 			return true; 
 		} else return super.onTouchEvent (event); 

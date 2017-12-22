@@ -65,6 +65,23 @@ public class PenIcon extends ImageView {
 		File folder = PensAdapter.getPensFolder (getContext ()); 
 		penImage = new File (folder, Integer.toString (color, 16) + ".png"); 
 		BitmapFactory.Options options = null; 
+		if (penImage.exists ()) { 
+			options = new BitmapFactory.Options (); 
+			options.inJustDecodeBounds = true; 
+			BitmapFactory.decodeFile (penImage.getPath (), options); 
+			mPenWidth = options.outWidth; 
+			mPenHeight = options.outHeight; 
+			try { 
+				setImageURI (Uri.fromFile (penImage)); 
+			} catch (OutOfMemoryError err) { 
+				Toast.makeText (getContext (), R.string.title_out_of_mem, 
+						Toast.LENGTH_SHORT).show (); 
+				err.printStackTrace (); 
+			} 
+			requestLayout (); 
+			invalidate (); 
+			mUseCachedBitmap = true; 
+		} 
 		if (!penImage.exists ()) { // Create a cache of the bitmap: 
 			// Initialize, if have not done so yet: 
 			ensureBitmapRightSize ();
@@ -95,22 +112,6 @@ public class PenIcon extends ImageView {
 					e.printStackTrace ();
 				}
 			}
-		} else { 
-			options = new BitmapFactory.Options (); 
-			options.inJustDecodeBounds = true; 
-			BitmapFactory.decodeFile (penImage.getPath (), options); 
-			mPenWidth = options.outWidth; 
-			mPenHeight = options.outHeight; 
-			try { 
-				setImageURI (Uri.fromFile (penImage)); 
-			} catch (OutOfMemoryError err) {
-				Toast.makeText (getContext (), R.string.title_out_of_mem,
-						Toast.LENGTH_SHORT).show ();
-				err.printStackTrace ();
-			}
-			requestLayout ();
-			invalidate ();
-			mUseCachedBitmap = true;
 		} 
 	} 
 	

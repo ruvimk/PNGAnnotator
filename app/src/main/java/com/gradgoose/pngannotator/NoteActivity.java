@@ -683,6 +683,8 @@ public class NoteActivity extends Activity {
 																mRvBigPages 
 																	.getViewTreeObserver () 
 																	.addOnGlobalLayoutListener (mOnGlobalLayout); 
+															updateUserInterface (); 
+															updateMenuItems (); 
 														} 
 														@Override 
 														public void onFilesNoChange (File[][] list) { 

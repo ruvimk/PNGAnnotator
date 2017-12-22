@@ -410,7 +410,7 @@ public class PageView extends ImageView {
 			} 
 			// If the view size is not known yet, then don't load the big bitmap yet because we don't know how big it should be: 
 			if (getWidth () == 0) {
-				Log.d (TAG, "step2setItemFile (): View size not known yet. Skipping the loading ..."); 
+				Log.d (TAG, "step2setItemFile (): View size not known yet. Skipping " + itemFile.getName () + " loading ..."); 
 				return null; 
 			} else Log.d (TAG, "step2setItemFile (): Loading bitmap " + itemFile.getName () + " ..."); 
 			// Load the bitmap in a separate thread: 

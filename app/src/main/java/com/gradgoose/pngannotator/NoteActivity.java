@@ -600,6 +600,9 @@ public class NoteActivity extends Activity {
 	SubfoldersAdapter mSubfoldersAdapter = null; 
 	RecyclerView.LayoutManager mSubfoldersLayoutManager = null; 
 	
+	LinearLayoutManager mSubfoldersLinearLayoutManager = null; 
+	GridLayoutManager mSubfoldersGridLayoutManager = null; 
+	
 	SwipeableRecyclerView mRvBigPages = null; 
 	PngNotesAdapter mNotesAdapter = null; 
 	LinearLayoutManager mNotesLayoutManager = null; 
@@ -628,6 +631,45 @@ public class NoteActivity extends Activity {
 					   isBrowsingRootFolder (); 
 	} 
 	boolean mAlreadyHandling_OutOfMem = false; 
+	void updateUserInterface () { 
+		// Subfolders: 
+		if (!wantDisplaySubfoldersAsBig ()) { 
+			// If there ARE images to display, then list the subfolders up above the images: 
+			mSubfoldersLayoutManager = mSubfoldersLinearLayoutManager; 
+		} else { 
+			// If no images to browse, then it would look weird with a bunch of empty 
+			// space below the subfolder browser; in this case, make the subfolder 
+			// browser take up all the space it needs by assigning it a grid layout: 
+			mSubfoldersLayoutManager = mSubfoldersGridLayoutManager; 
+			// Clear the background color: 
+			mRvSubfolderBrowser.setBackgroundColor (Color.TRANSPARENT); 
+		} 
+		mRvSubfolderBrowser.setLayoutManager (mSubfoldersLayoutManager); 
+		// Notes: 
+		setNotesLayoutManager (); 
+		// Update the views for the tool initially selected: 
+		hand.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_NONE ? 
+																		 R.drawable.black_border : 0); 
+		eraser.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_ERASER ? 
+																		   R.drawable.black_border : 0); 
+		if (currentTool == TOOL_PEN) 
+			mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (currentColor)); 
+		if (currentTool == TOOL_ERASER) 
+			currentColor = PageView.ERASE_COLOR; 
+		mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+		mNotesAdapter.mBrush = currentTool == TOOL_ERASER ? 
+									   prefs.getFloat ("erase-width", 10.0f) 
+									   : prefs.getFloat ("write-width", 1.0f); 
+		mNotesAdapter.mTool = currentTool; 
+		mNotesAdapter.mColor = currentColor; 
+		mNotesAdapter.notifyDataSetChanged (); 
+		// Set the brush width text: 
+		updateBrushWidthTextShowing (); 
+		// Initialize the pen mode things: 
+		updateViewsForPenMode (); 
+		// Show the pen options only if there are images available for editing: 
+		mRvPenOptions.setVisibility (canEdit () ? View.VISIBLE : View.GONE); 
+	} 
 	void initUserInterface () { 
 		// Subfolder browser RecyclerView: 
 		mRvSubfolderBrowser = (RecyclerView) getLayoutInflater () 
@@ -679,20 +721,8 @@ public class NoteActivity extends Activity {
 				} 
 			} 
 		}; 
-		if (!wantDisplaySubfoldersAsBig ()) { 
-			// If there ARE images to display, then list the subfolders up above the images: 
-			mSubfoldersLayoutManager = 
-					new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
-		} else { 
-			// If no images to browse, then it would look weird with a bunch of empty 
-			// space below the subfolder browser; in this case, make the subfolder 
-			// browser take up all the space it needs by assigning it a grid layout: 
-			mSubfoldersLayoutManager = 
-					new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 
-			// Clear the background color: 
-			mRvSubfolderBrowser.setBackgroundColor (Color.TRANSPARENT); 
-		} 
-		mRvSubfolderBrowser.setLayoutManager (mSubfoldersLayoutManager); 
+		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
+		mSubfoldersGridLayoutManager = new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 
 		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter); 
 		
 		// Image annotator layout managers: 
@@ -702,7 +732,6 @@ public class NoteActivity extends Activity {
 		// Image annotation RecyclerView: 
 		mRvBigPages = findViewById (R.id.rvBigPages);
 		mRvBigPages.setParentFolder (mParentFolder, mBrowsingFolders.elementAt (0).getName ()); 
-		setNotesLayoutManager (); 
 		mRvBigPages.setAdapter (mNotesAdapter); 
 		// Put it into the list only if it's not empty (to avoid a scroll bar problem): 
 		if (mSubfoldersAdapter.mList.length > 0) 
@@ -787,28 +816,8 @@ public class NoteActivity extends Activity {
 		// Progress bar: 
 		pbMainProgress = findViewById (R.id.pbMainProgress); 
 		pbMainProgress.setVisibility (View.GONE); 
-		// Update the views for the tool initially selected: 
-		hand.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_NONE ? 
-				R.drawable.black_border : 0); 
-		eraser.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_ERASER ? 
-				R.drawable.black_border : 0); 
-		if (currentTool == TOOL_PEN) 
-			mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (currentColor)); 
-		if (currentTool == TOOL_ERASER) 
-			currentColor = PageView.ERASE_COLOR; 
-		mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
-		mNotesAdapter.mBrush = currentTool == TOOL_ERASER ? 
-									   prefs.getFloat ("erase-width", 10.0f) 
-									   : prefs.getFloat ("write-width", 1.0f); 
-		mNotesAdapter.mTool = currentTool; 
-		mNotesAdapter.mColor = currentColor; 
-		mNotesAdapter.notifyDataSetChanged (); 
-		// Set the brush width text: 
-		updateBrushWidthTextShowing (); 
-		// Initialize the pen mode things: 
-		updateViewsForPenMode (); 
-		// Show the pen options only if there are images available for editing: 
-		mRvPenOptions.setVisibility (canEdit () ? View.VISIBLE : View.GONE); 
+		// Set things: 
+		updateUserInterface (); 
 		// Wait for the RecyclerView to finish loading, and then scroll to the right place: 
 		mDoNotResetInitialScrollYet = true; 
 		mStillWaitingToScroll = true; 

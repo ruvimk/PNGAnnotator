@@ -375,7 +375,8 @@ public class PageView extends ImageView {
 		return step2setItemFile (file, 1); 
 	} 
 	private @Nullable 
-	Step2Thread step2setItemFile (final File file, final int attemptNumber) { 
+	Step2Thread step2setItemFile (final @Nullable File file, final int attemptNumber) { 
+		if (file == null) return null; 
 		// Load just the image dimensions first: 
 		final BitmapFactory.Options options = new BitmapFactory.Options (); 
 		if (knownSmallVersion == 0) { 
@@ -482,17 +483,17 @@ public class PageView extends ImageView {
 		// Load just the image dimensions first: 
 		final BitmapFactory.Options options = new BitmapFactory.Options (); 
 		options.inJustDecodeBounds = true; 
-		BitmapFactory.decodeFile (file.getPath (), options); 
+		if (file != null) BitmapFactory.decodeFile (file.getPath (), options); 
 		// Set our natural width and height variables to better handle onMeasure (): 
 		mBitmapNaturalWidth = options.outWidth; 
 		mBitmapNaturalHeight = options.outHeight; 
 		// If this is one of our known files, grab a small version to load just for display: 
 		knownSmallVersion = 0; 
-		String md5 = mMd5Cache != null ? 
+		String md5 = file != null ? (mMd5Cache != null ? 
 							 mMd5Cache.getString (file.getAbsolutePath (), "") 
-							 : ""; 
+							 : "") : ""; 
 		boolean md5notFound = md5.isEmpty (); 
-		if (md5notFound) { 
+		if (md5notFound && file != null) { 
 			try { 
 				md5 = PngEdit.calculateMD5 (file); 
 				if (mMd5Cache != null) 
@@ -513,7 +514,7 @@ public class PageView extends ImageView {
 						if (!md5now.equals (md5was)) { 
 							if (step2 != null) 
 								step2.cancel = true; 
-							mMd5Cache.edit ().putString (file.getAbsolutePath (), md5now).apply (); 
+							if (file != null) mMd5Cache.edit ().putString (file.getAbsolutePath (), md5now).apply (); 
 							checkIfMd5Known (md5now); 
 							((Activity) getContext ()).runOnUiThread (new Runnable () { 
 								@Override public void run () { 

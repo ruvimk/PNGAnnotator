@@ -338,8 +338,8 @@ public class NoteActivity extends Activity {
 //							@Override public void run () { 
 //								runOnUiThread (new Runnable () { 
 //									@Override public void run () { 
-										if (wasEmpty) updateUserInterface (); 
-										else mNotesAdapter.reloadList (); 
+										updateUserInterface (); 
+										mNotesAdapter.reloadList (); 
 				updateMenuItems (); 
 //									} 
 //								}); 

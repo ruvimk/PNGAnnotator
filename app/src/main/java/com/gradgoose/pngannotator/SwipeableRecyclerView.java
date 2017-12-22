@@ -25,7 +25,7 @@ import java.util.Vector;
 public class SwipeableRecyclerView extends RecyclerView { 
 	static final String TAG = "SwipeRV"; 
 	
-	float decayRate = 0.2f; 
+	float decayRate = 0.05f; 
 	long timestep = 20; 
 	
 	final float MAX_DISPLACEMENT_FOR_CLICK; 

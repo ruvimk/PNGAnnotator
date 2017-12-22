@@ -262,7 +262,7 @@ public class NoteActivity extends Activity {
 	MenuItem mMenuGoToPage = null; 
 	MenuItem mMenuPenMode = null; 
 	MenuItem mMenuToggleOverview = null; 
-	MenuItem mMenuRecents = null; 
+//	MenuItem mMenuRecents = null; 
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 
 		getMenuInflater ().inflate (R.menu.main_menu, menu); 
 		return true; 
@@ -274,7 +274,7 @@ public class NoteActivity extends Activity {
 									PngNotesAdapter.hasImages (mBrowsingFolders); 
 		mMenuGoToPage.setVisible (hasImages); 
 		mMenuToggleOverview.setVisible (hasImages); 
-		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
+//		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
 		mMenuPenMode.setChecked (isPenModeEnabled ()); 
 	} 
@@ -282,7 +282,7 @@ public class NoteActivity extends Activity {
 		super.onPrepareOptionsMenu (menu); 
 		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
 		mMenuToggleOverview = menu.findItem (R.id.menu_action_toggle_overview); 
-		mMenuRecents = menu.findItem (R.id.menu_action_recents); 
+//		mMenuRecents = menu.findItem (R.id.menu_action_recents); 
 		mMenuPenMode = menu.findItem (R.id.menu_action_pen_mode); 
 		updateMenuItems (); 
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
@@ -297,19 +297,19 @@ public class NoteActivity extends Activity {
 			case R.id.menu_action_goto_page: 
 				userSelectPage (); 
 				break; 
-			case R.id.menu_action_recents: 
-				if (recentFolders.size () > 1){ 
-					String parts [] = recentFolders.elementAt (1).split (";parent:"); 
-					String folderPaths [] = parts[0].split ("\t"); 
-					String parentPaths [] = parts[1] != null ? parts[1].split ("\t") 
-							: new String [0]; 
-					Intent goRecent = new Intent (this, NoteActivity.class); 
-					goRecent.putExtra (STATE_BROWSING_PATH, folderPaths); 
-					goRecent.putExtra (STATE_PARENT_BROWSE, parentPaths); 
-					startActivity (goRecent); // Start new activity. 
-					finish (); // Finish this activity. 
-				} 
-				break; 
+//			case R.id.menu_action_recents: 
+//				if (recentFolders.size () > 1){ 
+//					String parts [] = recentFolders.elementAt (1).split (";parent:"); 
+//					String folderPaths [] = parts[0].split ("\t"); 
+//					String parentPaths [] = parts[1] != null ? parts[1].split ("\t") 
+//							: new String [0]; 
+//					Intent goRecent = new Intent (this, NoteActivity.class); 
+//					goRecent.putExtra (STATE_BROWSING_PATH, folderPaths); 
+//					goRecent.putExtra (STATE_PARENT_BROWSE, parentPaths); 
+//					startActivity (goRecent); // Start new activity. 
+//					finish (); // Finish this activity. 
+//				} 
+//				break; 
 			case R.id.menu_action_pen_mode: 
 				item.setChecked (!item.isChecked ()); 
 				enablePenMode (item.isChecked ()); 

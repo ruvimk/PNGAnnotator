@@ -72,7 +72,8 @@ public class PenIcon extends ImageView {
 			mPenWidth = options.outWidth; 
 			mPenHeight = options.outHeight; 
 			try { 
-				setImageURI (Uri.fromFile (penImage)); 
+				mBitmap = BitmapFactory.decodeFile (penImage.getAbsolutePath ()); 
+				setImageBitmap (mBitmap); 
 			} catch (OutOfMemoryError err) { 
 				Toast.makeText (getContext (), R.string.title_out_of_mem, 
 						Toast.LENGTH_SHORT).show (); 

@@ -260,6 +260,8 @@ public class NoteActivity extends Activity {
 	} 
 	
 	MenuItem mMenuGoToPage = null; 
+	MenuItem mMenuPenMode = null; 
+	MenuItem mMenuToggleOverview = null; 
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 
 		getMenuInflater ().inflate (R.menu.main_menu, menu); 
 		return true; 
@@ -271,9 +273,12 @@ public class NoteActivity extends Activity {
 									PngNotesAdapter.hasImages (mBrowsingFolders); 
 		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
 		mMenuGoToPage.setVisible (hasImages); 
+		mMenuToggleOverview = menu.findItem (R.id.menu_action_toggle_overview); 
+		mMenuToggleOverview.setVisible (mNotesAdapter.countImages () > 2); 
+		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
 		menu.findItem (R.id.menu_action_recents).setVisible (recentFolders.size () > 1 && 
 			hasImages); 
-		menu.findItem (R.id.menu_action_pen_mode).setChecked (isPenModeEnabled ()); 
+		(mMenuPenMode = menu.findItem (R.id.menu_action_pen_mode)).setChecked (isPenModeEnabled ()); 
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
 		return true; 
 	} 

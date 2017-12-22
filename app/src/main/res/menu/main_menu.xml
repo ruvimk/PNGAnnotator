@@ -34,6 +34,8 @@
 		android:icon="@drawable/ic_apps_black_24dp"
 		android:showAsAction="ifRoom"
 		android:title="@string/menu_toggle_overview"
+		android:checkable="true"
+		android:checked="false"
 		/> 
 	
 	<item

@@ -521,7 +521,7 @@ public class PageView extends ImageView {
 			}).start (); 
 		} 
 		// Now load our edits for this picture: 
-		if (!oldFile.equals (itemFile)) {
+		if (oldFile == null || !oldFile.equals (itemFile)) {
 			try { 
 				synchronized (edit) { 
 					edit.value = PngEdit.forFile (getContext (), file); 

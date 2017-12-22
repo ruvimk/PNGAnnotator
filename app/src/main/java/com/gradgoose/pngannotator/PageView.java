@@ -406,6 +406,8 @@ public class PageView extends ImageView {
 				// Update the last loaded path: 
 				lastLoadedPath = file.getPath (); 
 			} 
+			// If the view size is not known yet, then don't load the big bitmap yet because we don't know how big it should be: 
+			if (getWidth () == 0) return null; 
 			// Load the bitmap in a separate thread: 
 			Step2Thread thread; 
 			(thread = new Step2Thread () { 
@@ -518,6 +520,7 @@ public class PageView extends ImageView {
 			}).start (); 
 		} 
 		// Now load our edits for this picture: 
+		
 		try { 
 			synchronized (edit) { 
 				edit.value = PngEdit.forFile (getContext (), file); 
@@ -575,6 +578,8 @@ public class PageView extends ImageView {
 		} 
 		// Get display metrics (the object that allows us to convert CM to DP): 
 		metrics = Resources.getSystem ().getDisplayMetrics (); 
+		// Reload the item bitmaps: 
+		setItemFile (itemFile); // This will load the appropriately-sized bitmap into memory. 
 	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 

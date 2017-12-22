@@ -358,6 +358,7 @@ public class PageView extends ImageView {
 	
 	Bitmap mPreviousSetBitmap = null; 
 	@Override public void setImageBitmap (Bitmap bmp) { 
+		Log.d (TAG, "setImageBitmap (" + (bmp != null ? "BITMAP" : "null") + ")"); 
 		if (mPreviousSetBitmap != null) { 
 			mPreviousSetBitmap.recycle (); 
 		} 

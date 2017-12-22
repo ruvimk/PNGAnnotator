@@ -272,11 +272,8 @@ public class NoteActivity extends Activity {
 		boolean hasImages = mNotesAdapter != null ? 
 									mNotesAdapter.hasImages () : 
 									PngNotesAdapter.hasImages (mBrowsingFolders); 
-		boolean enoughForOverview = mNotesAdapter != null ? 
-											mNotesAdapter.countImages () > 2 : 
-											hasImages; 
 		mMenuGoToPage.setVisible (hasImages); 
-		mMenuToggleOverview.setVisible (enoughForOverview); 
+		mMenuToggleOverview.setVisible (hasImages); 
 		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
 		mMenuPenMode.setChecked (isPenModeEnabled ()); 

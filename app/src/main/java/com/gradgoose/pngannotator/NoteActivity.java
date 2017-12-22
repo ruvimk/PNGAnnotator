@@ -585,6 +585,7 @@ public class NoteActivity extends Activity {
 	SwipeableRecyclerView mRvBigPages = null; 
 	PngNotesAdapter mNotesAdapter = null; 
 	LinearLayoutManager mNotesLayoutManager = null; 
+	GridLayoutManager mNoteOverviewLayoutManager = null; 
 	
 	RecyclerView mRvPenOptions = null; 
 	PensAdapter mPensAdapter = null; 
@@ -676,11 +677,14 @@ public class NoteActivity extends Activity {
 		mRvSubfolderBrowser.setLayoutManager (mSubfoldersLayoutManager); 
 		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter); 
 		
+		// Image annotator layout managers: 
+		mNotesLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false); 
+		mNoteOverviewLayoutManager = new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 
+		
 		// Image annotation RecyclerView: 
 		mRvBigPages = findViewById (R.id.rvBigPages);
 		mRvBigPages.setParentFolder (mParentFolder, mBrowsingFolders.elementAt (0).getName ()); 
-		mRvBigPages.setLayoutManager (mNotesLayoutManager = 
-						new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false)); 
+		setNotesLayoutManager (); 
 		mRvBigPages.setAdapter (mNotesAdapter); 
 		// Put it into the list only if it's not empty (to avoid a scroll bar problem): 
 		if (mSubfoldersAdapter.mList.length > 0) 
@@ -791,6 +795,10 @@ public class NoteActivity extends Activity {
 		mDoNotResetInitialScrollYet = true; 
 		mStillWaitingToScroll = true; 
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
+	} 
+	private void setNotesLayoutManager () { 
+		mRvBigPages.setLayoutManager (prefs.getBoolean ("notes-overview", false) ? 
+											  mNoteOverviewLayoutManager : mNotesLayoutManager); 
 	} 
 	void updateBrushWidthTextShowing () { 
 		brushWidthText.setText (getString (R.string.label_brush_width) 

@@ -366,6 +366,10 @@ public class PageView extends ImageView {
 		super.setImageBitmap (bmp); 
 	} 
 	
+	@Override public void onAttachedToWindow () { 
+		super.onAttachedToWindow (); 
+		setItemFile (itemFile); // Reload bitmaps. 
+	} 
 	@Override public void onDetachedFromWindow () { 
 		super.onDetachedFromWindow (); 
 		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 

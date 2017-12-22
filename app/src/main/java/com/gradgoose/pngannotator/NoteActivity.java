@@ -268,6 +268,7 @@ public class NoteActivity extends Activity {
 		return true; 
 	} 
 	private void updateMenuItems () { 
+		if (mMenuGoToPage == null) return; // Return if these have not yet been initialized. 
 		boolean hasImages = mNotesAdapter != null ? 
 									mNotesAdapter.hasImages () : 
 									PngNotesAdapter.hasImages (mBrowsingFolders); 

@@ -303,6 +303,11 @@ public class NoteActivity extends Activity {
 				item.setChecked (!item.isChecked ()); 
 				enablePenMode (item.isChecked ()); 
 				break; 
+			case R.id.menu_action_toggle_overview: 
+				prefs.edit ().putBoolean ("notes-overview", !prefs.getBoolean ("notes-overview", false)).apply (); 
+				item.setChecked (prefs.getBoolean ("notes-overview", false)); 
+				setNotesLayoutManager (); // Swap layout. 
+				break; 
 			case R.id.menu_action_export_pages: 
 				exportPages (); 
 				break; 

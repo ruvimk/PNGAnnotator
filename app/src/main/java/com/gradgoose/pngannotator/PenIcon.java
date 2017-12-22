@@ -116,6 +116,10 @@ public class PenIcon extends ImageView {
 		} 
 	} 
 	
+	@Override public void onAttachedToWindow () { 
+		super.onAttachedToWindow (); 
+		if (mBitmap == null) initBitmap (); 
+	} 
 	@Override public void onDetachedFromWindow () { 
 		super.onDetachedFromWindow (); 
 		if (mBitmap != null) { 

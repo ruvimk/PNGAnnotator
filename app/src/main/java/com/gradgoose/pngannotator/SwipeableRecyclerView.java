@@ -25,6 +25,9 @@ import java.util.Vector;
 public class SwipeableRecyclerView extends RecyclerView { 
 	static final String TAG = "SwipeRV"; 
 	
+	float decayRate = 0.2f; 
+	long timestep = 20; 
+	
 	final float MAX_DISPLACEMENT_FOR_CLICK; 
 	final float MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN; 
 	
@@ -68,8 +71,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 			} 
 		}).start (); 
 	} 
-	float decayRate = 0.2f; 
-	long timestep = 20; 
 	long lastAnimatedT = 0; 
 	Runnable mStepAnimation = new Runnable () { 
 		@Override public void run () { 

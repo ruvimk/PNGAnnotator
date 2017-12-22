@@ -629,6 +629,7 @@ public class NoteActivity extends Activity {
 	} 
 	boolean mAlreadyHandling_OutOfMem = false; 
 	void updateUserInterface () { 
+		if (mNotesAdapter == null || mSubfoldersAdapter == null || hand == null) return; 
 		// Subfolders: 
 		if (!wantDisplaySubfoldersAsBig ()) { 
 			// If there ARE images to display, then list the subfolders up above the images: 

@@ -413,7 +413,7 @@ public class PageView extends ImageView {
 			if (getWidth () == 0) {
 				Log.d (TAG, "step2setItemFile (): View size not known yet. Skipping " + itemFile.getName () + " loading ..."); 
 				return null; 
-			} else Log.d (TAG, "step2setItemFile (): Loading bitmap " + itemFile.getName () + " ..."); 
+			} 
 			// Load the bitmap in a separate thread: 
 			Step2Thread thread; 
 			(thread = new Step2Thread () { 
@@ -437,9 +437,10 @@ public class PageView extends ImageView {
 							((Activity) getContext ()).runOnUiThread (new Runnable () {
 								@Override
 								public void run () {
-									if (!cancel) 
+									if (!cancel) { 
+										Log.d (TAG, "step2setItemFile (): Setting bitmap " + itemFile.getName () + " ..."); 
 										setImageBitmap (myBitmap); 
-									else myBitmap.recycle (); 
+									} else myBitmap.recycle (); 
 								}
 							}); 
 						else myBitmap.recycle (); 

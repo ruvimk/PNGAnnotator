@@ -340,8 +340,7 @@ public class NoteActivity extends Activity {
 //									@Override public void run () { 
 										if (wasEmpty) initUserInterface (); 
 										else mNotesAdapter.reloadList (); 
-				if (mMenuGoToPage != null) // Make sure the 'go to page' menu item is visible. 
-					mMenuGoToPage.setVisible (true); // May not have been if this is the first page. 
+				updateMenuItems (); 
 //									} 
 //								}); 
 //							} 

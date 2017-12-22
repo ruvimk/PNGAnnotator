@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.widget.ImageView;
@@ -30,6 +31,7 @@ import java.io.IOException;
  */
 
 public class PageView extends ImageView { 
+	static final String TAG = "PageView"; 
 	
 	File itemFile = null; 
 	
@@ -407,7 +409,10 @@ public class PageView extends ImageView {
 				lastLoadedPath = file.getPath (); 
 			} 
 			// If the view size is not known yet, then don't load the big bitmap yet because we don't know how big it should be: 
-			if (getWidth () == 0) return null; 
+			if (getWidth () == 0) {
+				Log.d (TAG, "step2setItemFile (): View size not known yet. Skipping the loading ..."); 
+				return null; 
+			} 
 			// Load the bitmap in a separate thread: 
 			Step2Thread thread; 
 			(thread = new Step2Thread () { 
@@ -568,6 +573,7 @@ public class PageView extends ImageView {
 	
 	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
 		super.onSizeChanged (w, h, oldW, oldH); 
+		Log.d (TAG, "onSizeChanged (): Reloading bitmaps, scaling vectors ..."); 
 		// Update paper lines, if any: 
 		if (paperPoints != null) { 
 			int fromW = oldW != 0 ? oldW : 1; 

@@ -522,25 +522,25 @@ public class PageView extends ImageView {
 		} 
 		// Now load our edits for this picture: 
 		if (!oldFile.equals (itemFile)) {
-		try { 
-			synchronized (edit) { 
-				edit.value = PngEdit.forFile (getContext (), file); 
-				edit.value.setWindowSize (getWidth (), getHeight ()); 
-				edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
+			try { 
+				synchronized (edit) { 
+					edit.value = PngEdit.forFile (getContext (), file); 
+					edit.value.setWindowSize (getWidth (), getHeight ()); 
+					edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
+				} 
+			} catch (IOException err) { 
+				// Can't edit: 
+				synchronized (edit) { 
+					edit.value = null; 
+				} 
+				// Log this error: 
+				err.printStackTrace (); 
+				// Show a message to the user, telling them that they can't view/save edits: 
+				Toast.makeText (getContext (), 
+						R.string.error_io_no_edit, 
+						Toast.LENGTH_SHORT) 
+						.show (); 
 			} 
-		} catch (IOException err) { 
-			// Can't edit: 
-			synchronized (edit) { 
-				edit.value = null; 
-			} 
-			// Log this error: 
-			err.printStackTrace (); 
-			// Show a message to the user, telling them that they can't view/save edits: 
-			Toast.makeText (getContext (), 
-					R.string.error_io_no_edit, 
-					Toast.LENGTH_SHORT) 
-					.show (); 
-		} 
 		} 
 		// Redraw this view: 
 		invalidate (); 

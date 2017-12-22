@@ -470,6 +470,7 @@ public class PageView extends ImageView {
 		return null; 
 	} 
 	public void setItemFile (final File file) { 
+		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
 		itemFile = file; 
 		// Load just the image dimensions first: 
 		final BitmapFactory.Options options = new BitmapFactory.Options (); 
@@ -520,7 +521,7 @@ public class PageView extends ImageView {
 			}).start (); 
 		} 
 		// Now load our edits for this picture: 
-		
+		if (!oldFile.equals (itemFile)) {
 		try { 
 			synchronized (edit) { 
 				edit.value = PngEdit.forFile (getContext (), file); 
@@ -539,6 +540,7 @@ public class PageView extends ImageView {
 					R.string.error_io_no_edit, 
 					Toast.LENGTH_SHORT) 
 					.show (); 
+		} 
 		} 
 		// Redraw this view: 
 		invalidate (); 

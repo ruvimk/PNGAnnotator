@@ -262,26 +262,31 @@ public class NoteActivity extends Activity {
 	MenuItem mMenuGoToPage = null; 
 	MenuItem mMenuPenMode = null; 
 	MenuItem mMenuToggleOverview = null; 
+	MenuItem mMenuRecents = null; 
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 
 		getMenuInflater ().inflate (R.menu.main_menu, menu); 
 		return true; 
 	} 
-	@Override public boolean onPrepareOptionsMenu (Menu menu) { 
-		super.onPrepareOptionsMenu (menu); 
+	private void updateMenuItems () { 
 		boolean hasImages = mNotesAdapter != null ? 
 									mNotesAdapter.hasImages () : 
 									PngNotesAdapter.hasImages (mBrowsingFolders); 
 		boolean enoughForOverview = mNotesAdapter != null ? 
 											mNotesAdapter.countImages () > 2 : 
 											hasImages; 
-		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
 		mMenuGoToPage.setVisible (hasImages); 
-		mMenuToggleOverview = menu.findItem (R.id.menu_action_toggle_overview); 
 		mMenuToggleOverview.setVisible (enoughForOverview); 
+		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
-		menu.findItem (R.id.menu_action_recents).setVisible (recentFolders.size () > 1 && 
-			hasImages); 
-		(mMenuPenMode = menu.findItem (R.id.menu_action_pen_mode)).setChecked (isPenModeEnabled ()); 
+		mMenuPenMode.setChecked (isPenModeEnabled ()); 
+	} 
+	@Override public boolean onPrepareOptionsMenu (Menu menu) { 
+		super.onPrepareOptionsMenu (menu); 
+		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
+		mMenuToggleOverview = menu.findItem (R.id.menu_action_toggle_overview); 
+		mMenuRecents = menu.findItem (R.id.menu_action_recents); 
+		mMenuPenMode = menu.findItem (R.id.menu_action_pen_mode); 
+		updateMenuItems (); 
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
 		return true; 
 	} 

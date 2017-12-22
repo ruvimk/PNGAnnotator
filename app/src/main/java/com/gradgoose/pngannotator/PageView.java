@@ -389,6 +389,8 @@ public class PageView extends ImageView {
 					if (thumbnail != null && thumbnail.exists ()) { 
 						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
 					} else { 
+						options.inJustDecodeBounds = true; 
+						BitmapFactory.decodeFile (file.getPath (), options); // Decode bounds. 
 						options.inJustDecodeBounds = false; 
 						options.inSampleSize = calculateInSampleSize (options.outWidth, 
 								options.outHeight, 
@@ -408,18 +410,21 @@ public class PageView extends ImageView {
 			Step2Thread thread; 
 			(thread = new Step2Thread () { 
 				@Override public void run () {
+					BitmapFactory.Options step2options = new BitmapFactory.Options (); // Let's use our own options object in this thread. Stay safe. 
+					step2options.inJustDecodeBounds = true; 
+					BitmapFactory.decodeFile (file.getPath (), step2options); // In case it changed, get it again. 
 					// Calculate the down-sample scale: 
-					options.inSampleSize = 
-							calculateInSampleSize (options.outWidth, 
-									options.outHeight, 
+					step2options.inSampleSize = 
+							calculateInSampleSize (step2options.outWidth, 
+									step2options.outHeight, 
 									getWidth (), 
 									0); 
 					// Now actually load the bitmap, down-sampled if needed: 
-					options.inJustDecodeBounds = false; 
+					step2options.inJustDecodeBounds = false; 
 					if (cancel) 
 						return; 
 					try { 
-						final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+						final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), step2options); 
 						if (!cancel) 
 							((Activity) getContext ()).runOnUiThread (new Runnable () {
 								@Override

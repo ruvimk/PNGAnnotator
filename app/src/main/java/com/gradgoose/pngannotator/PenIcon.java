@@ -116,6 +116,13 @@ public class PenIcon extends ImageView {
 		} 
 	} 
 	
+	@Override public void onDetachedFromWindow () { 
+		super.onDetachedFromWindow (); 
+		if (mBitmap != null) { 
+			mBitmap.recycle (); 
+			mBitmap = null; 
+		} 
+	} 
 	@Override public void onMeasure (int widthMeasureSpec, int heightMeasureSpec) { 
 		setMeasuredDimension (mPenWidth, mPenHeight); 
 	} 

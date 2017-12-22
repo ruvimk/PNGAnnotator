@@ -412,7 +412,7 @@ public class PageView extends ImageView {
 			if (getWidth () == 0) {
 				Log.d (TAG, "step2setItemFile (): View size not known yet. Skipping the loading ..."); 
 				return null; 
-			} 
+			} else Log.d (TAG, "step2setItemFile (): Loading bitmap " + itemFile.getName () + " ..."); 
 			// Load the bitmap in a separate thread: 
 			Step2Thread thread; 
 			(thread = new Step2Thread () { 

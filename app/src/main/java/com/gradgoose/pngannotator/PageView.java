@@ -363,6 +363,11 @@ public class PageView extends ImageView {
 		super.setImageBitmap (bmp); 
 	} 
 	
+	@Override public void onDetachedFromWindow () { 
+		super.onDetachedFromWindow (); 
+		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 
+	} 
+	
 	private @Nullable 
 	Step2Thread step2setItemFile (final File file) { 
 		return step2setItemFile (file, 1); 

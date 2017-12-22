@@ -271,10 +271,13 @@ public class NoteActivity extends Activity {
 		boolean hasImages = mNotesAdapter != null ? 
 									mNotesAdapter.hasImages () : 
 									PngNotesAdapter.hasImages (mBrowsingFolders); 
+		boolean enoughForOverview = mNotesAdapter != null ? 
+											mNotesAdapter.countImages () > 2 : 
+											hasImages; 
 		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
 		mMenuGoToPage.setVisible (hasImages); 
 		mMenuToggleOverview = menu.findItem (R.id.menu_action_toggle_overview); 
-		mMenuToggleOverview.setVisible (mNotesAdapter.countImages () > 2); 
+		mMenuToggleOverview.setVisible (enoughForOverview); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
 		menu.findItem (R.id.menu_action_recents).setVisible (recentFolders.size () > 1 && 
 			hasImages); 

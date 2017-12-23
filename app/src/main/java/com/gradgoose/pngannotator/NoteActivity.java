@@ -824,14 +824,33 @@ public class NoteActivity extends Activity {
 		pbMainProgress.setVisibility (View.GONE); 
 		// Set things: 
 		updateUserInterface (); 
+	} 
+	private void setNotesLayoutManager () { 
+		// Calculate scroll stuff for notes: 
+		RecyclerView.LayoutManager oldManager = mRvBigPages.getLayoutManager (); 
+		int scrollPosition; 
+		View firstView; 
+		float scrollFraction; 
+		if (oldManager == mNoteOverviewLayoutManager) { 
+			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									 mRvBigPages.getWidth (); 
+		} else { 
+			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									 mRvBigPages.getWidth (); 
+		} 
+		// Change the layout manager: 
+		mRvBigPages.setLayoutManager (canShowAsGrid () && prefs.getBoolean ("notes-overview", false) ? 
+											  mNoteOverviewLayoutManager : mNotesLayoutManager); 
 		// Wait for the RecyclerView to finish loading, and then scroll to the right place: 
+		initialScrollItemPosition = scrollPosition; 
+		initialScrollFraction = scrollFraction; 
 		mDoNotResetInitialScrollYet = true; 
 		mStillWaitingToScroll = true; 
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
-	} 
-	private void setNotesLayoutManager () { 
-		mRvBigPages.setLayoutManager (canShowAsGrid () && prefs.getBoolean ("notes-overview", false) ? 
-											  mNoteOverviewLayoutManager : mNotesLayoutManager); 
 	} 
 	void updateBrushWidthTextShowing () { 
 		brushWidthText.setText (getString (R.string.label_brush_width) 
@@ -847,6 +866,8 @@ public class NoteActivity extends Activity {
 				// don't mess up and reuse it when the user doesn't want us to): 
 				int initialScrollItemSpace = (int) (mRvBigPages.getWidth () * initialScrollFraction); 
 				mNotesLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 
+						initialScrollItemSpace); 
+				mNoteOverviewLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 
 						initialScrollItemSpace); 
 				if (!mDoNotResetInitialScrollYet) 
 					resetInitialScroll (); 

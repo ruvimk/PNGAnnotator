@@ -30,4 +30,10 @@
 		android:background="#8888"
 		/> 
 	
+	<View
+		android:layout_width="1dp"
+		android:layout_height="match_parent"
+		android:background="#8888"
+		/> 
+	
 </FrameLayout>

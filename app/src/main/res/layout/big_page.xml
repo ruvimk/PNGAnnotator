@@ -9,28 +9,28 @@
 		android:layout_height="wrap_content"
 		android:background="@android:drawable/picture_frame"
 		>
-	
-	<com.gradgoose.pngannotator.PageView
-		android:id="@+id/pvBigPage"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content" 
-		android:scaleType="centerCrop"
-		android:adjustViewBounds="true"
-		/>
-	
-	<TextView 
-		android:id="@+id/tvPageTitle"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content" 
-		android:paddingLeft="8dp"
-		android:paddingRight="8dp"
-		android:paddingTop="2dp"
-		android:paddingBottom="2dp"
-		android:background="#8ddd"
-		android:textColor="#8000"
-		android:text="TITLE"
-		/>
-	
+		
+		<com.gradgoose.pngannotator.PageView
+			android:id="@+id/pvBigPage"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" 
+			android:scaleType="centerCrop"
+			android:adjustViewBounds="true"
+			/>
+		
+		<TextView 
+			android:id="@+id/tvPageTitle"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" 
+			android:paddingLeft="8dp"
+			android:paddingRight="8dp"
+			android:paddingTop="2dp"
+			android:paddingBottom="2dp"
+			android:background="#8ddd"
+			android:textColor="#8000"
+			android:text="TITLE"
+			/>
+		
 	</FrameLayout> 
 	
 	<View

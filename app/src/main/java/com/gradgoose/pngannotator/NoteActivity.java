@@ -707,10 +707,11 @@ public class NoteActivity extends Activity {
 		mRvPenOptions.setVisibility (canEdit () ? View.VISIBLE : View.GONE); 
 	} 
 	void initUserInterface () { 
+		ViewGroup vgRoot = (ViewGroup) findViewById (R.id.vMainRoot); 
 		// Subfolder browser RecyclerView: 
 		mRvSubfolderBrowser = (RecyclerView) getLayoutInflater () 
 				.inflate (R.layout.subfolder_browser, 
-						(ViewGroup) findViewById (R.id.vMainRoot), 
+						vgRoot, 
 						false); 
 		mSubfoldersAdapter = new SubfoldersAdapter (this, mBrowsingFolders); 
 		mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolders, 
@@ -737,7 +738,7 @@ public class NoteActivity extends Activity {
 				if (mAlreadyHandling_OutOfMem) return; 
 				mAlreadyHandling_OutOfMem = true; 
 				Bundle extras = getIntent ().getExtras (); 
-				boolean alreadyRestartedByError = extras.getBoolean ("memory-error", false); 
+				boolean alreadyRestartedByError = extras != null && extras.getBoolean ("memory-error", false); 
 				if (alreadyRestartedByError) { 
 					new AlertDialog.Builder (NoteActivity.this) 
 							.setTitle (R.string.title_out_of_mem) 
@@ -780,11 +781,11 @@ public class NoteActivity extends Activity {
 						new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false)); 
 		mRvPenOptions.setAdapter (mPensAdapter = new PensAdapter (this)); 
 		eraser = getLayoutInflater ().inflate (R.layout.icon_eraser, 
-				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+				vgRoot, false); 
 		hand = getLayoutInflater ().inflate (R.layout.icon_eraser, 
-				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+				vgRoot, false); 
 		brushWidthButton = getLayoutInflater ().inflate (R.layout.icon_brush_width, 
-				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+				vgRoot, false); 
 		((ImageView) hand.findViewById (R.id.ivEraser)).setImageResource (R.mipmap.ic_hand); 
 		hand.findViewById (R.id.ivMiniHand).setVisibility (View.GONE); 
 		eraser_miniHand = eraser.findViewById (R.id.ivMiniHand); 

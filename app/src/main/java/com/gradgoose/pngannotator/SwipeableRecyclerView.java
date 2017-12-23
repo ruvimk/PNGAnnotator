@@ -10,6 +10,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -31,6 +32,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 	final float MAX_DISPLACEMENT_FOR_CLICK; 
 	final float MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN; 
 	
+	ScaleGestureDetector mScaleGestureDetector = null; 
+	
 	String mNowBrowsingName = ""; 
 	Vector<File> mParentFolder = null; 
 	File mParentSubfolders [] [] = null; 
@@ -46,6 +49,24 @@ public class SwipeableRecyclerView extends RecyclerView {
 				metrics); 
 		MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 
 				0.8f, metrics); 
+		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
+			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
+				setScaleX (scaleGestureDetector.getScaleFactor ()); 
+				setScaleY (scaleGestureDetector.getScaleFactor ()); 
+				setPivotX (scaleGestureDetector.getFocusX ()); 
+				setPivotY (scaleGestureDetector.getFocusY ()); 
+				return true; 
+			} 
+			
+			@Override public boolean onScaleBegin (ScaleGestureDetector scaleGestureDetector) { 
+				return true; 
+			} 
+			
+			@Override public void onScaleEnd (ScaleGestureDetector scaleGestureDetector) { 
+				setScaleX (1); 
+				setScaleY (1); 
+			} 
+		}); 
 	} 
 	public void setParentFolder (Vector<File> browsingParentFolder, String nowBrowsingFolderName) { 
 		mParentFolder = browsingParentFolder; 

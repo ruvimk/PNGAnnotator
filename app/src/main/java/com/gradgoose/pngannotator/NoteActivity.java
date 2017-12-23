@@ -241,14 +241,26 @@ public class NoteActivity extends Activity {
 	} 
 	
 	boolean mReloadOnNextResume = false; 
-	@Override public void onPause () {
+	@Override public void onPause () { 
+		// Calculate scroll position: 
+		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
+		int scrollPosition; 
+		View firstView; 
+		float scrollFraction; 
+		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
+			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									 mRvBigPages.getWidth (); 
+		} else { 
+			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									 mRvBigPages.getWidth (); 
+		} 
 		// Update the "last page, left off" value: 
-		int position = mNotesLayoutManager.findFirstVisibleItemPosition (); 
-		View firstView = mNotesLayoutManager.findViewByPosition (position); 
-		float scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-									   mRvBigPages.getWidth (); 
 		leftOff.edit () 
-				.putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), position) 
+				.putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), scrollPosition) 
 				.putFloat ("ScrollFraction:" + mBrowsingFolders.elementAt (0).getPath (), 
 						scrollFraction) 
 				.apply (); 

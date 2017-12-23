@@ -13,12 +13,14 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -51,6 +53,7 @@ public class PageView extends ImageView {
 	
 	boolean mToolMode = false; 
 	WriteDetector mWriteDetector; 
+	GestureDetector mOtherGestureDetector; 
 	
 	boolean mNowWriting = false; 
 	boolean mNowErasing = false; 
@@ -188,6 +191,34 @@ public class PageView extends ImageView {
 		erasePaint.setColor (ERASE_COLOR); 
 //		erasePaint.setXfermode (new PorterDuffXfermode (PorterDuff.Mode.SRC_OUT)); 
 //		setLayerType (LAYER_TYPE_SOFTWARE, null); 
+		mOtherGestureDetector = new GestureDetector (getContext (), new GestureDetector.OnGestureListener () { 
+			@Override public boolean onDown (MotionEvent motionEvent) { 
+				return true; 
+			} 
+			
+			@Override public void onShowPress (MotionEvent motionEvent) { 
+				
+			} 
+			
+			@Override public boolean onSingleTapUp (MotionEvent motionEvent) { 
+				performClick (); // Just perform a click - tell the View that it was clicked. 
+				return true; 
+			} 
+			
+			@Override public boolean onScroll (MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) { 
+				return false; 
+			} 
+			
+			@Override public void onLongPress (MotionEvent motionEvent) { 
+				if (Build.VERSION.SDK_INT >= 24) 
+					performLongClick (motionEvent.getX (), motionEvent.getY ()); // Tell it about a long click. 
+				else performLongClick (); 
+			} 
+			
+			@Override public boolean onFling (MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) { 
+				return false; 
+			} 
+		}); 
 		mWriteDetector = new WriteDetector (getContext (), new WriteDetector.OnWriteGestureListener () { 
 			@Override public boolean onStrokeBegin (int strokeID, float x, float y) { 
 				if (edit.value == null) return false; 
@@ -614,6 +645,7 @@ public class PageView extends ImageView {
 					getParent ().requestDisallowInterceptTouchEvent (oneIsAPen); 
 				} else getParent ().requestDisallowInterceptTouchEvent (true); 
 			} 
+			mOtherGestureDetector.onTouchEvent (event); // For detecting clicks and long-clicks. 
 			return mWriteDetector.onTouchEvent (event); 
 		} else return super.onTouchEvent (event); 
 	} 

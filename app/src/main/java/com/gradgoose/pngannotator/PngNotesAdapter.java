@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -240,6 +241,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		public void bind (File itemFile) { 
 			titleView.setText (itemFile.getName ()); 
+			pageView.setOnClickListener (new View.OnClickListener () { 
+				@Override public void onClick (View view) {
+					Toast.makeText (mContext, "Clicked!", Toast.LENGTH_SHORT).show (); 
+				} 
+			}); 
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.setItemFile (itemFile); 
 			pageView.setPenMode (mPenMode); 

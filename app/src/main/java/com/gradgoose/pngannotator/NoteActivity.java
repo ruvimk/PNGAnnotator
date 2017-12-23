@@ -850,17 +850,17 @@ public class NoteActivity extends Activity {
 		View firstView; 
 		float scrollFraction = initialScrollFraction; 
 		if (recalculateScrollValues) { 
-		if (oldManager == mNoteOverviewLayoutManager) { 
-			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
-			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-									 mRvBigPages.getWidth (); 
-		} else { 
-			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
-			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-									 mRvBigPages.getWidth (); 
-		} 
+			if (oldManager == mNoteOverviewLayoutManager) { 
+				scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
+				firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+				scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+										 mRvBigPages.getWidth (); 
+			} else { 
+				scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
+				firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+				scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+										 mRvBigPages.getWidth (); 
+			} 
 		} 
 		// Change the layout manager: 
 		mRvBigPages.setLayoutManager (canShowAsGrid () && prefs.getBoolean ("notes-overview", false) ? 

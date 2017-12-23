@@ -220,11 +220,23 @@ public class NoteActivity extends Activity {
 		for (int i = 0; i < mBrowsingFolders.size (); i++) 
 			paths[i] = mBrowsingFolders.elementAt (i).getAbsolutePath (); 
 		outState.putStringArray (STATE_BROWSING_PATH, paths);  
-		int position = mNotesLayoutManager.findFirstVisibleItemPosition (); 
-		outState.putInt (STATE_SCROLL_ITEM, position); 
-		View firstView = mNotesLayoutManager.findViewByPosition (position); 
-		float scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-									   mRvBigPages.getWidth (); 
+		// Calculate scroll position: 
+		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
+		int scrollPosition; 
+		View firstView; 
+		float scrollFraction; 
+		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
+			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									 mRvBigPages.getWidth (); 
+		} else { 
+			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									 mRvBigPages.getWidth (); 
+		} 
+		outState.putInt (STATE_SCROLL_ITEM, scrollPosition); 
 		outState.putFloat (STATE_SCROLL_FRACTION, scrollFraction); 
 	} 
 	
@@ -635,6 +647,9 @@ public class NoteActivity extends Activity {
 	} 
 	boolean mAlreadyHandling_OutOfMem = false; 
 	void updateUserInterface () { 
+		updateUserInterface (false); 
+	} 
+	void updateUserInterface (boolean firstTimeLoading) { 
 		if (mNotesAdapter == null || mSubfoldersAdapter == null || hand == null) return; 
 		// Subfolders: 
 		if (!wantDisplaySubfoldersAsBig ()) { 
@@ -650,7 +665,7 @@ public class NoteActivity extends Activity {
 		} 
 		mRvSubfolderBrowser.setLayoutManager (mSubfoldersLayoutManager); 
 		// Notes: 
-		setNotesLayoutManager (); 
+		setNotesLayoutManager (!firstTimeLoading); 
 		// Update the views for the tool initially selected: 
 		hand.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_NONE ? 
 																		 R.drawable.black_border : 0); 
@@ -823,14 +838,18 @@ public class NoteActivity extends Activity {
 		pbMainProgress = findViewById (R.id.pbMainProgress); 
 		pbMainProgress.setVisibility (View.GONE); 
 		// Set things: 
-		updateUserInterface (); 
+		updateUserInterface (true); 
 	} 
 	private void setNotesLayoutManager () { 
+		setNotesLayoutManager (true); 
+	} 
+	private void setNotesLayoutManager (boolean recalculateScrollValues) { 
 		// Calculate scroll stuff for notes: 
 		RecyclerView.LayoutManager oldManager = mRvBigPages.getLayoutManager (); 
-		int scrollPosition; 
+		int scrollPosition = initialScrollItemPosition; 
 		View firstView; 
-		float scrollFraction; 
+		float scrollFraction = initialScrollFraction; 
+		if (recalculateScrollValues) { 
 		if (oldManager == mNoteOverviewLayoutManager) { 
 			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
 			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
@@ -841,6 +860,7 @@ public class NoteActivity extends Activity {
 			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
 			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
 									 mRvBigPages.getWidth (); 
+		} 
 		} 
 		// Change the layout manager: 
 		mRvBigPages.setLayoutManager (canShowAsGrid () && prefs.getBoolean ("notes-overview", false) ? 

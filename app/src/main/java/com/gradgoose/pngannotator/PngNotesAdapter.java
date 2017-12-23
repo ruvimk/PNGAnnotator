@@ -46,11 +46,21 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	PageView.ErrorCallback mErrorCallback = null; 
 	
+	OnNoteInteractListener mOnNoteInteractListener = null; 
+	
 	long headerPersistantIdStart = 0; 
 	View mHeaderItemViews [] = null; 
 	
 	FileListCache mCache = null; 
 	File mList [] = null; 
+	
+	void setNoteInteractListener (OnNoteInteractListener listener) { 
+		mOnNoteInteractListener = listener; 
+	} 
+	public interface OnNoteInteractListener { 
+		void onNotePageClicked (File itemFile, int listPosition); 
+		boolean onNotePageLongClicked (File itemFile, int listPosition); 
+	} 
 	
 	public void setHeaderItemViews (View list []) { 
 		mHeaderItemViews = list; 
@@ -236,6 +246,18 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		final PageView pageView; 
 		final TextView titleView; 
 		final View tileContainer; 
+		final View.OnClickListener onClickListener = new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				if (mOnNoteInteractListener != null) mOnNoteInteractListener.onNotePageClicked (mItemFile, mListPosition); 
+			} 
+		}; 
+		final View.OnLongClickListener onLongClickListener = new View.OnLongClickListener () { 
+			@Override public boolean onLongClick (View view) { 
+				return mOnNoteInteractListener != null && mOnNoteInteractListener.onNotePageLongClicked (mItemFile, mListPosition); 
+			} 
+		}; 
+		File mItemFile; 
+		int mListPosition; 
 		public Holder (View root) { 
 			super (root); 
 			pageView = root.findViewById (R.id.pvBigPage); 
@@ -243,13 +265,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			tileContainer = root.findViewById (R.id.flPageTile); 
 			mAllPageViews.add (pageView); 
 		} 
-		public void bind (File itemFile) { 
+		public void bind (File itemFile, int positionInList) { 
 			titleView.setText (itemFile.getName ()); 
-			pageView.setOnClickListener (new View.OnClickListener () { 
-				@Override public void onClick (View view) {
-					Toast.makeText (mContext, "Clicked!", Toast.LENGTH_SHORT).show (); 
-				} 
-			}); 
+			mItemFile = itemFile; 
+			mListPosition = positionInList; 
+			pageView.setOnClickListener (onClickListener); 
+			pageView.setOnLongClickListener (onLongClickListener); 
 			tileContainer.setBackgroundResource (mUsePictureFrameBackground ? android.R.drawable.picture_frame : 0); 
 			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 
@@ -282,7 +303,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	@Override public void onBindViewHolder (RecyclerView.ViewHolder holder, int position) {
 		if (holder instanceof Holder) 
-			((Holder) holder).bind (getItemFile (position)); 
+			((Holder) holder).bind (getItemFile (position), position); 
 	} 
 	
 	@Override public int getItemViewType (int position) { 

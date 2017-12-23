@@ -221,21 +221,8 @@ public class NoteActivity extends Activity {
 			paths[i] = mBrowsingFolders.elementAt (i).getAbsolutePath (); 
 		outState.putStringArray (STATE_BROWSING_PATH, paths);  
 		// Calculate scroll position: 
-		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
-		int scrollPosition; 
-		View firstView; 
-		float scrollFraction; 
-		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
-			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
-			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-									 mRvBigPages.getWidth (); 
-		} else { 
-			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
-			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-									 mRvBigPages.getWidth (); 
-		} 
+		int scrollPosition = getScrollPosition (); 
+		float scrollFraction = getScrollFraction (); 
 		outState.putInt (STATE_SCROLL_ITEM, scrollPosition); 
 		outState.putFloat (STATE_SCROLL_FRACTION, scrollFraction); 
 	} 
@@ -243,21 +230,8 @@ public class NoteActivity extends Activity {
 	boolean mReloadOnNextResume = false; 
 	@Override public void onPause () { 
 		// Calculate scroll position: 
-		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
-		int scrollPosition; 
-		View firstView; 
-		float scrollFraction; 
-		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
-			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
-			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-									 mRvBigPages.getWidth (); 
-		} else { 
-			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
-			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-									 mRvBigPages.getWidth (); 
-		} 
+		int scrollPosition = getScrollPosition (); 
+		float scrollFraction = getScrollFraction (); 
 		// Update the "last page, left off" value: 
 		leftOff.edit () 
 				.putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), scrollPosition) 
@@ -389,6 +363,37 @@ public class NoteActivity extends Activity {
 	private void goBack () { 
 		if (canGoBack ()) 
 			finish (); 
+	} 
+	
+	int getScrollPosition () { 
+		if (mRvBigPages == null) return -1; 
+		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
+		int scrollPosition; 
+		View firstView; 
+		float scrollFraction; 
+		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
+			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
+		} else { 
+			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
+		} 
+		return scrollPosition; 
+	} 
+	float getScrollFraction () { 
+		if (mRvBigPages == null) return -1; 
+		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
+		int scrollPosition = getScrollPosition (); 
+		View firstView; 
+		float scrollFraction; 
+		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									 mRvBigPages.getWidth (); 
+		} else { 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
+									 mRvBigPages.getWidth (); 
+		} 
+		return scrollFraction; 
 	} 
 	
 	int getPageIndex () { 
@@ -859,20 +864,10 @@ public class NoteActivity extends Activity {
 		// Calculate scroll stuff for notes: 
 		RecyclerView.LayoutManager oldManager = mRvBigPages.getLayoutManager (); 
 		int scrollPosition = initialScrollItemPosition; 
-		View firstView; 
 		float scrollFraction = initialScrollFraction; 
 		if (recalculateScrollValues) { 
-			if (oldManager == mNoteOverviewLayoutManager) { 
-				scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
-				firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-				scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-										 mRvBigPages.getWidth (); 
-			} else { 
-				scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
-				firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-				scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
-										 mRvBigPages.getWidth (); 
-			} 
+			scrollPosition = getScrollPosition (); 
+			scrollFraction = getScrollFraction (); 
 		} 
 		// Change the layout manager: 
 		mRvBigPages.setLayoutManager (canShowAsGrid () && prefs.getBoolean ("notes-overview", false) ? 

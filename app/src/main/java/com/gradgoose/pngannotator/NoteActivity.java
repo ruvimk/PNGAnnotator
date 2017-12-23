@@ -267,13 +267,19 @@ public class NoteActivity extends Activity {
 		getMenuInflater ().inflate (R.menu.main_menu, menu); 
 		return true; 
 	} 
-	private void updateMenuItems () { 
-		if (mMenuGoToPage == null) return; // Return if these have not yet been initialized. 
-		boolean hasImages = mNotesAdapter != null ? 
+	protected boolean hasImages () { 
+		return mNotesAdapter != null ? 
 									mNotesAdapter.hasImages () : 
 									PngNotesAdapter.hasImages (mBrowsingFolders); 
+	} 
+	protected boolean canShowAsGrid () { 
+		return hasImages (); 
+	} 
+	private void updateMenuItems () { 
+		if (mMenuGoToPage == null) return; // Return if these have not yet been initialized. 
+		boolean hasImages = hasImages (); 
 		mMenuGoToPage.setVisible (hasImages); 
-		mMenuToggleOverview.setVisible (hasImages); 
+		mMenuToggleOverview.setVisible (canShowAsGrid ()); 
 //		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
 		mMenuPenMode.setChecked (isPenModeEnabled ()); 
@@ -824,7 +830,7 @@ public class NoteActivity extends Activity {
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
 	} 
 	private void setNotesLayoutManager () { 
-		mRvBigPages.setLayoutManager (prefs.getBoolean ("notes-overview", false) ? 
+		mRvBigPages.setLayoutManager (canShowAsGrid () && prefs.getBoolean ("notes-overview", false) ? 
 											  mNoteOverviewLayoutManager : mNotesLayoutManager); 
 	} 
 	void updateBrushWidthTextShowing () { 

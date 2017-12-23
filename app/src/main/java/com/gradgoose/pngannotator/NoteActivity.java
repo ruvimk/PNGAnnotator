@@ -870,8 +870,9 @@ public class NoteActivity extends Activity {
 			scrollFraction = getScrollFraction (); 
 		} 
 		// Change the layout manager: 
-		mRvBigPages.setLayoutManager (canShowAsGrid () && prefs.getBoolean ("notes-overview", false) ? 
-											  mNoteOverviewLayoutManager : mNotesLayoutManager); 
+		boolean useGrid = canShowAsGrid () && prefs.getBoolean ("notes-overview", false); 
+		mNotesAdapter.usePictureFrameBackground (useGrid); // Use picture frame tiles if they're in a grid. 
+		mRvBigPages.setLayoutManager (useGrid ? mNoteOverviewLayoutManager : mNotesLayoutManager); 
 		// Wait for the RecyclerView to finish loading, and then scroll to the right place: 
 		initialScrollItemPosition = scrollPosition; 
 		initialScrollFraction = scrollFraction; 

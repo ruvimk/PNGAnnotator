@@ -38,6 +38,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	boolean mPenMode = false; 
 	boolean mToolMode = false; 
 	
+	boolean mUsePictureFrameBackground = true; 
+	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
 	float mBrush = 3.0f; 
@@ -233,10 +235,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	public class Holder extends RecyclerView.ViewHolder { 
 		final PageView pageView; 
 		final TextView titleView; 
+		final View tileContainer; 
 		public Holder (View root) { 
 			super (root); 
 			pageView = root.findViewById (R.id.pvBigPage); 
 			titleView = root.findViewById (R.id.tvPageTitle); 
+			tileContainer = root.findViewById (R.id.flPageTile); 
 			mAllPageViews.add (pageView); 
 		} 
 		public void bind (File itemFile) { 
@@ -246,6 +250,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					Toast.makeText (mContext, "Clicked!", Toast.LENGTH_SHORT).show (); 
 				} 
 			}); 
+			tileContainer.setBackgroundResource (mUsePictureFrameBackground ? android.R.drawable.picture_frame : 0); 
+			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.setItemFile (itemFile); 
 			pageView.setPenMode (mPenMode); 
@@ -254,6 +260,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.mColor = mColor; 
 			pageView.mBrush = mBrush; 
 		} 
+	} 
+	
+	public void usePictureFrameBackground (boolean whetherUsePictureFrame) { 
+		mUsePictureFrameBackground = whetherUsePictureFrame; 
 	} 
 	
 	void recycleBitmaps () { 

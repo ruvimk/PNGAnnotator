@@ -733,6 +733,19 @@ public class NoteActivity extends Activity {
 																resetInitialScroll (); 
 														} 
 													}); 
+		mNotesAdapter.setNoteInteractListener (new PngNotesAdapter.OnNoteInteractListener () { 
+			@Override public void onNotePageClicked (File itemFile, int listPosition) { 
+				if (prefs.getBoolean ("notes-overview", false)) { 
+					// A note tile was clicked from overview mode; zoom in on that note: 
+					prefs.edit ().putBoolean ("notes-overview", false).apply (); // Go into full-page mode. 
+					initialScrollItemPosition = listPosition; // Scroll to this. 
+					setNotesLayoutManager (false); // Don't recalculate; just use initialScrollItemPosition. 
+				} 
+			} 
+			@Override public boolean onNotePageLongClicked (File itemFile, int listPosition) { 
+				return false; 
+			} 
+		}); 
 		mNotesAdapter.mErrorCallback = new PageView.ErrorCallback () { 
 			@Override public void onBitmapOutOfMemory () { 
 				if (mAlreadyHandling_OutOfMem) return; 

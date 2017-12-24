@@ -22,14 +22,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 				float scale = prevScale * scaleGestureDetector.getScaleFactor (); 
 				float x = scaleGestureDetector.getFocusX (); 
 				float y = scaleGestureDetector.getFocusY (); 
-				int childCount = getChildCount (); 
-				for (int childIndex = 0; childIndex < childCount; childIndex++) { 
-					View child = getChildAt (childIndex); 
-					child.setScaleX (scale); 
-					child.setScaleY (scale); 
-					child.setPivotX (x); 
-					child.setPivotY (y); 
-				} 
+				setScale (scale, scale, x, y); 
 				prevScale = scale; 
 				isScaleEvent = true; 
 				return true; 
@@ -41,12 +34,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 			
 			@Override public void onScaleEnd (ScaleGestureDetector scaleGestureDetector) { 
-				int childCount = getChildCount (); 
-				for (int childIndex = 0; childIndex < childCount; childIndex++) { 
-					View child = getChildAt (childIndex); 
-					child.setScaleX (1); 
-					child.setScaleY (1); 
-				} 
+				setScale (1, 1, 0, 0); 
 				isScaleEvent = false; 
 			} 
 		}); 
@@ -59,5 +47,15 @@ public class ScaleDetectorContainer extends FrameLayout {
 		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 		else getParent ().requestDisallowInterceptTouchEvent (true); 
 		return isScaleEvent; 
+	} 
+	void setScale (float scaleX, float scaleY, float pivotX, float pivotY) { 
+		int childCount = getChildCount (); 
+		for (int childIndex = 0; childIndex < childCount; childIndex++) { 
+			View child = getChildAt (childIndex); 
+			child.setScaleX (scaleX); 
+			child.setScaleY (scaleY); 
+			child.setPivotX (pivotX); 
+			child.setPivotY (pivotY); 
+		} 
 	} 
 } 

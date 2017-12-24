@@ -483,6 +483,8 @@ public class PageView extends ImageView {
 //										Log.d (TAG, "step2setItemFile (): Setting bitmap " + itemFile.getName () + " ..."); 
 										setImageBitmap (myBitmap); 
 										mPreviousBigBitmap = myBitmap; 
+										Log.d (TAG, "Loaded bitmap " + file.getName () + "; size: " 
+															+ myBitmap.getWidth () + " x " + myBitmap.getHeight ()); 
 									} else myBitmap.recycle (); 
 								}
 							}); 
@@ -521,8 +523,8 @@ public class PageView extends ImageView {
 	} 
 	public void setItemFile (final File file) { 
 		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
-		Log.d (TAG, "Setting item file; before: " + (oldFile != null ? oldFile.getName () : "") + "; now: " + 
-							(file != null ? file.getName () : "") + ";"); 
+//		Log.d (TAG, "Setting item file; before: " + (oldFile != null ? oldFile.getName () : "") + "; now: " + 
+//							(file != null ? file.getName () : "") + ";"); 
 		itemFile = file; 
 		// Load just the image dimensions first: 
 		final BitmapFactory.Options options = new BitmapFactory.Options (); 

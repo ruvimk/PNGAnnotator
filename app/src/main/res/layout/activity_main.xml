@@ -27,6 +27,7 @@
 		android:layout_height="match_parent"
 		android:clipToPadding="false"
 		android:scrollbars="vertical|horizontal"
+		android:animateLayoutChanges="false"
 		/>
 	</com.gradgoose.pngannotator.ScaleDetectorContainer> 
 	

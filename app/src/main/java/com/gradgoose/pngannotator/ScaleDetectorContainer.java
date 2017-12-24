@@ -14,6 +14,15 @@ import android.widget.FrameLayout;
 public class ScaleDetectorContainer extends FrameLayout { 
 	ScaleGestureDetector mScaleGestureDetector = null; 
 	boolean isScaleEvent = false; 
+	boolean allowZoomOut = false; 
+	float currentScale = 1; 
+	OnScaleDone onScaleDone = null; 
+	void setOnScaleDoneListener (OnScaleDone listener) { 
+		onScaleDone = listener; 
+	} 
+	public interface OnScaleDone { 
+		void onZoomLeave (float pivotX, float pivotY); 
+	} 
 	public ScaleDetectorContainer (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
 		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
@@ -22,6 +31,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 				float scale = prevScale * scaleGestureDetector.getScaleFactor (); 
 				float x = scaleGestureDetector.getFocusX (); 
 				float y = scaleGestureDetector.getFocusY (); 
+				if (scale < 1 && !allowZoomOut) scale = 1; // If zoom-out not allowed, don't allow scale below 1. 
 				setScale (scale, scale, x, y); 
 				prevScale = scale; 
 				isScaleEvent = true; 
@@ -29,12 +39,16 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 			
 			@Override public boolean onScaleBegin (ScaleGestureDetector scaleGestureDetector) { 
-				prevScale = 1; 
+				prevScale = currentScale; 
 				return true; 
 			} 
 			
 			@Override public void onScaleEnd (ScaleGestureDetector scaleGestureDetector) { 
-				setScale (1, 1, 0, 0); 
+				if (currentScale > .75 && currentScale < 1) 
+					setScale (1, 1, 0, 0); 
+				else if (onScaleDone != null) onScaleDone.onZoomLeave (scaleGestureDetector.getFocusX (), 
+						scaleGestureDetector.getFocusY ()); 
+				else setScale (1, 1, 0, 0); 
 				isScaleEvent = false; 
 			} 
 		}); 
@@ -57,5 +71,6 @@ public class ScaleDetectorContainer extends FrameLayout {
 			child.setPivotX (pivotX); 
 			child.setPivotY (pivotY); 
 		} 
+		currentScale = scaleX; 
 	} 
 } 

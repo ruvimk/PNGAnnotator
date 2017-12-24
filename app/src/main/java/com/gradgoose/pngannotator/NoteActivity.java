@@ -635,6 +635,7 @@ public class NoteActivity extends Activity {
 	LinearLayoutManager mSubfoldersLinearLayoutManager = null; 
 	GridLayoutManager mSubfoldersGridLayoutManager = null; 
 	
+	ScaleDetectorContainer mScalePageContainer = null; 
 	SwipeableRecyclerView mRvBigPages = null; 
 	PngNotesAdapter mNotesAdapter = null; 
 	LinearLayoutManager mNotesLayoutManager = null; 
@@ -708,6 +709,7 @@ public class NoteActivity extends Activity {
 	} 
 	void initUserInterface () { 
 		ViewGroup vgRoot = (ViewGroup) findViewById (R.id.vMainRoot); 
+		mScalePageContainer = findViewById (R.id.flScaleDetectorContainer); 
 		// Subfolder browser RecyclerView: 
 		mRvSubfolderBrowser = (RecyclerView) getLayoutInflater () 
 				.inflate (R.layout.subfolder_browser, 
@@ -773,6 +775,12 @@ public class NoteActivity extends Activity {
 				} 
 			} 
 		}; 
+		mScalePageContainer.setOnScaleDoneListener (new ScaleDetectorContainer.OnScaleDone () { 
+			@Override public void onZoomLeave (float pivotX, float pivotY) { 
+				prefs.edit ().putBoolean ("notes-overview", true).apply (); 
+				setNotesLayoutManager (); 
+			} 
+		}); 
 		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
 		mSubfoldersGridLayoutManager = new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 
 		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter); 
@@ -885,6 +893,7 @@ public class NoteActivity extends Activity {
 		} 
 		// Change the layout manager: 
 		boolean useGrid = canShowAsGrid () && prefs.getBoolean ("notes-overview", false); 
+		mScalePageContainer.allowZoomOut = !useGrid; // Allow zoom-out leave gesture if we're in full-page view. 
 		mNotesAdapter.usePictureFrameBackground (useGrid); // Use picture frame tiles if they're in a grid. 
 		mRvBigPages.setLayoutManager (useGrid ? mNoteOverviewLayoutManager : mNotesLayoutManager); 
 		// Wait for the RecyclerView to finish loading, and then scroll to the right place: 
@@ -911,6 +920,7 @@ public class NoteActivity extends Activity {
 						initialScrollItemSpace); 
 				mNoteOverviewLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 
 						initialScrollItemSpace); 
+				mScalePageContainer.setScale (1, 1, 0, 0); // Reset scale. 
 				if (!mDoNotResetInitialScrollYet) 
 					resetInitialScroll (); 
 			} 

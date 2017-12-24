@@ -32,7 +32,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 	final float MAX_DISPLACEMENT_FOR_CLICK; 
 	final float MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN; 
 	
-	ScaleGestureDetector mScaleGestureDetector = null; 
+//	ScaleGestureDetector mScaleGestureDetector = null; 
 	
 	String mNowBrowsingName = ""; 
 	Vector<File> mParentFolder = null; 
@@ -49,24 +49,29 @@ public class SwipeableRecyclerView extends RecyclerView {
 				metrics); 
 		MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 
 				0.8f, metrics); 
-		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
-			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
-				setScaleX (scaleGestureDetector.getScaleFactor ()); 
-				setScaleY (scaleGestureDetector.getScaleFactor ()); 
-				setPivotX (scaleGestureDetector.getFocusX ()); 
-				setPivotY (scaleGestureDetector.getFocusY ()); 
-				return true; 
-			} 
-			
-			@Override public boolean onScaleBegin (ScaleGestureDetector scaleGestureDetector) { 
-				return true; 
-			} 
-			
-			@Override public void onScaleEnd (ScaleGestureDetector scaleGestureDetector) { 
-				setScaleX (1); 
-				setScaleY (1); 
-			} 
-		}); 
+//		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
+//			float prevScale = 1; 
+//			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
+//				float scale = prevScale * scaleGestureDetector.getScaleFactor (); 
+//				setScaleX (scale); 
+//				setScaleY (scale); 
+//				setPivotX (scaleGestureDetector.getFocusX ()); 
+//				setPivotY (scaleGestureDetector.getFocusY ()); 
+//				prevScale = scale; 
+//				isScaleEvent = true; 
+//				return true; 
+//			} 
+//			
+//			@Override public boolean onScaleBegin (ScaleGestureDetector scaleGestureDetector) { 
+//				return true; 
+//			} 
+//			
+//			@Override public void onScaleEnd (ScaleGestureDetector scaleGestureDetector) { 
+//				setScaleX (1); 
+//				setScaleY (1); 
+//				isScaleEvent = false; 
+//			} 
+//		}); 
 	} 
 	public void setParentFolder (Vector<File> browsingParentFolder, String nowBrowsingFolderName) { 
 		mParentFolder = browsingParentFolder; 
@@ -158,7 +163,15 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float MIN_DELTA_TO_SWIPE; 
 	float MIN_DISPLACEMENT_TO_SCROLL; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
+//		if (isScaleEvent) mScaleGestureDetector.onTouchEvent (event); 
+		if (event.getAction () == MotionEvent.ACTION_UP) isScaleEvent = false; 
 		if (handleTouch ()) { 
+			if (isScaleEvent) { 
+				// Reset swipe position, and exit. 
+				swipeDelta = 0; 
+				updateSwipePosition (); 
+				return true; 
+			} 
 			float x = event.getX (); 
 			float y = event.getY (); 
 			boolean horizontal = isHorizontalOrientation (); 
@@ -225,6 +238,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 	} 
 	float firstInterceptX = 0; 
 	float firstInterceptY = 0; 
+	boolean isScaleEvent = false; 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) {
 		float x = event.getX (); 
 		float y = event.getY (); 
@@ -232,12 +246,15 @@ public class SwipeableRecyclerView extends RecyclerView {
 			firstInterceptX = x; 
 			firstInterceptY = y; 
 		} 
-		return (canSwipe () && 
+//		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
+//		else getParent ().requestDisallowInterceptTouchEvent (true); 
+		// The scale detector will set isScaleEvent, we will set it, if we detect a scale. 
+		return (/*isScaleEvent || */(canSwipe () && 
 						Math.abs (x - firstInterceptX) > Math.abs (y - firstInterceptY) && 
 							 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 
 												(y - firstInterceptY) * (y - firstInterceptY)) 
 									 >= MIN_DISPLACEMENT_TO_SCROLL) || 
-					   super.onInterceptTouchEvent (event); 
+					   super.onInterceptTouchEvent (event)); 
 	} 
 	public void pageUp () { 
 		LayoutManager lm = getLayoutManager (); 

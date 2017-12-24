@@ -16,14 +16,19 @@
 		android:background="@drawable/pen_selection_background"
 		/>
 	
+	<com.gradgoose.pngannotator.ScaleDetectorContainer
+		android:id="@+id/flScaleDetectorContainer"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1">
 	<com.gradgoose.pngannotator.SwipeableRecyclerView
 		android:id="@+id/rvBigPages"
 		android:layout_width="match_parent"
-		android:layout_height="0dp"
-		android:layout_weight="1"
+		android:layout_height="match_parent"
 		android:clipToPadding="false"
 		android:scrollbars="vertical|horizontal"
 		/>
+	</com.gradgoose.pngannotator.ScaleDetectorContainer> 
 	
 	<ProgressBar
 		android:id="@+id/pbMainProgress"

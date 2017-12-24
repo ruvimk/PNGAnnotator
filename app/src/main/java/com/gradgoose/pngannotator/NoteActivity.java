@@ -373,11 +373,31 @@ public class NoteActivity extends Activity {
 		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
 		int scrollPosition; 
 		View firstView; 
-		float scrollFraction; 
+		int viewTop, viewTop2; 
 		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
 			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
+			firstView = mNoteOverviewLayoutManager.findViewByPosition (scrollPosition); 
+			viewTop = firstView.getTop (); 
+			if (viewTop < 0) { 
+				firstView = mNoteOverviewLayoutManager.findViewByPosition (scrollPosition + mOverviewColumnCount); 
+				if (firstView != null) { 
+					viewTop2 = firstView.getTop (); 
+					if (Math.abs (viewTop2) < Math.abs (viewTop)) 
+						scrollPosition += mOverviewColumnCount; 
+				} 
+			} 
 		} else { 
 			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
+			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			viewTop = firstView.getTop (); 
+			if (viewTop < 0) { 
+				firstView = mNotesLayoutManager.findViewByPosition (scrollPosition + 1); 
+				if (firstView != null) { 
+					viewTop2 = firstView.getTop (); 
+					if (Math.abs (viewTop2) < Math.abs (viewTop)) 
+						scrollPosition += 1; 
+				} 
+			} 
 		} 
 		return scrollPosition; 
 	} 
@@ -388,7 +408,7 @@ public class NoteActivity extends Activity {
 		View firstView; 
 		float scrollFraction; 
 		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
-			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
+			firstView = mNoteOverviewLayoutManager.findViewByPosition (scrollPosition); 
 			scrollFraction = (float) (firstView != null ? firstView.getTop () : 0) / 
 									 mRvBigPages.getWidth (); 
 		} else { 

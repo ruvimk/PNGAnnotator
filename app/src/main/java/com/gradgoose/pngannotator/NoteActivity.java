@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.util.ArraySet;
 import android.support.v7.widget.GridLayoutManager;
@@ -35,6 +36,8 @@ import java.util.Set;
 import java.util.Vector;
 
 public class NoteActivity extends Activity { 
+	
+	int mOverviewColumnCount = 3; 
 	
 	File mDCIM = null; // Keep track of the root camera images folder. 
 	File mPictures = null; 
@@ -653,6 +656,42 @@ public class NoteActivity extends Activity {
 	
 	ProgressBar pbMainProgress = null; 
 	
+	boolean animatingZoomLeave = false; 
+	float notesZoomPivotX = 0; 
+	float notesZoomPivotY = 0; 
+	float targetZoomPivotX = 0; 
+	float targetZoomPivotY = 0; 
+	float targetZoomScale = 0.3f; 
+	Handler mHandler = new Handler (); 
+	Runnable mAnimateZoomLeaveStep = new Runnable () { 
+		@Override public void run () { 
+			if (!animatingZoomLeave) return; 
+			float prevScale = mScalePageContainer.currentScale; 
+			float now = prevScale * 0.95f + targetZoomScale * 0.05f; 
+			notesZoomPivotX = notesZoomPivotX * 0.9f + targetZoomPivotX * 0.1f; 
+			notesZoomPivotY = notesZoomPivotY * 0.9f + targetZoomPivotY * 0.1f; 
+			mScalePageContainer.setScale (now, now, notesZoomPivotX, notesZoomPivotY); 
+			if (Math.abs (notesZoomPivotX - targetZoomPivotX) < 50 && 
+					Math.abs (notesZoomPivotY - targetZoomPivotY) < 50) { 
+				// This checks if the little tile flew over to where it should go ... 
+				setNotesLayoutManager (false); 
+				return; // Done animating. 
+			} 
+			mHandler.postDelayed (this, 20); 
+		} 
+	}; 
+	void animateZoomLeave (float startPivotX, float startPivotY) { 
+		notesZoomPivotX = startPivotX; 
+		notesZoomPivotY = startPivotY; 
+		targetZoomPivotX = (float) (getScrollPosition () % mOverviewColumnCount) * mScalePageContainer.getWidth () / mOverviewColumnCount + 
+								   (float) mScalePageContainer.getWidth () / (2 * mOverviewColumnCount); 
+		targetZoomPivotY = startPivotY; 
+		initialScrollFraction = targetZoomPivotY / (float) mScalePageContainer.getWidth (); 
+		if (animatingZoomLeave) return; // Already animating. 
+		animatingZoomLeave = true; 
+		mAnimateZoomLeaveStep.run (); 
+	} 
+	
 	boolean isBrowsingRootFolder () { 
 		for (File folder : mBrowsingFolders) 
 			if (folder.equals (mDCIM)) 
@@ -777,8 +816,9 @@ public class NoteActivity extends Activity {
 		}; 
 		mScalePageContainer.setOnScaleDoneListener (new ScaleDetectorContainer.OnScaleDone () { 
 			@Override public void onZoomLeave (float pivotX, float pivotY) { 
+				initialScrollItemPosition = getScrollPosition (); 
 				prefs.edit ().putBoolean ("notes-overview", true).apply (); 
-				setNotesLayoutManager (); 
+				animateZoomLeave (pivotX, pivotY); 
 			} 
 		}); 
 		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
@@ -787,7 +827,7 @@ public class NoteActivity extends Activity {
 		
 		// Image annotator layout managers: 
 		mNotesLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false); 
-		mNoteOverviewLayoutManager = new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 
+		mNoteOverviewLayoutManager = new GridLayoutManager (this, mOverviewColumnCount, LinearLayoutManager.VERTICAL, false); 
 		
 		// Image annotation RecyclerView: 
 		mRvBigPages = findViewById (R.id.rvBigPages);
@@ -920,6 +960,7 @@ public class NoteActivity extends Activity {
 						initialScrollItemSpace); 
 				mNoteOverviewLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 
 						initialScrollItemSpace); 
+				animatingZoomLeave = false; // Cancel any zoom animations. 
 				mScalePageContainer.setScale (1, 1, 0, 0); // Reset scale. 
 				if (!mDoNotResetInitialScrollYet) 
 					resetInitialScroll (); 

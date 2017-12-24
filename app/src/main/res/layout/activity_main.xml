@@ -21,14 +21,14 @@
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
 		android:layout_weight="1">
-	<com.gradgoose.pngannotator.SwipeableRecyclerView
-		android:id="@+id/rvBigPages"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:clipToPadding="false"
-		android:scrollbars="vertical|horizontal"
-		android:animateLayoutChanges="false"
-		/>
+		<com.gradgoose.pngannotator.SwipeableRecyclerView
+			android:id="@+id/rvBigPages"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:clipToPadding="false"
+			android:scrollbars="vertical|horizontal"
+			android:animateLayoutChanges="false"
+			/>
 	</com.gradgoose.pngannotator.ScaleDetectorContainer> 
 	
 	<ProgressBar

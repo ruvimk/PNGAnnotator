@@ -399,14 +399,19 @@ public class PageView extends ImageView {
 		super.setImageBitmap (bmp); 
 	} 
 	
+	boolean mAttachedToWindow = false; 
 	@Override public void onAttachedToWindow () { 
 		super.onAttachedToWindow (); 
+		mAttachedToWindow = true; 
 		setItemFile (itemFile); // Reload bitmaps. 
 	} 
 	@Override public void onDetachedFromWindow () { 
 		super.onDetachedFromWindow (); 
+		mAttachedToWindow = false; 
 		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 
 	} 
+	
+	String mNowLoadingPath = ""; 
 	
 	private @Nullable 
 	Step2Thread step2setItemFile (final File file) { 
@@ -415,6 +420,7 @@ public class PageView extends ImageView {
 	private @Nullable 
 	Step2Thread step2setItemFile (final @Nullable File file, final int attemptNumber) { 
 		if (file == null) return null; 
+		if (!mAttachedToWindow) return null; // Don't load bitmaps into views that are not visible. 
 		// Load just the image dimensions first: 
 		final BitmapFactory.Options options = new BitmapFactory.Options (); 
 		if (knownSmallVersion == 0) { 
@@ -456,6 +462,8 @@ public class PageView extends ImageView {
 			if (file.getPath ().equals (lastLoadedPath) && mPreviousBigBitmap != null) { 
 				return null; // Already have a big bitmap in memory of this file. 
 			} 
+			if (mNowLoadingPath.equals (file.getPath ())) return null; // Don't load if this exact path is already being loaded. 
+			mNowLoadingPath = file.getPath (); 
 			// Load the bitmap in a separate thread: 
 			Step2Thread thread; 
 			(thread = new Step2Thread () { 
@@ -485,6 +493,7 @@ public class PageView extends ImageView {
 										mPreviousBigBitmap = myBitmap; 
 										Log.d (TAG, "Loaded bitmap " + file.getName () + "; size: " 
 															+ myBitmap.getWidth () + " x " + myBitmap.getHeight ()); 
+										mNowLoadingPath = ""; // Not loading anymore. 
 									} else myBitmap.recycle (); 
 								}
 							}); 

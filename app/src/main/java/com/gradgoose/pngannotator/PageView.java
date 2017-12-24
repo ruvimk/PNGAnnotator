@@ -359,9 +359,9 @@ public class PageView extends ImageView {
 		if (naturalHeight > requiredHeight || naturalWidth > requiredWidth) { 
 			if (naturalWidth > naturalHeight && 
 					requiredHeight > 0) { 
-				inSampleSize = Math.round ((float) naturalHeight / (float) requiredHeight); 
+				inSampleSize = (int) Math.ceil ((float) naturalHeight / (float) requiredHeight); 
 			} else if (requiredWidth > 0) { 
-				inSampleSize = Math.round ((float) naturalWidth / (float) requiredWidth); 
+				inSampleSize = (int) Math.ceil ((float) naturalWidth / (float) requiredWidth); 
 			} 
 		} 
 		return inSampleSize; 

@@ -387,12 +387,14 @@ public class PageView extends ImageView {
 		boolean cancel = false; 
 	} 
 	
+	Bitmap mPreviousBigBitmap = null; 
 	Bitmap mPreviousSetBitmap = null; 
 	@Override public void setImageBitmap (Bitmap bmp) { 
-		Log.d (TAG, "setImageBitmap (" + (bmp != null ? "BITMAP" : "null") + ")"); 
+//		Log.d (TAG, "setImageBitmap (" + (bmp != null ? "BITMAP" : "null") + ")"); 
 		if (mPreviousSetBitmap != null) { 
 			mPreviousSetBitmap.recycle (); 
 		} 
+		if (bmp == null) mPreviousBigBitmap = null; 
 		mPreviousSetBitmap = bmp; 
 		super.setImageBitmap (bmp); 
 	} 
@@ -418,6 +420,7 @@ public class PageView extends ImageView {
 		if (knownSmallVersion == 0) { 
 			// If this is a different filename from before, 
 			if (!file.getPath ().equals (lastLoadedPath)) { 
+				mPreviousBigBitmap = null; // No big bitmap. Just thumbnail for now. 
 				// Load a REALLY small version for time time being, while it's loading 
 				// (this is to avoid white blanks and confusing the user by showing 
 				// them some random picture that they have just seen from a 
@@ -447,8 +450,11 @@ public class PageView extends ImageView {
 			} 
 			// If the view size is not known yet, then don't load the big bitmap yet because we don't know how big it should be: 
 			if (getWidth () == 0) {
-				Log.d (TAG, "step2setItemFile (): View size not known yet. Skipping " + itemFile.getName () + " loading ..."); 
+//				Log.d (TAG, "step2setItemFile (): View size not known yet. Skipping " + itemFile.getName () + " loading ..."); 
 				return null; 
+			} 
+			if (file.getPath ().equals (lastLoadedPath) && mPreviousBigBitmap != null) { 
+				return null; // Already have a big bitmap in memory of this file. 
 			} 
 			// Load the bitmap in a separate thread: 
 			Step2Thread thread; 
@@ -474,8 +480,9 @@ public class PageView extends ImageView {
 								@Override
 								public void run () {
 									if (!cancel) { 
-										Log.d (TAG, "step2setItemFile (): Setting bitmap " + itemFile.getName () + " ..."); 
+//										Log.d (TAG, "step2setItemFile (): Setting bitmap " + itemFile.getName () + " ..."); 
 										setImageBitmap (myBitmap); 
+										mPreviousBigBitmap = myBitmap; 
 									} else myBitmap.recycle (); 
 								}
 							}); 
@@ -613,7 +620,7 @@ public class PageView extends ImageView {
 	
 	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
 		super.onSizeChanged (w, h, oldW, oldH); 
-		Log.d (TAG, "onSizeChanged (): Reloading bitmaps, scaling vectors ..."); 
+//		Log.d (TAG, "onSizeChanged (): Reloading bitmaps, scaling vectors ..."); 
 		// Update paper lines, if any: 
 		if (paperPoints != null) { 
 			int fromW = oldW != 0 ? oldW : 1; 

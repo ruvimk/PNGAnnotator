@@ -780,6 +780,7 @@ public class NoteActivity extends Activity {
 					// A note tile was clicked from overview mode; zoom in on that note: 
 					prefs.edit ().putBoolean ("notes-overview", false).apply (); // Go into full-page mode. 
 					initialScrollItemPosition = listPosition; // Scroll to this. 
+					initialScrollFraction = 0; 
 					setNotesLayoutManager (false); // Don't recalculate; just use initialScrollItemPosition. 
 				} 
 			} 

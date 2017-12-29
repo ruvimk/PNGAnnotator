@@ -45,6 +45,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	int mSampleMode = PageView.SAMPLE_NORMAL; 
 	int mLoadMode = PageView.LOAD_ORIGINAL; 
+	int mPreviewMode = PageView.PREVIEW_THUMBNAIL; 
 	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
@@ -65,6 +66,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	} 
 	void setLoadMode (int loadMode) { 
 		mLoadMode = loadMode; 
+	} 
+	void setPreviewMode (int previewMode) { 
+		mPreviewMode = previewMode; 
 	} 
 	
 	void setNoteInteractListener (OnNoteInteractListener listener) { 
@@ -350,6 +354,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.sampleMode = mSampleMode; 
 			pageView.loadMode = mLoadMode; 
+			pageView.previewMode = mPreviewMode; 
 			pageView.setItemFile (itemFile); 
 			pageView.setPenMode (mPenMode); 
 			pageView.setToolMode (mToolMode); 

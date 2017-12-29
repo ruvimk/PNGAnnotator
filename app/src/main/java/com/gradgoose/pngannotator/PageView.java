@@ -38,9 +38,13 @@ public class PageView extends ImageView {
 	static final int SAMPLE_SPARSE = 1; // Load images in half the NORMAL resolution. 
 	static final int LOAD_ORIGINAL = 0; // Load actual bitmaps. 
 	static final int LOAD_TILE = 1; // Load scaled-down tiles if available. 
+	static final int PREVIEW_THUMBNAIL = 0; // Show the 16x16 version while loading the bigger bitmap. 
+	static final int PREVIEW_THUMBNAIL_IF_EXISTS = 1; // Show 16x16 version only if a pre-scaled one is available in the cache. 
+	static final int PREVIEW_NONE = 2; // Don't show anything at all while loading the bigger bitmap. 
 	
 	int sampleMode = SAMPLE_NORMAL; 
 	int loadMode = LOAD_ORIGINAL; 
+	int previewMode = PREVIEW_THUMBNAIL; 
 	
 	File itemFile = null; 
 	
@@ -438,12 +442,13 @@ public class PageView extends ImageView {
 				// (this is to avoid white blanks and confusing the user by showing 
 				// them some random picture that they have just seen from a 
 				// recycled view): 
-				Bitmap littleBitmap; 
+				Bitmap littleBitmap = null; 
 				File thumbnail = PngNotesAdapter.getThumbnailFile (getContext (), file); 
 				try { 
-					if (thumbnail != null && thumbnail.exists ()) { 
+					if ((previewMode == PREVIEW_THUMBNAIL || previewMode == PREVIEW_THUMBNAIL_IF_EXISTS) && 
+																	thumbnail != null && thumbnail.exists ()) { 
 						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
-					} else { 
+					} else if (previewMode == PREVIEW_THUMBNAIL_IF_EXISTS) { 
 						if (thumbnail == null || !thumbnail.exists ()) { 
 							thumbnail = PngNotesAdapter.getTileFile (getContext (), file); 
 							if (thumbnail == null || !thumbnail.exists ()) 

@@ -163,7 +163,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					if (mWhichDir == 1) { 
 						// We're loading tiles ... 
 						Bitmap big = bmp; 
-						int needSize = Math.min (windowWidth / 3, windowHeight / 3); 
+						int needSize = Math.min (windowWidth / 2, windowHeight / 2); 
 						bmp = Bitmap.createScaledBitmap (big, needSize, needSize, true); 
 						if (bmp != big) 
 							big.recycle (); 

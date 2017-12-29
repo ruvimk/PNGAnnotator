@@ -958,7 +958,7 @@ public class NoteActivity extends Activity {
 		mNotesAdapter.usePictureFrameBackground (useGrid); // Use picture frame tiles if they're in a grid. 
 		mNotesAdapter.setSampleMode (useGrid ? PageView.SAMPLE_SPARSE : PageView.SAMPLE_NORMAL); 
 		mNotesAdapter.setLoadMode (useGrid ? PageView.LOAD_TILE : PageView.LOAD_ORIGINAL); 
-		mNotesAdapter.setPreviewMode (useGrid ? PageView.PREVIEW_NONE : PageView.PREVIEW_THUMBNAIL); 
+		mNotesAdapter.setPreviewMode (useGrid ? PageView.PREVIEW_THUMBNAIL_IF_EXISTS : PageView.PREVIEW_THUMBNAIL); 
 		mRvBigPages.setLayoutManager (useGrid ? mNoteOverviewLayoutManager : mNotesLayoutManager); 
 		// Wait for the RecyclerView to finish loading, and then scroll to the right place: 
 		initialScrollItemPosition = scrollPosition; 

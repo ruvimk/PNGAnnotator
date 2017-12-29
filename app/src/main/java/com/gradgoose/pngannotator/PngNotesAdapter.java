@@ -163,9 +163,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					if (mWhichDir == 1) { 
 						// We're loading tiles ... 
 						Bitmap big = bmp; 
-						int needW = windowWidth / 3; 
-						int needH = windowHeight / 3; 
-						bmp = Bitmap.createScaledBitmap (big, needW, needH, true); 
+						int needSize = Math.min (windowWidth / 3, windowHeight / 3); 
+						bmp = Bitmap.createScaledBitmap (big, needSize, needSize, true); 
 						big.recycle (); 
 					} 
 					// Save the small bitmap to a PNG thumbnail: 

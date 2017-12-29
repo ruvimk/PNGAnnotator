@@ -215,15 +215,18 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	public File [] prepareFileList () { 
 		File list [] [] = mCache.asyncListFiles (mFilterJustImages, 
 				new FileListCache.OnFilesChangedListener () { 
+					private void updateCache () { 
+						// Update thumbnails: 
+						updateThumbnailCache (); 
+						// Update tiles for grid view mode: 
+						updateTileCache (); 
+					} 
 					@Override public void onFilesChanged (File [][] list) { 
 						mList = getFlattenedList (list); 
 						// Callback: 
 						if (mOnFilesChangedListener != null) 
 							mOnFilesChangedListener.onFilesChanged (list); 
-						// Update thumbnails: 
-						updateThumbnailCache (); 
-						// Update tiles for grid view mode: 
-						updateTileCache (); 
+						updateCache (); 
 						// Update views: 
 						notifyDataSetChanged (); 
 					} 
@@ -231,6 +234,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						// Callback: 
 						if (mOnFilesChangedListener != null) 
 							mOnFilesChangedListener.onFilesNoChange (list); 
+						updateCache (); 
 					} 
 				}); 
 		return mList = getFlattenedList (list); 

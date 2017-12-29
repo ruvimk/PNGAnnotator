@@ -42,6 +42,8 @@ public class PageView extends ImageView {
 	static final int PREVIEW_THUMBNAIL_IF_EXISTS = 1; // Show 16x16 version only if a pre-scaled one is available in the cache. 
 	static final int PREVIEW_NONE = 2; // Don't show anything at all while loading the bigger bitmap. 
 	
+	static final int THUMBNAIL_SIZE = 64; 
+	
 	int sampleMode = SAMPLE_NORMAL; 
 	int loadMode = LOAD_ORIGINAL; 
 	int previewMode = PREVIEW_THUMBNAIL; 
@@ -456,7 +458,7 @@ public class PageView extends ImageView {
 						} else thumbnail = file; 
 						options.inSampleSize = calculateInSampleSize (mBitmapNaturalWidth, 
 								mBitmapNaturalHeight, 
-								16, 16); 
+								THUMBNAIL_SIZE, THUMBNAIL_SIZE); 
 						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath (), options); 
 					} 
 					setImageBitmap (littleBitmap); 

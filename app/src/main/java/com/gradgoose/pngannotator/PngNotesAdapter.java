@@ -160,7 +160,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					} else { 
 						options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
 								options.outHeight, 
-								16, 16); 
+								PageView.THUMBNAIL_SIZE, PageView.THUMBNAIL_SIZE); 
 					} 
 					// Load a small version of the picture into a bitmap: 
 					Bitmap bmp = BitmapFactory.decodeFile (picture.getPath (), options); 

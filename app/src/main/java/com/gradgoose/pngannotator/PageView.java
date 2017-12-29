@@ -494,7 +494,16 @@ public class PageView extends ImageView {
 					String filePath = file.getPath (); 
 					if (loadMode == LOAD_TILE) { 
 						File tileFile = PngNotesAdapter.getTileFile (getContext (), file); 
-						if (tileFile != null && tileFile.exists ()) filePath = tileFile.getPath (); 
+						if (tileFile != null && tileFile.exists ()) { 
+							// Update inSampleSize, so that we down-sample it correctly: 
+							BitmapFactory.Options tileOptions = new BitmapFactory.Options (); 
+							tileOptions.inJustDecodeBounds = true; 
+							BitmapFactory.decodeFile (tileFile.getPath (), tileOptions); 
+							step2options.inSampleSize = calculateInSampleSize (tileOptions.outWidth, 
+									tileOptions.outHeight, getWidth (), 0); 
+							// We'll be loading this smaller version: 
+							filePath = tileFile.getPath (); 
+						} 
 					} 
 					try { 
 						final Bitmap myBitmap = BitmapFactory.decodeFile (filePath, step2options); 

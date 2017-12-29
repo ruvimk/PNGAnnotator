@@ -34,6 +34,10 @@ import java.io.IOException;
 
 public class PageView extends ImageView { 
 	static final String TAG = "PageView"; 
+	static final int SAMPLE_NORMAL = 0; // Use calcInSampleSize () as usual. 
+	static final int SAMPLE_SPARSE = 1; // Load images in half the NORMAL resolution. 
+	
+	int sampleMode = SAMPLE_NORMAL; 
 	
 	File itemFile = null; 
 	
@@ -477,6 +481,9 @@ public class PageView extends ImageView {
 									step2options.outHeight, 
 									getWidth (), 
 									0); 
+					if (sampleMode == SAMPLE_SPARSE) { 
+						step2options.inSampleSize = step2options.inSampleSize * 3 / 2; // 2x the sample span -> half the image size. 
+					} 
 					// Now actually load the bitmap, down-sampled if needed: 
 					step2options.inJustDecodeBounds = false; 
 					if (cancel) 

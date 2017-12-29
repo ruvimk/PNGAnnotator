@@ -40,6 +40,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	boolean mUsePictureFrameBackground = true; 
 	
+	int mSampleMode = PageView.SAMPLE_NORMAL; 
+	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
 	float mBrush = 3.0f; 
@@ -53,6 +55,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	FileListCache mCache = null; 
 	File mList [] = null; 
+	
+	void setSampleMode (int sampleMode) { 
+		mSampleMode = sampleMode; 
+	} 
 	
 	void setNoteInteractListener (OnNoteInteractListener listener) { 
 		mOnNoteInteractListener = listener; 
@@ -274,6 +280,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			tileContainer.setBackgroundResource (mUsePictureFrameBackground ? android.R.drawable.picture_frame : 0); 
 			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 
+			pageView.sampleMode = mSampleMode; 
 			pageView.setItemFile (itemFile); 
 			pageView.setPenMode (mPenMode); 
 			pageView.setToolMode (mToolMode); 

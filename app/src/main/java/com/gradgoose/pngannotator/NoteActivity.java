@@ -794,6 +794,15 @@ public class NoteActivity extends Activity {
 																resetInitialScroll (); 
 														} 
 													}); 
+		mNotesAdapter.setOnCacheUpdatedListener (new PngNotesAdapter.CacheUpdatedListener () { 
+			@Override public void onThumbnailCacheUpdated () { 
+				
+			} 
+			
+			@Override public void onTileCacheUpdated () { 
+				mNotesAdapter.notifyDataSetChanged (); 
+			} 
+		}); 
 		mNotesAdapter.setNoteInteractListener (new PngNotesAdapter.OnNoteInteractListener () { 
 			@Override public void onNotePageClicked (File itemFile, int listPosition) { 
 				if (prefs.getBoolean ("notes-overview", false)) { 

@@ -116,6 +116,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	} 
 	static class UpdateCache extends AsyncTask<File [], Void, Integer> { 
 		Context mContext; 
+		CacheUpdatedListener mOnUpdate = null; 
 		int mWhichDir = 0; 
 		public UpdateCache (Context context, int whichDir) { 
 			mContext = context; 
@@ -123,6 +124,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		void close () { 
 			mContext = null; 
+			mOnUpdate = null; 
 		} 
 		@Override protected Integer doInBackground (File [] ... files) {
 			int windowWidth = 1024; 
@@ -183,18 +185,23 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			close (); 
 		} 
 		@Override public void onPostExecute (Integer result) { 
-			if (mWhichDir == 1) 
-				Toast.makeText (mContext, mContext.getString (R.string.msg_cache_updated).replace ("{N}", 
-					String.valueOf (result)), Toast.LENGTH_SHORT).show (); 
+			if (result > 0) { 
+				if (mOnUpdate != null) { 
+					if (mWhichDir == 0) mOnUpdate.onThumbnailCacheUpdated (); 
+					else if (mWhichDir == 1) mOnUpdate.onTileCacheUpdated (); 
+				} 
+			} 
 			close (); 
 		} 
 	} 
 	private void updateThumbnailCache () {
 		UpdateCache updateCache = new UpdateCache (mContext, 0); 
+		updateCache.mOnUpdate = mOnCacheUpdatedListener; 
 		updateCache.execute (mList); 
 	} 
 	private void updateTileCache () { 
 		UpdateCache updateCache = new UpdateCache (mContext, 1); 
+		updateCache.mOnUpdate = mOnCacheUpdatedListener; 
 		updateCache.execute (mList); 
 	} 
 	static File [] getFlattenedList (File list [] []) { 
@@ -212,7 +219,17 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		return list2; 
 	} 
 	
+	public interface CacheUpdatedListener { 
+		void onThumbnailCacheUpdated (); 
+		void onTileCacheUpdated (); 
+	} 
+	
 	FileListCache.OnFilesChangedListener mOnFilesChangedListener = null; 
+	CacheUpdatedListener mOnCacheUpdatedListener = null; 
+	void setOnCacheUpdatedListener (CacheUpdatedListener listener) { 
+		mOnCacheUpdatedListener = listener; 
+	} 
+	
 	public File [] prepareFileList () { 
 		File list [] [] = mCache.asyncListFiles (mFilterJustImages, 
 				new FileListCache.OnFilesChangedListener () { 

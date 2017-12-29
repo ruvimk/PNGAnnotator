@@ -444,13 +444,16 @@ public class PageView extends ImageView {
 					if (thumbnail != null && thumbnail.exists ()) { 
 						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
 					} else { 
+						if (thumbnail == null || !thumbnail.exists ()) { 
+							thumbnail = PngNotesAdapter.getTileFile (getContext (), file); 
+						} else thumbnail = file; 
 						options.inJustDecodeBounds = true; 
-						BitmapFactory.decodeFile (file.getPath (), options); // Decode bounds. 
+						BitmapFactory.decodeFile (thumbnail.getPath (), options); // Decode bounds. 
 						options.inJustDecodeBounds = false; 
 						options.inSampleSize = calculateInSampleSize (options.outWidth, 
 								options.outHeight, 
 								16, 16); 
-						littleBitmap = BitmapFactory.decodeFile (file.getPath (), options); 
+						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath (), options); 
 					} 
 					setImageBitmap (littleBitmap); 
 				} catch (OutOfMemoryError err) { 

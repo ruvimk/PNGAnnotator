@@ -114,7 +114,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		return new File (tileDir, fullFileName); 
 	} 
-	static class UpdateCache extends AsyncTask<File [], Void, Void> { 
+	static class UpdateCache extends AsyncTask<File [], Void, Integer> { 
 		Context mContext; 
 		int mWhichDir = 0; 
 		public UpdateCache (Context context, int whichDir) { 
@@ -124,9 +124,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		void close () { 
 			mContext = null; 
 		} 
-		@Override protected Void doInBackground (File [] ... files) {
+		@Override protected Integer doInBackground (File [] ... files) {
 			int windowWidth = 1024; 
 			int windowHeight = 1024; 
+			int changedCount = 0; 
 			if (mContext instanceof Activity) { 
 				DisplayMetrics displayMetrics = new DisplayMetrics (); 
 				((Activity) mContext).getWindowManager () 
@@ -177,18 +178,22 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						FileOutputStream fos = new FileOutputStream (thumbnail, false);
 						bmp.compress (Bitmap.CompressFormat.PNG, 100, fos);
 						fos.close (); 
+						changedCount++; 
 					} catch (IOException e) {
 						e.printStackTrace (); 
 					}
 					bmp.recycle ();
 				} 
 			} 
-			return null; 
+			return changedCount; 
 		} 
 		@Override public void onCancelled () { 
 			close (); 
 		} 
-		@Override public void onPostExecute (Void result) { 
+		@Override public void onPostExecute (Integer result) { 
+			if (mWhichDir == 1) 
+				Toast.makeText (mContext, mContext.getString (R.string.msg_cache_updated).replace ("{N}", 
+					String.valueOf (result)), Toast.LENGTH_SHORT).show (); 
 			close (); 
 		} 
 	} 

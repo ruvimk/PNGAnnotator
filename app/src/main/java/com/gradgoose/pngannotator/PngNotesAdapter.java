@@ -165,7 +165,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						Bitmap big = bmp; 
 						int needSize = Math.min (windowWidth / 3, windowHeight / 3); 
 						bmp = Bitmap.createScaledBitmap (big, needSize, needSize, true); 
-						big.recycle (); 
+						if (bmp != big) 
+							big.recycle (); 
 					} 
 					// Save the small bitmap to a PNG thumbnail: 
 					try {

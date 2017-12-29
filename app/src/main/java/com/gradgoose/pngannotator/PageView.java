@@ -446,6 +446,8 @@ public class PageView extends ImageView {
 					} else { 
 						if (thumbnail == null || !thumbnail.exists ()) { 
 							thumbnail = PngNotesAdapter.getTileFile (getContext (), file); 
+							if (thumbnail == null || !thumbnail.exists ()) 
+								thumbnail = file; 
 						} else thumbnail = file; 
 						options.inJustDecodeBounds = true; 
 						BitmapFactory.decodeFile (thumbnail.getPath (), options); // Decode bounds. 

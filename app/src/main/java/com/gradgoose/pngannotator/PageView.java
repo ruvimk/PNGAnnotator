@@ -454,11 +454,8 @@ public class PageView extends ImageView {
 							if (thumbnail == null || !thumbnail.exists ()) 
 								thumbnail = file; 
 						} else thumbnail = file; 
-						options.inJustDecodeBounds = true; 
-						BitmapFactory.decodeFile (thumbnail.getPath (), options); // Decode bounds. 
-						options.inJustDecodeBounds = false; 
-						options.inSampleSize = calculateInSampleSize (options.outWidth, 
-								options.outHeight, 
+						options.inSampleSize = calculateInSampleSize (mBitmapNaturalWidth, 
+								mBitmapNaturalHeight, 
 								16, 16); 
 						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath (), options); 
 					} 
@@ -486,19 +483,15 @@ public class PageView extends ImageView {
 			(thread = new Step2Thread () { 
 				@Override public void run () {
 					BitmapFactory.Options step2options = new BitmapFactory.Options (); // Let's use our own options object in this thread. Stay safe. 
-					step2options.inJustDecodeBounds = true; 
-					BitmapFactory.decodeFile (file.getPath (), step2options); // In case it changed, get it again. 
 					// Calculate the down-sample scale: 
 					step2options.inSampleSize = 
-							calculateInSampleSize (step2options.outWidth, 
-									step2options.outHeight, 
+							calculateInSampleSize (mBitmapNaturalWidth, 
+									mBitmapNaturalHeight, 
 									getWidth (), 
 									0); 
 					if (sampleMode == SAMPLE_SPARSE) { 
 						step2options.inSampleSize = step2options.inSampleSize * 3 / 2; // 2x the sample span -> half the image size. 
 					} 
-					// Now actually load the bitmap, down-sampled if needed: 
-					step2options.inJustDecodeBounds = false; 
 					if (cancel || !mAttachedToWindow) 
 						return; 
 					String filePath = file.getPath (); 
@@ -519,7 +512,7 @@ public class PageView extends ImageView {
 							bigBitmap = nowBitmap; 
 						} 
 						final Bitmap myBitmap = bigBitmap; 
-						if (!cancel) 
+						if (!cancel && mAttachedToWindow) 
 							((Activity) getContext ()).runOnUiThread (new Runnable () {
 								@Override
 								public void run () {

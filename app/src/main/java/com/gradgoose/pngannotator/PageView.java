@@ -36,8 +36,11 @@ public class PageView extends ImageView {
 	static final String TAG = "PageView"; 
 	static final int SAMPLE_NORMAL = 0; // Use calcInSampleSize () as usual. 
 	static final int SAMPLE_SPARSE = 1; // Load images in half the NORMAL resolution. 
+	static final int LOAD_ORIGINAL = 0; // Load actual bitmaps. 
+	static final int LOAD_TILE = 1; // Load scaled-down tiles if available. 
 	
 	int sampleMode = SAMPLE_NORMAL; 
+	int loadMode = LOAD_ORIGINAL; 
 	
 	File itemFile = null; 
 	
@@ -488,8 +491,13 @@ public class PageView extends ImageView {
 					step2options.inJustDecodeBounds = false; 
 					if (cancel) 
 						return; 
+					String filePath = file.getPath (); 
+					if (loadMode == LOAD_TILE) { 
+						File tileFile = PngNotesAdapter.getTileFile (getContext (), file); 
+						if (tileFile != null && tileFile.exists ()) filePath = tileFile.getPath (); 
+					} 
 					try { 
-						final Bitmap myBitmap = BitmapFactory.decodeFile (file.getPath (), step2options); 
+						final Bitmap myBitmap = BitmapFactory.decodeFile (filePath, step2options); 
 						if (!cancel) 
 							((Activity) getContext ()).runOnUiThread (new Runnable () {
 								@Override

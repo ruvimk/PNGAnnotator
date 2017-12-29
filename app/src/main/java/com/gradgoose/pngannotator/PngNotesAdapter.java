@@ -1,14 +1,17 @@
 package com.gradgoose.pngannotator;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +44,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	boolean mUsePictureFrameBackground = true; 
 	
 	int mSampleMode = PageView.SAMPLE_NORMAL; 
+	int mLoadMode = PageView.LOAD_ORIGINAL; 
 	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
@@ -58,6 +62,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	void setSampleMode (int sampleMode) { 
 		mSampleMode = sampleMode; 
+	} 
+	void setLoadMode (int loadMode) { 
+		mLoadMode = loadMode; 
 	} 
 	
 	void setNoteInteractListener (OnNoteInteractListener listener) { 
@@ -91,48 +98,103 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		return new File (thumbnailDir, fullFileName); 
 	} 
-	private void updateThumbnailCache () {
-		AsyncTask<File [], Void, Void> mUpdateThumbnailsTask = 
-				new AsyncTask<File[], Void, Void> () { 
-					@Override protected Void doInBackground (File[]... files) { 
-						for (File [] list : files) { 
-							for (File picture : list) { 
-								// Get the file where to save the thumbnail: 
-								File thumbnail = getThumbnailFile (mContext, picture); 
-								if (thumbnail == null) continue; 
-								// If the picture didn't change, skip updating the thumbnail: 
-								if (thumbnail.exists () && 
-											thumbnail.lastModified () > picture.lastModified ()) 
-									continue; 
-								// Load just the image dimensions first: 
-								final BitmapFactory.Options options = new BitmapFactory.Options (); 
-								options.inJustDecodeBounds = true; 
-								BitmapFactory.decodeFile (picture.getPath (), options); 
-								// Load a REALLY small version for time time being, while it's loading 
-								// (this is to avoid white blanks and confusing the user by showing 
-								// them some random picture that they have just seen from a 
-								// recycled view): 
-								options.inJustDecodeBounds = false; 
-								options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
-										options.outHeight, 
-										16, 16); 
-								// Load a small version of the picture into a bitmap: 
-								Bitmap bmp = BitmapFactory.decodeFile (picture.getPath (), options); 
-								// Save the small bitmap to a PNG thumbnail: 
-								try { 
-									FileOutputStream fos = new FileOutputStream (thumbnail, false); 
-									bmp.compress (Bitmap.CompressFormat.PNG, 100, fos); 
-									fos.close (); 
-								} catch (IOException e) { 
-									e.printStackTrace (); 
-								} 
-								bmp.recycle (); 
-							} 
-						} 
-						return null; 
+	@Nullable static File getTileFile (Context context, File targetFile) { 
+		File cacheDir = context.getCacheDir (); 
+		File tileDir = new File (cacheDir, "Tiles"); 
+		if (!tileDir.exists () && !tileDir.mkdirs ()) return null; 
+		String fullFileName; 
+		try { 
+			fullFileName = PngEdit.getFullFileName (context, targetFile, ".png"); 
+		} catch (IOException err) { 
+			return null; 
+		} 
+		return new File (tileDir, fullFileName); 
+	} 
+	static class UpdateCache extends AsyncTask<File [], Void, Void> { 
+		Context mContext; 
+		int mWhichDir = 0; 
+		public UpdateCache (Context context, int whichDir) { 
+			mContext = context; 
+			mWhichDir = whichDir; 
+		} 
+		void close () { 
+			mContext = null; 
+		} 
+		@Override protected Void doInBackground (File [] ... files) {
+			int windowWidth = 1024; 
+			int windowHeight = 1024; 
+			if (mContext instanceof Activity) { 
+				DisplayMetrics displayMetrics = new DisplayMetrics (); 
+				((Activity) mContext).getWindowManager () 
+						.getDefaultDisplay () 
+						.getMetrics (displayMetrics); 
+				windowWidth = displayMetrics.widthPixels; 
+				windowHeight = displayMetrics.heightPixels; 
+			} 
+			for (File [] list : files) {
+				for (File picture : list) {
+					// Get the file where to save the thumbnail: 
+					File thumbnail = mWhichDir == 1 ? getTileFile (mContext, picture) : getThumbnailFile (mContext, picture); 
+					if (thumbnail == null) continue;
+					// If the picture didn't change, skip updating the thumbnail: 
+					if (thumbnail.exists () &&
+								thumbnail.lastModified () > picture.lastModified ())
+						continue;
+					// Load just the image dimensions first: 
+					final BitmapFactory.Options options = new BitmapFactory.Options ();
+					options.inJustDecodeBounds = true;
+					BitmapFactory.decodeFile (picture.getPath (), options);
+					// Load a REALLY small version for time time being, while it's loading 
+					// (this is to avoid white blanks and confusing the user by showing 
+					// them some random picture that they have just seen from a 
+					// recycled view): 
+					options.inJustDecodeBounds = false;
+					if (mWhichDir == 1) { 
+						// For a tile, load a bigger bitmap first. 
+						options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
+								options.outHeight, 1024, 1024); 
+					} else { 
+						options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
+								options.outHeight, 
+								16, 16); 
 					} 
-				}; 
-		mUpdateThumbnailsTask.execute (mList); 
+					// Load a small version of the picture into a bitmap: 
+					Bitmap bmp = BitmapFactory.decodeFile (picture.getPath (), options); 
+					if (mWhichDir == 1) { 
+						// We're loading tiles ... 
+						Bitmap big = bmp; 
+						int needW = windowWidth / 3; 
+						int needH = windowHeight / 3; 
+						bmp = Bitmap.createScaledBitmap (big, needW, needH, true); 
+						big.recycle (); 
+					} 
+					// Save the small bitmap to a PNG thumbnail: 
+					try {
+						FileOutputStream fos = new FileOutputStream (thumbnail, false);
+						bmp.compress (Bitmap.CompressFormat.PNG, 100, fos);
+						fos.close (); 
+					} catch (IOException e) {
+						e.printStackTrace (); 
+					}
+					bmp.recycle ();
+				} 
+			} 
+			return null; 
+		} 
+		@Override public void onCancelled () { 
+			close (); 
+		} 
+		@Override public void onPostExecute (Void result) { 
+			close (); 
+		} 
+	} 
+	private void updateThumbnailCache () {
+		UpdateCache updateCache = new UpdateCache (mContext, 0); 
+		updateCache.execute (mList); 
+	} 
+	private void updateTileCache () { 
+		UpdateCache updateCache = new UpdateCache (mContext, 1); 
+		updateCache.execute (mList); 
 	} 
 	static File [] getFlattenedList (File list [] []) { 
 		int total = 0; 
@@ -160,6 +222,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 							mOnFilesChangedListener.onFilesChanged (list); 
 						// Update thumbnails: 
 						updateThumbnailCache (); 
+						// Update tiles for grid view mode: 
+						updateTileCache (); 
 						// Update views: 
 						notifyDataSetChanged (); 
 					} 
@@ -281,6 +345,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.sampleMode = mSampleMode; 
+			pageView.loadMode = mLoadMode; 
 			pageView.setItemFile (itemFile); 
 			pageView.setPenMode (mPenMode); 
 			pageView.setToolMode (mToolMode); 

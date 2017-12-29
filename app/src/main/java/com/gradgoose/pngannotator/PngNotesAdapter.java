@@ -154,25 +154,17 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					// them some random picture that they have just seen from a 
 					// recycled view): 
 					options.inJustDecodeBounds = false;
-					if (mWhichDir == 1) { 
-						// For a tile, load a bigger bitmap first. 
-						options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
-								options.outHeight, 1024, 1024); 
-					} else { 
-						options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
-								options.outHeight, 
-								PageView.THUMBNAIL_SIZE, PageView.THUMBNAIL_SIZE); 
-					} 
+					// For a tile, load a bigger bitmap first. 
+					options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
+							options.outHeight, 1024, 1024); 
 					// Load a small version of the picture into a bitmap: 
-					Bitmap bmp = BitmapFactory.decodeFile (picture.getPath (), options); 
-					if (mWhichDir == 1) { 
-						// We're loading tiles ... 
-						Bitmap big = bmp; 
-						int needSize = Math.min (windowWidth / 2, windowHeight / 2); 
-						bmp = Bitmap.createScaledBitmap (big, needSize, needSize, true); 
-						if (bmp != big) 
-							big.recycle (); 
-					} 
+					Bitmap big = BitmapFactory.decodeFile (picture.getPath (), options); 
+					// We're loading tiles ... 
+					int needSize = mWhichDir == 1 ? Math.min (windowWidth / 2, windowHeight / 2) 
+										   : PageView.THUMBNAIL_SIZE; 
+					Bitmap bmp = Bitmap.createScaledBitmap (big, needSize, needSize, true); 
+					if (bmp != big) 
+						big.recycle (); 
 					// Save the small bitmap to a PNG thumbnail: 
 					try {
 						FileOutputStream fos = new FileOutputStream (thumbnail, false);

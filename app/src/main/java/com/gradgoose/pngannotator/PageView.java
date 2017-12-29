@@ -489,7 +489,7 @@ public class PageView extends ImageView {
 					} 
 					// Now actually load the bitmap, down-sampled if needed: 
 					step2options.inJustDecodeBounds = false; 
-					if (cancel) 
+					if (cancel || !mAttachedToWindow) 
 						return; 
 					String filePath = file.getPath (); 
 					if (loadMode == LOAD_TILE) { 

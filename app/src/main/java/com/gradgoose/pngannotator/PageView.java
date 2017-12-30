@@ -690,7 +690,11 @@ public class PageView extends ImageView {
 		// Get display metrics (the object that allows us to convert CM to DP): 
 		metrics = Resources.getSystem ().getDisplayMetrics (); 
 		// Reload the item bitmaps: 
-		setItemFile (itemFile); // This will load the appropriately-sized bitmap into memory. 
+		Glide.with (this) 
+				.load (itemFile) 
+				.thumbnail (.05f) 
+				.into (this); 
+//		setItemFile (itemFile); // This will load the appropriately-sized bitmap into memory. 
 	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 

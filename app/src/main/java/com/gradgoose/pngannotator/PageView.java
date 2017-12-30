@@ -436,7 +436,7 @@ public class PageView extends ImageView {
 //		return step2setItemFile (file, 1); 
 		Glide.with (this) 
 				.load (file) 
-				.thumbnail (.1f) 
+				.thumbnail (.05f) 
 				.into (this); 
 		return null; 
 	} 

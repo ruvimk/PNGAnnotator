@@ -383,8 +383,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	} 
 	
 	void recycleBitmaps () { 
-		for (PageView pageView : mAllPageViews) 
-			pageView.setImageBitmap (null); // This will recycle the previous bitmap. 
+//		for (PageView pageView : mAllPageViews) 
+//			pageView.setImageBitmap (null); // This will recycle the previous bitmap. 
 	} 
 	
 	@Override public RecyclerView.ViewHolder onCreateViewHolder (ViewGroup parent, int viewType) { 

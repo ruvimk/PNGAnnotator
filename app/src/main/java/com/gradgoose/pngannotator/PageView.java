@@ -25,6 +25,8 @@ import android.view.MotionEvent;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -404,11 +406,14 @@ public class PageView extends ImageView {
 	Bitmap mPreviousSetBitmap = null; 
 	@Override public void setImageBitmap (Bitmap bmp) { 
 //		Log.d (TAG, "setImageBitmap (" + (bmp != null ? "BITMAP" : "null") + ")"); 
-		if (mPreviousSetBitmap != null) { 
-			mPreviousSetBitmap.recycle (); 
-		} 
-		if (bmp == null) mPreviousBigBitmap = null; 
-		mPreviousSetBitmap = bmp; 
+//		if (bmp == null) { 
+//			
+//		} 
+//		if (mPreviousSetBitmap != null) { 
+//			mPreviousSetBitmap.recycle (); 
+//		} 
+//		if (bmp == null) mPreviousBigBitmap = null; 
+//		mPreviousSetBitmap = bmp; 
 		super.setImageBitmap (bmp); 
 	} 
 	
@@ -428,7 +433,11 @@ public class PageView extends ImageView {
 	
 	private @Nullable 
 	Step2Thread step2setItemFile (final File file) { 
-		return step2setItemFile (file, 1); 
+//		return step2setItemFile (file, 1); 
+		Glide.with (this) 
+				.load (file) 
+				.into (this); 
+		return null; 
 	} 
 	private @Nullable 
 	Step2Thread step2setItemFile (final @Nullable File file, final int attemptNumber) { 

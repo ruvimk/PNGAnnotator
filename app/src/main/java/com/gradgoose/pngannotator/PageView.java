@@ -45,6 +45,7 @@ public class PageView extends ImageView {
 	static final int PREVIEW_NONE = 2; // Don't show anything at all while loading the bigger bitmap. 
 	
 	static final int THUMBNAIL_SIZE = 64; 
+	static final float THUMBNAIL_MULTIPLIER = 0.01f; 
 	
 	int sampleMode = SAMPLE_NORMAL; 
 	int loadMode = LOAD_ORIGINAL; 
@@ -436,7 +437,7 @@ public class PageView extends ImageView {
 //		return step2setItemFile (file, 1); 
 		Glide.with (this) 
 				.load (file) 
-				.thumbnail (.05f) 
+				.thumbnail (THUMBNAIL_MULTIPLIER) 
 				.into (this); 
 		return null; 
 	} 
@@ -587,7 +588,7 @@ public class PageView extends ImageView {
 		knownSmallVersion = 0; 
 		Glide.with (this) 
 				.load (file) 
-				.thumbnail (.1f) 
+				.thumbnail (THUMBNAIL_MULTIPLIER) 
 				.into (this); 
 //		String md5 = file != null ? (mMd5Cache != null ? 
 //							 mMd5Cache.getString (file.getAbsolutePath (), "") 
@@ -692,7 +693,7 @@ public class PageView extends ImageView {
 		// Reload the item bitmaps: 
 		Glide.with (this) 
 				.load (itemFile) 
-				.thumbnail (.05f) 
+				.thumbnail (THUMBNAIL_MULTIPLIER) 
 				.into (this); 
 //		setItemFile (itemFile); // This will load the appropriately-sized bitmap into memory. 
 	} 

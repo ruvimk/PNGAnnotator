@@ -590,67 +590,67 @@ public class PageView extends ImageView {
 				.load (file) 
 				.thumbnail (THUMBNAIL_MULTIPLIER) 
 				.into (this); 
-//		String md5 = file != null ? (mMd5Cache != null ? 
-//							 mMd5Cache.getString (file.getAbsolutePath (), "") 
-//							 : "") : ""; 
-//		boolean md5notFound = md5.isEmpty (); 
-//		if (md5notFound && file != null) { 
-//			try { 
-//				md5 = PngEdit.calculateMD5 (file); 
-//				if (mMd5Cache != null) 
-//					mMd5Cache.edit ().putString (file.getAbsolutePath (), md5).apply (); 
-//				checkIfMd5Known (md5); 
-//			} catch (IOException err) { 
-//				// It's okay! 
-//			} 
-//		} else checkIfMd5Known (md5); 
-//		final Step2Thread step2 = step2setItemFile (file); 
-//		if (!md5notFound) { 
-//			// In a separate thread, check if the MD5 cache is out-of-date or not: 
-//			final String md5was = md5; 
-//			(new Thread () { 
-//				@Override public void run () { 
-//					try { 
-//						String md5now = PngEdit.calculateMD5 (file); 
-//						if (!md5now.equals (md5was)) { 
-//							if (step2 != null) 
-//								step2.cancel = true; 
-//							if (file != null) mMd5Cache.edit ().putString (file.getAbsolutePath (), md5now).apply (); 
-//							checkIfMd5Known (md5now); 
-//							((Activity) getContext ()).runOnUiThread (new Runnable () { 
-//								@Override public void run () { 
-//									step2setItemFile (file); 
-//								} 
-//							}); 
-//						} 
-//					} catch (IOException err) { 
-//						// It's okay. Do nothing. 
-//					} 
-//				} 
-//			}).start (); 
-//		} 
-//		// Now load our edits for this picture: 
-//		if (oldFile == null || !oldFile.equals (itemFile)) {
-//			try { 
-//				synchronized (edit) { 
-//					edit.value = PngEdit.forFile (getContext (), file); 
-//					edit.value.setWindowSize (getWidth (), getHeight ()); 
-//					edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
-//				} 
-//			} catch (IOException err) { 
-//				// Can't edit: 
-//				synchronized (edit) { 
-//					edit.value = null; 
-//				} 
-//				// Log this error: 
-//				err.printStackTrace (); 
-//				// Show a message to the user, telling them that they can't view/save edits: 
-//				Toast.makeText (getContext (), 
-//						R.string.error_io_no_edit, 
-//						Toast.LENGTH_SHORT) 
-//						.show (); 
-//			} 
-//		} 
+		String md5 = file != null ? (mMd5Cache != null ? 
+							 mMd5Cache.getString (file.getAbsolutePath (), "") 
+							 : "") : ""; 
+		boolean md5notFound = md5.isEmpty (); 
+		if (md5notFound && file != null) { 
+			try { 
+				md5 = PngEdit.calculateMD5 (file); 
+				if (mMd5Cache != null) 
+					mMd5Cache.edit ().putString (file.getAbsolutePath (), md5).apply (); 
+				checkIfMd5Known (md5); 
+			} catch (IOException err) { 
+				// It's okay! 
+			} 
+		} else checkIfMd5Known (md5); 
+		final Step2Thread step2 = step2setItemFile (file); 
+		if (!md5notFound) { 
+			// In a separate thread, check if the MD5 cache is out-of-date or not: 
+			final String md5was = md5; 
+			(new Thread () { 
+				@Override public void run () { 
+					try { 
+						String md5now = PngEdit.calculateMD5 (file); 
+						if (!md5now.equals (md5was)) { 
+							if (step2 != null) 
+								step2.cancel = true; 
+							if (file != null) mMd5Cache.edit ().putString (file.getAbsolutePath (), md5now).apply (); 
+							checkIfMd5Known (md5now); 
+							((Activity) getContext ()).runOnUiThread (new Runnable () { 
+								@Override public void run () { 
+									step2setItemFile (file); 
+								} 
+							}); 
+						} 
+					} catch (IOException err) { 
+						// It's okay. Do nothing. 
+					} 
+				} 
+			}).start (); 
+		} 
+		// Now load our edits for this picture: 
+		if (oldFile == null || !oldFile.equals (itemFile)) {
+			try { 
+				synchronized (edit) { 
+					edit.value = PngEdit.forFile (getContext (), file); 
+					edit.value.setWindowSize (getWidth (), getHeight ()); 
+					edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
+				} 
+			} catch (IOException err) { 
+				// Can't edit: 
+				synchronized (edit) { 
+					edit.value = null; 
+				} 
+				// Log this error: 
+				err.printStackTrace (); 
+				// Show a message to the user, telling them that they can't view/save edits: 
+				Toast.makeText (getContext (), 
+						R.string.error_io_no_edit, 
+						Toast.LENGTH_SHORT) 
+						.show (); 
+			} 
+		} 
 		// Redraw this view: 
 		invalidate (); 
 	} 

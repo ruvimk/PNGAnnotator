@@ -432,15 +432,15 @@ public class PageView extends ImageView {
 	
 	String mNowLoadingPath = ""; 
 	
-	private @Nullable 
-	Step2Thread step2setItemFile (final File file) { 
-//		return step2setItemFile (file, 1); 
-		Glide.with (this) 
-				.load (file) 
-				.thumbnail (THUMBNAIL_MULTIPLIER) 
-				.into (this); 
-		return null; 
-	} 
+//	private @Nullable 
+//	Step2Thread step2setItemFile (final File file) { 
+////		return step2setItemFile (file, 1); 
+//		Glide.with (this) 
+//				.load (file) 
+//				.thumbnail (THUMBNAIL_MULTIPLIER) 
+//				.into (this); 
+//		return null; 
+//	} 
 	private @Nullable 
 	Step2Thread step2setItemFile (final @Nullable File file, final int attemptNumber) { 
 		if (file == null) return null; 
@@ -586,10 +586,6 @@ public class PageView extends ImageView {
 		mBitmapNaturalHeight = options.outHeight; 
 		// If this is one of our known files, grab a small version to load just for display: 
 		knownSmallVersion = 0; 
-		Glide.with (this) 
-				.load (file) 
-				.thumbnail (THUMBNAIL_MULTIPLIER) 
-				.into (this); 
 		String md5 = file != null ? (mMd5Cache != null ? 
 							 mMd5Cache.getString (file.getAbsolutePath (), "") 
 							 : "") : ""; 
@@ -604,7 +600,15 @@ public class PageView extends ImageView {
 				// It's okay! 
 			} 
 		} else checkIfMd5Known (md5); 
-		final Step2Thread step2 = step2setItemFile (file); 
+//		final Step2Thread step2 = step2setItemFile (file); 
+		if (knownSmallVersion == 0) 
+			Glide.with (this) 
+					.load (file) 
+					.thumbnail (THUMBNAIL_MULTIPLIER) 
+					.into (this); 
+		else Glide.with (this) 
+					.load (R.drawable.transparent_pixel) 
+					.into (this); 
 		if (!md5notFound) { 
 			// In a separate thread, check if the MD5 cache is out-of-date or not: 
 			final String md5was = md5; 
@@ -613,15 +617,15 @@ public class PageView extends ImageView {
 					try { 
 						String md5now = PngEdit.calculateMD5 (file); 
 						if (!md5now.equals (md5was)) { 
-							if (step2 != null) 
-								step2.cancel = true; 
+//							if (step2 != null) 
+//								step2.cancel = true; 
 							if (file != null) mMd5Cache.edit ().putString (file.getAbsolutePath (), md5now).apply (); 
 							checkIfMd5Known (md5now); 
-							((Activity) getContext ()).runOnUiThread (new Runnable () { 
-								@Override public void run () { 
-									step2setItemFile (file); 
-								} 
-							}); 
+//							((Activity) getContext ()).runOnUiThread (new Runnable () { 
+//								@Override public void run () { 
+//									step2setItemFile (file); 
+//								} 
+//							}); 
 						} 
 					} catch (IOException err) { 
 						// It's okay. Do nothing. 
@@ -691,10 +695,11 @@ public class PageView extends ImageView {
 		// Get display metrics (the object that allows us to convert CM to DP): 
 		metrics = Resources.getSystem ().getDisplayMetrics (); 
 		// Reload the item bitmaps: 
-		Glide.with (this) 
-				.load (itemFile) 
-				.thumbnail (THUMBNAIL_MULTIPLIER) 
-				.into (this); 
+		if (knownSmallVersion == 0) 
+			Glide.with (this) 
+					.load (itemFile) 
+					.thumbnail (THUMBNAIL_MULTIPLIER) 
+					.into (this); 
 //		setItemFile (itemFile); // This will load the appropriately-sized bitmap into memory. 
 	} 
 	

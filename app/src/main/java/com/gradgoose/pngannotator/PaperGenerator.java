@@ -83,7 +83,7 @@ public class PaperGenerator {
 			byte buffer [] = new byte [4096]; 
 			int bRead; 
 			try { 
-				InputStream src = context.getResources ().openRawResource (R.raw.plain_graph_paper_4x4); 
+				InputStream src = context.getResources ().openRawResource (R.raw.plain_graph_paper_4x4_apg); 
 				while ((bRead = src.read (buffer, 0, buffer.length)) > 0) 
 					fos.write (buffer, 0, bRead); 
 				src.close (); 

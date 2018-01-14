@@ -140,6 +140,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			} 
 			for (File [] list : files) {
 				for (File picture : list) {
+					String path = picture.getPath (); 
+					if (path.endsWith (".apg")) continue; // Skip, since this is not a bitmap. 
 					// Get the file where to save the thumbnail: 
 					File thumbnail = mWhichDir == 1 ? getTileFile (mContext, picture) : getThumbnailFile (mContext, picture); 
 					if (thumbnail == null) continue;
@@ -161,6 +163,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 							options.outHeight, 1024, 1024); 
 					// Load a small version of the picture into a bitmap: 
 					Bitmap big = BitmapFactory.decodeFile (picture.getPath (), options); 
+					if (big == null) continue; // Picture could have changed in the meantime ... 
 					// We're loading tiles ... 
 					int needSize = mWhichDir == 1 ? Math.min (windowWidth / 2, windowHeight / 2) 
 										   : PageView.THUMBNAIL_SIZE; 
@@ -308,7 +311,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					lowerName.endsWith (".png") || 
 							lowerName.endsWith (".jpg") || 
 							lowerName.endsWith (".jpeg") || 
-							lowerName.endsWith (".gif") 
+							lowerName.endsWith (".gif") || 
+							lowerName.endsWith (".apg") // Edits/notes file 
 			); 
 		} 
 	}; 

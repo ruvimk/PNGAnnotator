@@ -377,7 +377,7 @@ public class NoteActivity extends Activity {
 		if (notesLayoutManager == mNoteOverviewLayoutManager) { 
 			scrollPosition = mNoteOverviewLayoutManager.findFirstVisibleItemPosition (); 
 			firstView = mNoteOverviewLayoutManager.findViewByPosition (scrollPosition); 
-			viewTop = firstView.getTop (); 
+			viewTop = firstView != null ? firstView.getTop () : 0; 
 			if (viewTop < 0) { 
 				firstView = mNoteOverviewLayoutManager.findViewByPosition (scrollPosition + mOverviewColumnCount); 
 				if (firstView != null) { 
@@ -389,7 +389,7 @@ public class NoteActivity extends Activity {
 		} else { 
 			scrollPosition = mNotesLayoutManager.findFirstVisibleItemPosition (); 
 			firstView = mNotesLayoutManager.findViewByPosition (scrollPosition); 
-			viewTop = firstView.getTop (); 
+			viewTop = firstView != null ? firstView.getTop () : 0; 
 			if (viewTop < 0) { 
 				firstView = mNotesLayoutManager.findViewByPosition (scrollPosition + 1); 
 				if (firstView != null) { 

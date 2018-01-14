@@ -47,6 +47,10 @@ public class PngEdit {
 	int mLastIoEditCount = 0; 
 	boolean useDifferentialSave = true; 
 	
+	int srcPageWidth = 1; 
+	int srcPageHeight = 1; 
+	int srcPageBackground = 1; 
+	
 	float windowWidth = 1; 
 	float windowHeight = 1; 
 	public void setWindowSize (float width, float height) { 
@@ -308,17 +312,31 @@ public class PngEdit {
 			if (inputStream.read (magic) >= 4 && magic[0] == 'G' && magic[1] == 'E') { 
 				if (magic[2] == '1' && magic[3] == '0') 
 					version = 1; 
+				else if (magic[2] == '1' && magic[3] == '1') 
+					version = 2; 
 			} else ((FileInputStream) inputStream).getChannel ().position (0); // Seek back. 
 			int totalBytes = inputStream.available (); 
 			ByteBuffer buffer = version > 0 ? ByteBuffer.allocate (totalBytes) : null; 
-			if (version == 1) { 
+			if (version == 1 || version == 2) { 
 				((FileInputStream) inputStream).getChannel ().read (buffer); 
 				float buf [] = new float [totalBytes / 4]; 
 				buffer.rewind (); // Seek back to position 0, for reading now. 
 				buffer.asFloatBuffer ().get (buf); 
+				int skipHeader = 0; 
+				if (version == 2) { 
+					srcPageWidth = (int) buf[0]; 
+					srcPageHeight = (int) buf[1]; 
+					srcPageBackground = (int) buf[2]; 
+					skipHeader = 4; 
+				} else { 
+					srcPageWidth = 170; 
+					srcPageHeight = 220; 
+					srcPageBackground = 1; 
+					// No header here. 
+				} 
 				// Process it: 
 				int ptCount; 
-				for (int i = 0; i < buf.length; i += 6 + ptCount) { 
+				for (int i = skipHeader; i < buf.length; i += 6 + ptCount) { 
 					// Get things: 
 					float colorA = buf[i + 0]; 
 					float colorR = buf[i + 1]; 
@@ -373,7 +391,7 @@ public class PngEdit {
 			inputStream.close (); 
 		} 
 	} 
-	int SAVE_VERSION = 1; 
+	int SAVE_VERSION = 2; 
 	public void saveEdits () throws IOException { 
 		synchronized (mEdits) { 
 			// The following statement is needed because the magic number needs to be 
@@ -384,11 +402,26 @@ public class PngEdit {
 			// Open the file for writing, with the append flag set to true if saving differentially: 
 			OutputStream outputStream = new FileOutputStream (mVectorEdits, useDifferentialSave); 
 			float ratioHW = imageHeight / imageWidth; 
-			if (SAVE_VERSION == 1) { 
+			if (SAVE_VERSION == 1 || SAVE_VERSION == 2) { 
 				if (!useDifferentialSave) { 
 					// Write magic number: 
-					byte magic [] = new byte [] { 'G', 'E', '1', '0' }; 
+					byte magic []; 
+					if (SAVE_VERSION == 2)
+						magic = new byte [] { 'G', 'E', '1', '1' }; 
+					else magic = new byte [] { 'G', 'E', '1', '0' }; 
 					outputStream.write (magic); 
+					// Write header: 
+					if (SAVE_VERSION >= 2) {
+						int hdrSize = 4; 
+						float header [] = new float [hdrSize]; 
+						header[0] = srcPageWidth; 
+						header[1] = srcPageHeight; 
+						header[2] = srcPageBackground; 
+						header[3] = 0; 
+						ByteBuffer headerBuffer = ByteBuffer.allocate (4 * header.length); 
+						headerBuffer.asFloatBuffer ().put (header); 
+						((FileOutputStream) outputStream).getChannel ().write (headerBuffer); 
+					} 
 					// Reset last edit count: 
 					mLastIoEditCount = 0; 
 				} 
@@ -514,6 +547,8 @@ public class PngEdit {
 		// will change, so our edits are locked onto just this version of the file. 
 	} 
 	public static File getEditsFile (Context context, File pngFile) throws IOException { 
+		if (pngFile.getName ().toLowerCase ().endsWith (".apg")) return pngFile; 
+		
 		// Get file name: 
 		String fullFilename = getFullFileName (context, pngFile); 
 		

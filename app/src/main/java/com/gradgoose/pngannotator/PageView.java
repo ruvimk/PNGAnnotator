@@ -386,18 +386,26 @@ public class PageView extends ImageView {
 	int mBitmapNaturalWidth = 1; 
 	int mBitmapNaturalHeight = 1; 
 	int knownSmallVersion = 0; 
+	boolean isAnnotatedPage = false; 
 	private void checkIfMd5Known (String md5) { 
 		Resources res = getResources (); 
+		int width = getWidth (); 
+		int height = getHeight (); 
+		if (width == 0) width = 1; 
+		if (height == 0) height = 1; 
 		if (md5.equals (res.getString (R.string.md5_graph_paper))) { 
 			knownSmallVersion = R.drawable.plain_graph_paper_4x4_small; 
 			// Make an array of line segments for drawing graph paper: 
-			int width = getWidth (); 
-			int height = getHeight (); 
-			if (width == 0) width = 1; 
-			if (height == 0) height = 1; 
 			paperPoints = paperGenerator.makeGraphPaperLines (width, height); 
 		} 
-		else paperPoints = null; 
+		else { 
+			int background = 0; 
+			synchronized (edit) { 
+				if (edit.value != null) background = edit.value.srcPageBackground; 
+			} 
+			if (background == 1) paperPoints = paperGenerator.makeGraphPaperLines (width, height); 
+			else paperPoints = null; 
+		} 
 	} 
 	class Step2Thread extends Thread { 
 		boolean cancel = false; 
@@ -572,36 +580,73 @@ public class PageView extends ImageView {
 		} 
 		return null; 
 	} 
-	public void setItemFile (final File file) { 
+	public void setItemFile (File file) { 
 		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
 //		Log.d (TAG, "Setting item file; before: " + (oldFile != null ? oldFile.getName () : "") + "; now: " + 
 //							(file != null ? file.getName () : "") + ";"); 
 		itemFile = file; 
-		// Load just the image dimensions first: 
-		final BitmapFactory.Options options = new BitmapFactory.Options (); 
-		options.inJustDecodeBounds = true; 
-		if (file != null) BitmapFactory.decodeFile (file.getPath (), options); 
-		// Set our natural width and height variables to better handle onMeasure (): 
-		mBitmapNaturalWidth = options.outWidth; 
-		mBitmapNaturalHeight = options.outHeight; 
 		// If this is one of our known files, grab a small version to load just for display: 
 		knownSmallVersion = 0; 
-		String md5 = file != null ? (mMd5Cache != null ? 
-							 mMd5Cache.getString (file.getAbsolutePath (), "") 
-							 : "") : ""; 
-		boolean md5notFound = md5.isEmpty (); 
-		if (md5notFound && file != null) { 
-			try { 
-				md5 = PngEdit.calculateMD5 (file); 
-				if (mMd5Cache != null) 
-					mMd5Cache.edit ().putString (file.getAbsolutePath (), md5).apply (); 
-				checkIfMd5Known (md5); 
-			} catch (IOException err) { 
-				// It's okay! 
+		String md5; 
+		if (file != null && file.getName ().toLowerCase ().endsWith (".apg")) { 
+			md5 = ""; 
+			isAnnotatedPage = true; 
+		} else {
+			try {
+				md5 = file != null ? PngEdit.calculateMD5 (file) : "";
+			} catch (IOException err) {
+				md5 = "";
+			}
+			isAnnotatedPage = false; 
+		} 
+		if (!isAnnotatedPage && file != null) {
+			checkIfMd5Known (md5); 
+			if (knownSmallVersion != 0) { 
+				// For saving Ruvim's notes, we did this. 
+				try {
+					PngEdit e = PngEdit.forFile (getContext (), file); 
+					String fullPath = file.getAbsolutePath (); 
+					// Find width/height: 
+					int imgWidth = 170; 
+					int imgHeight = 220; 
+					{
+						final BitmapFactory.Options options = new BitmapFactory.Options ();
+						options.inJustDecodeBounds = true;
+						BitmapFactory.decodeFile (file.getPath (), options);
+						imgWidth = options.outWidth; 
+						imgHeight = options.outHeight; 
+					} 
+					File now = new File (fullPath.substring (0, fullPath.lastIndexOf ('.')) + ".apg"); 
+					if (file.renameTo (now)) { 
+						file = now; 
+						itemFile = now; 
+						// Put width/height into edits: 
+						e.srcPageWidth = imgWidth; 
+						e.srcPageHeight = imgHeight; 
+						// Put edits into the .apg file: 
+						e.mTarget = now; // The new target file. 
+						e.mVectorEdits = now; // The edits file *IS* the target file. 
+						e.useDifferentialSave = false; // Force it to actually write out everything, not just the last changes. 
+						e.saveEdits (); // Save data to the new place. 
+						isAnnotatedPage = true; // Page upgraded. 
+					} 
+				} catch (IOException err) { 
+					
+				} 
 			} 
-		} else checkIfMd5Known (md5); 
+		} 
+		if (!isAnnotatedPage) { 
+			// Load just the image dimensions first: 
+			final BitmapFactory.Options options = new BitmapFactory.Options (); 
+			options.inJustDecodeBounds = true; 
+			if (file != null) BitmapFactory.decodeFile (file.getPath (), options); 
+			// Set our natural width and height variables to better handle onMeasure (): 
+			mBitmapNaturalWidth = options.outWidth; 
+			mBitmapNaturalHeight = options.outHeight; 
+			// We set natural width and height for the annotated page case after we load the edits. 
+		} 
 //		final Step2Thread step2 = step2setItemFile (file); 
-		if (knownSmallVersion == 0) 
+		if (knownSmallVersion == 0 && !isAnnotatedPage) 
 			Glide.with (this) 
 					.load (file) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
@@ -609,35 +654,18 @@ public class PageView extends ImageView {
 		else Glide.with (this) 
 					.load (R.drawable.transparent_pixel) 
 					.into (this); 
-		if (!md5notFound) { 
-			// In a separate thread, check if the MD5 cache is out-of-date or not: 
-			final String md5was = md5; 
-			(new Thread () { 
-				@Override public void run () { 
-					try { 
-						String md5now = PngEdit.calculateMD5 (file); 
-						if (!md5now.equals (md5was)) { 
-//							if (step2 != null) 
-//								step2.cancel = true; 
-							if (file != null) mMd5Cache.edit ().putString (file.getAbsolutePath (), md5now).apply (); 
-							checkIfMd5Known (md5now); 
-//							((Activity) getContext ()).runOnUiThread (new Runnable () { 
-//								@Override public void run () { 
-//									step2setItemFile (file); 
-//								} 
-//							}); 
-						} 
-					} catch (IOException err) { 
-						// It's okay. Do nothing. 
-					} 
-				} 
-			}).start (); 
-		} 
 		// Now load our edits for this picture: 
 		if (oldFile == null || !oldFile.equals (itemFile)) {
 			try { 
 				synchronized (edit) { 
 					edit.value = PngEdit.forFile (getContext (), file); 
+					if (isAnnotatedPage) { 
+						mBitmapNaturalWidth = edit.value.srcPageWidth; 
+						mBitmapNaturalHeight = edit.value.srcPageHeight; 
+					} else { 
+						edit.value.srcPageWidth = mBitmapNaturalWidth; 
+						edit.value.srcPageHeight = mBitmapNaturalHeight; 
+					} 
 					edit.value.setWindowSize (getWidth (), getHeight ()); 
 					edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
 				} 
@@ -746,6 +774,18 @@ public class PageView extends ImageView {
 			case R.drawable.plain_graph_paper_4x4_small: 
 				paperGenerator.drawGraphPaper (canvas, paperPaint); 
 				break; 
+			default: 
+				if (isAnnotatedPage) { 
+					int background = 0; 
+					synchronized (edit) {
+						if (edit.value != null) background = edit.value.srcPageBackground;
+					} 
+					switch (background) {
+						case 1:
+							paperGenerator.drawGraphPaper (canvas, paperPaint);
+							break;
+					} 
+				} 
 		} 
 		// Check if the previous tool and color are different, and if so then 
 		// it's been a while, and we need to clear our temporary path: 

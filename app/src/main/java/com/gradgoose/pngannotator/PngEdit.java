@@ -49,7 +49,7 @@ public class PngEdit {
 	
 	int srcPageWidth = 1; 
 	int srcPageHeight = 1; 
-	int srcPageBackground = 1; 
+	int srcPageBackground = 0; 
 	
 	float windowWidth = 1; 
 	float windowHeight = 1; 
@@ -331,7 +331,7 @@ public class PngEdit {
 				} else { 
 					srcPageWidth = 170; 
 					srcPageHeight = 220; 
-					srcPageBackground = 1; 
+					srcPageBackground = 0; 
 					// No header here. 
 				} 
 				// Process it: 

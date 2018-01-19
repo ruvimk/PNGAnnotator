@@ -54,6 +54,7 @@ public class PageView extends ImageView {
 	File itemFile = null; 
 	
 	final EditHolder edit = new EditHolder (); 
+	final PngEdit.Cache strokeCache = new PngEdit.Cache (); 
 	
 	static SharedPreferences mMd5Cache = null; 
 	
@@ -147,6 +148,7 @@ public class PageView extends ImageView {
 								// Return an error code: 
 								return "IOException"; 
 							} 
+							strokeCache.update (edit.value); 
 						} 
 						if (!mNowErasing && !mNowWriting) 
 							tmpPointCount = 0; 
@@ -674,6 +676,7 @@ public class PageView extends ImageView {
 					} 
 					edit.value.setWindowSize (getWidth (), getHeight ()); 
 					edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
+					strokeCache.update (edit.value); 
 				} 
 			} catch (IOException err) { 
 				// Can't edit: 
@@ -725,6 +728,7 @@ public class PageView extends ImageView {
 		// Update edits: 
 		if (edit.value != null) synchronized (edit) { 
 			edit.value.setWindowSize (w, h); 
+			strokeCache.update (edit.value); 
 		} 
 		// Get display metrics (the object that allows us to convert CM to DP): 
 		metrics = Resources.getSystem ().getDisplayMetrics (); 
@@ -837,14 +841,21 @@ public class PageView extends ImageView {
 					canvas.drawLines (e.points, strokePaint); 
 				} 
 			} else 
-				for (PngEdit.LittleEdit e : edit.value.mEdits) { 
-	//			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
-	//				e = edit.value.mEdits.elementAt (i); 
-					strokePaint.setColor (e.color); 
-					float strokeWidth = e.brushWidth * brushScale; 
+//				for (PngEdit.LittleEdit e : edit.value.mEdits) { 
+//	//			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
+//	//				e = edit.value.mEdits.elementAt (i); 
+//					strokePaint.setColor (e.color); 
+//					float strokeWidth = e.brushWidth * brushScale; 
+//					if (strokeWidth < 1f) strokeWidth = 0f; // Thinnest possible. 
+//					strokePaint.setStrokeWidth (strokeWidth); 
+//					canvas.drawLines (e.points, strokePaint); 
+//				} 
+				for (PngEdit.Cache.Entry entry : strokeCache.mList) {
+					strokePaint.setColor (entry.color); 
+					float strokeWidth = entry.brushWidth * brushScale; 
 					if (strokeWidth < 1f) strokeWidth = 0f; // Thinnest possible. 
 					strokePaint.setStrokeWidth (strokeWidth); 
-					canvas.drawLines (e.points, strokePaint); 
+					canvas.drawLines (entry.points, 0, entry.szPoints, strokePaint); 
 				} 
 		} 
 		// Finally, draw the currently being written path: 

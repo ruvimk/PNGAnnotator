@@ -4,26 +4,18 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -299,6 +291,77 @@ public class PngEdit {
 		} 
 	} 
 	
+	
+	static class Cache { 
+		Vector<Entry> mList = new Vector<> (); 
+		static class Entry { 
+			static float [] BLANK = new float [0]; 
+			int color = Color.BLACK; 
+			float brushWidth = 1.0f; 
+			float points [] = BLANK; 
+			int idxPoints = 0; 
+			int szPoints = 0; 
+			public Entry (LittleEdit fillFrom) { 
+				color = fillFrom.color; 
+				brushWidth = fillFrom.brushWidth; 
+				countPoints (fillFrom.points); 
+			} 
+			void countPoints (float pts []) { 
+				szPoints += pts.length; 
+			} 
+			void resetCount () { 
+				szPoints = 0; 
+			} 
+			void addPoints (float pts []) { 
+				if (points.length < szPoints) { 
+					points = new float [szPoints]; 
+				} 
+				System.arraycopy (pts, 0, points, idxPoints, pts.length); 
+				idxPoints += pts.length; 
+			} 
+			void resetPointer () { 
+				idxPoints = 0; 
+			} 
+		} 
+		void update (PngEdit edit) { 
+			int listIndex = 0; 
+			if (mList.size () > 0) // Just makes sure that we don't overcount points. 
+				mList.elementAt (listIndex).resetCount (); 
+			// First go through and count all the points that we'll need for this: 
+			for (LittleEdit e : edit.mEdits) { 
+				if (listIndex >= mList.size ()) { 
+					mList.add (new Entry (e)); 
+					continue; 
+				} 
+				Entry prev = mList.elementAt (listIndex); 
+				if (prev.color != e.color || prev.brushWidth != e.brushWidth) { 
+					listIndex++; 
+					if (listIndex >= mList.size ()) 
+						mList.add (new Entry (e)); 
+					else { 
+						prev = mList.elementAt (listIndex); 
+						prev.color = e.color; 
+						prev.brushWidth = e.brushWidth; 
+						prev.resetCount (); // Makes sure we don't overcount points. 
+					} 
+					continue; 
+				} 
+				prev.countPoints (e.points); 
+			} 
+			// Next, go and actually create the structures in memory: 
+			listIndex = 0; 
+			if (mList.size () > 0) mList.elementAt (listIndex).resetPointer (); 
+			for (LittleEdit e : edit.mEdits) { 
+				Entry prev = mList.elementAt (listIndex); 
+				if (prev.color != e.color || prev.brushWidth != e.brushWidth) { 
+					listIndex++; 
+					prev = mList.elementAt (listIndex); 
+					prev.resetPointer (); 
+				} 
+				prev.addPoints (e.points); 
+			} 
+		} 
+	} 
 	
 	
 	

@@ -1093,7 +1093,7 @@ public class NoteActivity extends Activity {
 		return !isBrowsingRootFolder (); 
 	} 
 	boolean canEdit () { 
-		return mNotesAdapter.hasImages (); 
+		return hasImages (); 
 	} 
 	
 	@Override public void finish () { 

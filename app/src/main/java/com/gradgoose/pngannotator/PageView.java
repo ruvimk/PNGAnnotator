@@ -78,7 +78,7 @@ public class PageView extends ImageView {
 	int mColor = Color.BLACK; 
 	float mBrush = 1.0f; // in mm 
 	
-	float optimization_minStrokeSpan = 0.05f; // 0 means don't filter strokes based on their size. Units are out of this view's width. 
+	float optimization_minStrokeSpan = 0f; // 0 means don't filter strokes based on their size. Units are out of this view's width. 
 	
 	float tmpPoints [] = new float [256]; 
 	int tmpPointCount = 0; 

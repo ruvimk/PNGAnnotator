@@ -135,8 +135,10 @@ public class PaperGenerator {
 		int pxPaperW = (int) (mPaperW * mDPI); 
 		int pxPaperH = (int) (mPaperH * mDPI); 
 		int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
-		paint.setStrokeWidth (mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
-									  /* scale to window width */ canvas.getWidth () / pxPaperW); 
+		float strokeWidth = mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
+									  /* scale to window width */ canvas.getWidth () / pxPaperW; 
+		if (strokeWidth < 1f) strokeWidth = 0f; // Just use the hyperfine/thinnest option. 
+		paint.setStrokeWidth (strokeWidth); 
 		paint.setColor (Color.rgb (150, 200, 255)); 
 		for (int x = pxSpan / 2;
 			 x < pxPaperW; x += pxSpan)
@@ -157,8 +159,10 @@ public class PaperGenerator {
 		int pxPaperH = (int) (mPaperH * mDPI); 
 		int pxSpan = (int) (mDPI * 0.25f); // 4x4 paper. 
 		paint.setStyle (Paint.Style.STROKE); 
-		paint.setStrokeWidth (mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
-									  /* scale to window width */ width / pxPaperW); 
+		float strokeWidth = mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
+									  /* scale to window width */ width / pxPaperW; 
+		if (strokeWidth < 1f) strokeWidth = 0f; // Use the thinnest option possible. 
+		paint.setStrokeWidth (strokeWidth); 
 		paint.setColor (Color.rgb (150, 200, 255)); 
 	} 
 	float [] makeGraphPaperLines (int width, int height) { 

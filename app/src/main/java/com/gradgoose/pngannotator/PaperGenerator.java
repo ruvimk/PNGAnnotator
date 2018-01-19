@@ -49,7 +49,8 @@ public class PaperGenerator {
 			} 
 			if (firstDigit == -1) { 
 				// If the last filename doesn't have a number part, add one to it when creating new file: 
-				return new File (inFolder, lastName.replace (".png", "") + " 002.png"); 
+				int lastDot = lastName.lastIndexOf ('.'); 
+				return new File (inFolder, lastName.substring (0, lastDot) + " 002.png"); 
 			} 
 			// Otherwise, we have found where the number part of the filename starts, and to 
 			// make the next file that will come after it, we need to +1 (increment) that 
@@ -79,7 +80,10 @@ public class PaperGenerator {
 		if (file == null) 
 			return; 
 		try { 
-			FileOutputStream fos = new FileOutputStream (file, false); 
+			String pngPath = file.getAbsolutePath (); 
+			int lastDot = pngPath.lastIndexOf ('.'); 
+			File outFile = new File (pngPath.substring (0, lastDot) + ".apg"); 
+			FileOutputStream fos = new FileOutputStream (outFile, false); 
 			byte buffer [] = new byte [4096]; 
 			int bRead; 
 			try { 

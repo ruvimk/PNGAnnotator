@@ -682,6 +682,11 @@ public class PageView extends ImageView {
 							edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
 							strokeCache.update (edit.value); 
 						} 
+						((Activity) getContext ()).runOnUiThread (new Runnable () { 
+							@Override public void run () { 
+								invalidate (); 
+							} 
+						}); 
 					} catch (IOException err) { 
 						// Can't edit: 
 						synchronized (edit) { 
@@ -738,6 +743,11 @@ public class PageView extends ImageView {
 					edit.value.setWindowSize (w, h); 
 					strokeCache.update (edit.value); 
 				} 
+				((Activity) getContext ()).runOnUiThread (new Runnable () { 
+					@Override public void run () { 
+						invalidate (); 
+					} 
+				}); 
 			} 
 		}).start (); 
 		// Get display metrics (the object that allows us to convert CM to DP): 

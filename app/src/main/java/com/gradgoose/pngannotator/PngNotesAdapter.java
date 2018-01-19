@@ -247,7 +247,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						// Callback: 
 						if (mOnFilesChangedListener != null) 
 							mOnFilesChangedListener.onFilesChanged (list); 
-						updateCache (); 
+//						updateCache (); 
 						// Update views: 
 						notifyDataSetChanged (); 
 					} 
@@ -255,7 +255,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						// Callback: 
 						if (mOnFilesChangedListener != null) 
 							mOnFilesChangedListener.onFilesNoChange (list); 
-						updateCache (); 
+//						updateCache (); 
 					} 
 				}); 
 		return mList = getFlattenedList (list); 

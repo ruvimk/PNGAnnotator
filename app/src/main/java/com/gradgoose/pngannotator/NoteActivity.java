@@ -863,6 +863,14 @@ public class NoteActivity extends Activity {
 		mRvBigPages = findViewById (R.id.rvBigPages);
 		mRvBigPages.setParentFolder (mParentFolder, mBrowsingFolders.elementAt (0).getName ()); 
 		mRvBigPages.setAdapter (mNotesAdapter); 
+		mRvBigPages.setSwipeCallback (new SwipeableRecyclerView.SwipeCallback () { 
+			@Override public void swipeComplete (int direction) { 
+				if (direction < 0) goBack (); 
+			} 
+			@Override public boolean canSwipe (int direction) { 
+				return direction <= 0; 
+			} 
+		}); 
 		// Put it into the list only if it's not empty (to avoid a scroll bar problem): 
 		if (mSubfoldersAdapter.mList.length > 0) 
 			mNotesAdapter.setHeaderItemViews (new View [] {mRvSubfolderBrowser}); 

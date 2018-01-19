@@ -32,6 +32,15 @@ public class SwipeableRecyclerView extends RecyclerView {
 	final float MAX_DISPLACEMENT_FOR_CLICK; 
 	final float MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN; 
 	
+	public interface SwipeCallback { 
+		void swipeComplete (int direction); 
+		boolean canSwipe (int direction); 
+	} 
+	SwipeCallback mCallback = null; 
+	void setSwipeCallback (SwipeCallback callback) { 
+		mCallback = callback; 
+	} 
+	
 //	ScaleGestureDetector mScaleGestureDetector = null; 
 	
 	String mNowBrowsingName = ""; 
@@ -121,7 +130,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 			); 
 			if (leftOver > 1) 
 				postDelayed (this, timestep); 
-			else stillAnimating = false; 
+			else { 
+				stillAnimating = false; 
+				swipeDelta = 0; 
+			} 
 		} 
 	}; 
 	void finishScrollAnimation () { 
@@ -190,7 +202,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 				stillAnimating = false; 
 			} else if (action == MotionEvent.ACTION_MOVE) { 
 				currentCoordinate = coordinate; 
-				swipeDelta = canSwipe () ? firstCoordinate - currentCoordinate : 0; 
+				swipeDelta = canSwipe (firstCoordinate - currentCoordinate) ? firstCoordinate - currentCoordinate : 0; 
 				long now = System.currentTimeMillis (); 
 				float dt = (float) (now - prevT) / 1e3f; 
 				scrollVX = horizontal ? (prevX - x) / dt : 0; 
@@ -202,29 +214,31 @@ public class SwipeableRecyclerView extends RecyclerView {
 				prevT = now; 
 				Log.d (TAG, "Swipe delta: " + swipeDelta + " = " + firstCoordinate + " - " + 
 					currentCoordinate); 
-				if (canSwipe ()) 
+				if (canSwipe (swipeDelta)) 
 					updateSwipePosition (); 
 			} else if (action == MotionEvent.ACTION_UP) { 
 				stillSwiping = false; 
 				stillAnimating = true; 
-				if (swipeDelta >= MIN_DELTA_TO_SWIPE && canSwipe ()) { 
+				if (swipeDelta >= MIN_DELTA_TO_SWIPE && canSwipe (swipeDelta)) { 
 					// Restore the scroll: 
 					if (horizontal) 
 						scrollBy ((int) (x - firstX), 0); 
 					else scrollBy (0, (int) (y - firstY)); 
 					// Open the next folder inside this folder's parent: 
-					int nextIndex = (currentIndex + 1) % mParentSubfolders.length; 
-					go (nextIndex); 
-				} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE && canSwipe ()) { 
+//					int nextIndex = (currentIndex + 1) % mParentSubfolders.length; 
+//					go (nextIndex); 
+					go (+1); 
+				} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE && canSwipe (swipeDelta)) { 
 					// Restore the scroll: 
 					if (horizontal) 
 						scrollBy ((int) (x - firstX), 0); 
 					else scrollBy (0, (int) (y - firstY)); 
 					// Open the previous folder inside this folder's parent: 
-					int nextIndex = currentIndex - 1; 
-					if (nextIndex < 0) 
-						nextIndex = mParentSubfolders.length - 1; 
-					go (nextIndex); 
+//					int nextIndex = currentIndex - 1; 
+//					if (nextIndex < 0) 
+//						nextIndex = mParentSubfolders.length - 1; 
+//					go (nextIndex); 
+					go (-1); 
 				} 
 				finishScrollAnimation (); 
 			} else if (action == MotionEvent.ACTION_CANCEL) { 
@@ -249,7 +263,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 //		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 //		else getParent ().requestDisallowInterceptTouchEvent (true); 
 		// The scale detector will set isScaleEvent, we will set it, if we detect a scale. 
-		return (/*isScaleEvent || */(canSwipe () && 
+		return (/*isScaleEvent || */(canSwipe (firstInterceptX - x) && 
 						Math.abs (x - firstInterceptX) > Math.abs (y - firstInterceptY) && 
 							 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 
 												(y - firstInterceptY) * (y - firstInterceptY)) 
@@ -287,25 +301,32 @@ public class SwipeableRecyclerView extends RecyclerView {
 													== LinearLayoutManager.HORIZONTAL; 
 		return isHorizontalScrollOrientation; 
 	} 
-	void go (int index) {
-		Intent intent = new Intent (getContext (), NoteActivity.class); 
-		String current [] = new String [mParentSubfolders[index].length]; 
-		String parent [] = new String [mParentFolder.size ()]; 
-		for (int i = 0; i < mParentSubfolders[index].length; i++) 
-			current[i] = mParentSubfolders[index][i].getAbsolutePath (); 
-		for (int i = 0; i < mParentFolder.size (); i++) 
-			parent[i] = mParentFolder.elementAt (i).getAbsolutePath (); 
-		intent.putExtra (NoteActivity.STATE_BROWSING_PATH, current); 
-		intent.putExtra (NoteActivity.STATE_PARENT_BROWSE, parent); 
-		Activity activity = (Activity) getContext (); 
-		activity.startActivity (intent); 
-		activity.finish (); 
+	void go (int direction) { 
+		if (mCallback != null) 
+			mCallback.swipeComplete (direction); 
 	} 
-	public boolean canSwipe () { 
-		return mParentFolder != null && mParentSubfolders != null && 
-					   mParentSubfolders.length > 1; 
+	boolean canSwipe (float direction) { 
+		return mCallback != null && mCallback.canSwipe (direction == 0 ? 0 : (direction > 0 ? +1 : -1)); 
 	} 
+//	void go (int index) {
+//		Intent intent = new Intent (getContext (), NoteActivity.class); 
+//		String current [] = new String [mParentSubfolders[index].length]; 
+//		String parent [] = new String [mParentFolder.size ()]; 
+//		for (int i = 0; i < mParentSubfolders[index].length; i++) 
+//			current[i] = mParentSubfolders[index][i].getAbsolutePath (); 
+//		for (int i = 0; i < mParentFolder.size (); i++) 
+//			parent[i] = mParentFolder.elementAt (i).getAbsolutePath (); 
+//		intent.putExtra (NoteActivity.STATE_BROWSING_PATH, current); 
+//		intent.putExtra (NoteActivity.STATE_PARENT_BROWSE, parent); 
+//		Activity activity = (Activity) getContext (); 
+//		activity.startActivity (intent); 
+//		activity.finish (); 
+//	} 
+//	public boolean canSwipe () { 
+//		return mParentFolder != null && mParentSubfolders != null && 
+//					   mParentSubfolders.length > 1; 
+//	} 
 	protected boolean handleTouch () { 
-		return canSwipe (); 
+		return canSwipe (swipeDelta); 
 	} 
 } 

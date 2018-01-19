@@ -664,33 +664,39 @@ public class PageView extends ImageView {
 					.into (this); 
 		// Now load our edits for this picture: 
 		if (oldFile == null || !oldFile.equals (itemFile)) {
-			try { 
-				synchronized (edit) { 
-					edit.value = PngEdit.forFile (getContext (), file); 
-					if (isAnnotatedPage) { 
-						mBitmapNaturalWidth = edit.value.srcPageWidth; 
-						mBitmapNaturalHeight = edit.value.srcPageHeight; 
-					} else { 
-						edit.value.srcPageWidth = mBitmapNaturalWidth; 
-						edit.value.srcPageHeight = mBitmapNaturalHeight; 
+			final File targetFile = file; 
+			// Note: This may be a pre-fetch operation, so let's do the loading in a separate thread to keep the UI responsive. 
+			(new Thread () { 
+				@Override public void run () { 
+					try { 
+						synchronized (edit) { 
+							edit.value = PngEdit.forFile (getContext (), targetFile); 
+							if (isAnnotatedPage) { 
+								mBitmapNaturalWidth = edit.value.srcPageWidth; 
+								mBitmapNaturalHeight = edit.value.srcPageHeight; 
+							} else { 
+								edit.value.srcPageWidth = mBitmapNaturalWidth; 
+								edit.value.srcPageHeight = mBitmapNaturalHeight; 
+							} 
+							edit.value.setWindowSize (getWidth (), getHeight ()); 
+							edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
+							strokeCache.update (edit.value); 
+						} 
+					} catch (IOException err) { 
+						// Can't edit: 
+						synchronized (edit) { 
+							edit.value = null; 
+						} 
+						// Log this error: 
+						err.printStackTrace (); 
+						// Show a message to the user, telling them that they can't view/save edits: 
+						Toast.makeText (getContext (), 
+								R.string.error_io_no_edit, 
+								Toast.LENGTH_SHORT) 
+								.show (); 
 					} 
-					edit.value.setWindowSize (getWidth (), getHeight ()); 
-					edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
-					strokeCache.update (edit.value); 
 				} 
-			} catch (IOException err) { 
-				// Can't edit: 
-				synchronized (edit) { 
-					edit.value = null; 
-				} 
-				// Log this error: 
-				err.printStackTrace (); 
-				// Show a message to the user, telling them that they can't view/save edits: 
-				Toast.makeText (getContext (), 
-						R.string.error_io_no_edit, 
-						Toast.LENGTH_SHORT) 
-						.show (); 
-			} 
+			}).start (); 
 		} 
 		// Redraw this view: 
 		invalidate (); 

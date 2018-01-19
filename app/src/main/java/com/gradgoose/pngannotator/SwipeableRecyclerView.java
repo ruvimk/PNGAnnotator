@@ -13,6 +13,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import java.io.File;
@@ -151,6 +152,15 @@ public class SwipeableRecyclerView extends RecyclerView {
 			llParams.rightMargin = - (int) nowX; 
 			llParams.topMargin = (int) nowY; 
 			llParams.bottomMargin = - (int) nowY; 
+		} else {
+			FrameLayout.LayoutParams flParams = lp instanceof FrameLayout.LayoutParams ? 
+														(FrameLayout.LayoutParams) lp : null; 
+			if (flParams != null) { 
+				flParams.leftMargin = (int) nowX; 
+				flParams.rightMargin = - (int) nowX; 
+				flParams.topMargin = (int) nowY; 
+				flParams.bottomMargin = - (int) nowY; 
+			} 
 		} 
 		requestLayout (); 
 		invalidate (); 

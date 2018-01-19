@@ -722,7 +722,7 @@ public class PageView extends ImageView {
 		} else super.onMeasure (widthMeasureSpec, heightMeasureSpec); 
 	} 
 	
-	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
+	@Override public void onSizeChanged (final int w, final int h, int oldW, int oldH) { 
 		super.onSizeChanged (w, h, oldW, oldH); 
 //		Log.d (TAG, "onSizeChanged (): Reloading bitmaps, scaling vectors ..."); 
 		// Update paper lines, if any: 
@@ -732,10 +732,14 @@ public class PageView extends ImageView {
 			PaperGenerator.scalePoints (paperPoints, fromW, fromH, w, h); 
 		} 
 		// Update edits: 
-		if (edit.value != null) synchronized (edit) { 
-			edit.value.setWindowSize (w, h); 
-			strokeCache.update (edit.value); 
-		} 
+		if (edit.value != null) (new Thread () { 
+			@Override public void run () { 
+				synchronized (edit) { 
+					edit.value.setWindowSize (w, h); 
+					strokeCache.update (edit.value); 
+				} 
+			} 
+		}).start (); 
 		// Get display metrics (the object that allows us to convert CM to DP): 
 		metrics = Resources.getSystem ().getDisplayMetrics (); 
 		// Reload the item bitmaps: 

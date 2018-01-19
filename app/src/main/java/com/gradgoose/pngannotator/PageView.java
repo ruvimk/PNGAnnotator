@@ -803,15 +803,17 @@ public class PageView extends ImageView {
 			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
 				e = edit.value.mEdits.elementAt (i); 
 				strokePaint.setColor (e.color); 
-				strokePaint.setStrokeWidth (e.brushWidth * brushScale); 
+				float strokeWidth = e.brushWidth * brushScale; 
+				if (strokeWidth < 1f) strokeWidth = 0f; // Thinnest possible. 
+				strokePaint.setStrokeWidth (strokeWidth); 
 				canvas.drawLines (e.points, strokePaint); 
 			} 
 		} 
 		// Finally, draw the currently being written path: 
 		strokePaint.setColor (mNowErasing ? getContext ().getResources () 
 													.getColor (R.color.colorEraser) : mColor); 
-		strokePaint.setStrokeWidth (PaperGenerator.getPxPerMm (mBitmapNaturalWidth, 
-				mBitmapNaturalHeight) * mBrush * brushScale); 
+		strokePaint.setStrokeWidth (Math.max (PaperGenerator.getPxPerMm (mBitmapNaturalWidth, 
+				mBitmapNaturalHeight) * mBrush * brushScale, 1f)); // Just cap this to 1+, for simple one-liner code. 
 		canvas.drawLines (tmpPoints, 0, tmpPointCount, strokePaint); 
 	} 
 	

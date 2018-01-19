@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	
+	<dimen name="pg_up_down_btn_size">120dp</dimen>
+	<dimen name="pg_up_down_btn_pad">16dp</dimen>
+	
+	
+	
+</resources>

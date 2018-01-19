@@ -29,6 +29,26 @@
 			android:scrollbars="vertical|horizontal"
 			android:animateLayoutChanges="false"
 			/>
+		<ImageView
+			android:id="@+id/ivGoPageUp"
+			android:layout_width="60dp"
+			android:layout_height="60dp" 
+			android:layout_gravity="bottom|start"
+			android:src="@drawable/ic_arrow_upward_black_24dp"
+			android:background="@drawable/ic_blank_page"
+			android:padding="8dp"
+			android:contentDescription="@string/label_page_up"
+			/>
+		<ImageView
+			android:id="@+id/ivGoPageDown"
+			android:layout_width="60dp"
+			android:layout_height="60dp" 
+			android:layout_gravity="bottom|end"
+			android:src="@drawable/ic_arrow_downward_black_24dp"
+			android:background="@drawable/ic_blank_page"
+			android:padding="8dp"
+			android:contentDescription="@string/label_page_down"
+			/>
 	</com.gradgoose.pngannotator.ScaleDetectorContainer> 
 	
 	<ProgressBar

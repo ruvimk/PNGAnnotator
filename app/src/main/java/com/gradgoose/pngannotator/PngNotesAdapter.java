@@ -342,6 +342,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		final PageView pageView; 
 		final TextView titleView; 
 		final View tileContainer; 
+		final View horizontalRule; 
+		final View verticalRule; 
 		final View.OnClickListener onClickListener = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				if (mOnNoteInteractListener != null) mOnNoteInteractListener.onNotePageClicked (mItemFile, mListPosition); 
@@ -359,6 +361,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView = root.findViewById (R.id.pvBigPage); 
 			titleView = root.findViewById (R.id.tvPageTitle); 
 			tileContainer = root.findViewById (R.id.flPageTile); 
+			horizontalRule = root.findViewById (R.id.vHorizontalRule); 
+			verticalRule = root.findViewById (R.id.vVerticalRule); 
 			mAllPageViews.add (pageView); 
 		} 
 		public void bind (File itemFile, int positionInList) { 
@@ -369,6 +373,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.setOnLongClickListener (onLongClickListener); 
 			tileContainer.setBackgroundResource (mUsePictureFrameBackground ? android.R.drawable.picture_frame : 0); 
 			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
+			horizontalRule.setVisibility (mUsePictureFrameBackground ? View.GONE : View.VISIBLE); 
+			verticalRule.setVisibility (mUsePictureFrameBackground ? View.GONE : View.VISIBLE); 
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.sampleMode = mSampleMode; 
 			pageView.loadMode = mLoadMode; 

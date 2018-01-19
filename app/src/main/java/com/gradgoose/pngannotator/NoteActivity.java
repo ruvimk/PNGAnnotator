@@ -334,7 +334,7 @@ public class NoteActivity extends Activity {
 				break; 
 			case R.id.menu_action_new_page: 
 				// Insert a new graph paper at the end of the list: 
-				final boolean wasEmpty = !PngNotesAdapter.hasImages (mBrowsingFolders); 
+//				final boolean wasEmpty = !PngNotesAdapter.hasImages (mBrowsingFolders); 
 				int wasImageCount = mNotesAdapter.countImages (); 
 				mPaperGenerator.copyGraphPaper (this, mBrowsingFolders.elementAt (0), null); 
 //				mPaperGenerator.makeGraphPaper (mBrowsingFolders.elementAt (0), null, 

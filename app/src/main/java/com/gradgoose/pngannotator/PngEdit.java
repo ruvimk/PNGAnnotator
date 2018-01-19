@@ -343,6 +343,7 @@ public class PngEdit {
 						prev.color = e.color; 
 						prev.brushWidth = e.brushWidth; 
 						prev.resetCount (); // Makes sure we don't overcount points. 
+						prev.countPoints (e.points); 
 					} 
 					continue; 
 				} 

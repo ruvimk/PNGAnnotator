@@ -799,9 +799,10 @@ public class PageView extends ImageView {
 								   (float) canvas.getWidth () / mBitmapNaturalWidth 
 								   : paperGenerator.getScaleFactor (canvas.getWidth ()); 
 		if (edit.value != null) synchronized (edit) { 
-			PngEdit.LittleEdit e; 
-			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
-				e = edit.value.mEdits.elementAt (i); 
+//			PngEdit.LittleEdit e; 
+			for (PngEdit.LittleEdit e : edit.value.mEdits) { 
+//			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
+//				e = edit.value.mEdits.elementAt (i); 
 				strokePaint.setColor (e.color); 
 				float strokeWidth = e.brushWidth * brushScale; 
 				if (strokeWidth < 1f) strokeWidth = 0f; // Thinnest possible. 

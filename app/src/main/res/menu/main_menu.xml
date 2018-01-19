@@ -53,6 +53,14 @@
 	
 	
 	<item
+		android:id="@+id/menu_action_show_pg_nav"
+		android:showAsAction="never"
+		android:title="@string/menu_show_pg_nav"
+		android:checkable="true"
+		android:checked="false"
+		/> 
+	
+	<item
 		android:id="@+id/menu_action_pen_mode"
 		android:showAsAction="never"
 		android:title="@string/menu_pen_mode"

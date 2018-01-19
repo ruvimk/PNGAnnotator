@@ -78,8 +78,14 @@ public class PageView extends ImageView {
 	int mColor = Color.BLACK; 
 	float mBrush = 1.0f; // in mm 
 	
+	float optimization_minStrokeSpan = 0.05f; // 0 means don't filter strokes based on their size. Units are out of this view's width. 
+	
 	float tmpPoints [] = new float [256]; 
 	int tmpPointCount = 0; 
+	
+	void setOptimizationMinStrokeSpan (float span) { 
+		optimization_minStrokeSpan = span; 
+	} 
 	
 	int executingPushes = 0; // To have some sort of synchronization between pushStrokes (); 
 		class MyWork { 
@@ -798,17 +804,48 @@ public class PageView extends ImageView {
 		float brushScale = mBitmapNaturalWidth != 0 ? 
 								   (float) canvas.getWidth () / mBitmapNaturalWidth 
 								   : paperGenerator.getScaleFactor (canvas.getWidth ()); 
+		float minSpan = optimization_minStrokeSpan * getWidth (); 
 		if (edit.value != null) synchronized (edit) { 
 //			PngEdit.LittleEdit e; 
-			for (PngEdit.LittleEdit e : edit.value.mEdits) { 
-//			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
-//				e = edit.value.mEdits.elementAt (i); 
-				strokePaint.setColor (e.color); 
-				float strokeWidth = e.brushWidth * brushScale; 
-				if (strokeWidth < 1f) strokeWidth = 0f; // Thinnest possible. 
-				strokePaint.setStrokeWidth (strokeWidth); 
-				canvas.drawLines (e.points, strokePaint); 
-			} 
+			if (minSpan != 0) { 
+				for (PngEdit.LittleEdit e : edit.value.mEdits) { 
+					if (e.points.length < 8) continue; 
+					float x0 = e.points[0]; 
+					float x1 = e.points[e.points.length / 2 + 0]; 
+					float x2 = e.points[e.points.length - 2]; 
+					float xMin = Math.min (x0, Math.min (x1, x2)); 
+					float xMax = Math.max (x0, Math.max (x1, x2)); 
+					float xSpan = xMax - xMin; 
+					boolean dontSkip = xSpan >= minSpan; 
+					if (!dontSkip) { 
+						float y0 = e.points[1]; 
+						float y1 = e.points[e.points.length / 2 + 1]; 
+						float y2 = e.points[e.points.length - 1]; 
+						float yMin = Math.min (y0, Math.min (y1, y2)); 
+						float yMax = Math.max (y0, Math.max (y1, y2)); 
+						float ySpan = yMax - yMin; 
+						dontSkip = ySpan >= minSpan; 
+						if (!dontSkip) { 
+							dontSkip = Math.sqrt (xSpan * xSpan + ySpan * ySpan) >= minSpan; 
+						} 
+					} 
+					if (!dontSkip) continue; // Skip drawing this stroke. 
+					strokePaint.setColor (e.color); 
+					float strokeWidth = e.brushWidth * brushScale; 
+					if (strokeWidth < 1f) strokeWidth = 0f; // Thinnest possible. 
+					strokePaint.setStrokeWidth (strokeWidth); 
+					canvas.drawLines (e.points, strokePaint); 
+				} 
+			} else 
+				for (PngEdit.LittleEdit e : edit.value.mEdits) { 
+	//			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
+	//				e = edit.value.mEdits.elementAt (i); 
+					strokePaint.setColor (e.color); 
+					float strokeWidth = e.brushWidth * brushScale; 
+					if (strokeWidth < 1f) strokeWidth = 0f; // Thinnest possible. 
+					strokePaint.setStrokeWidth (strokeWidth); 
+					canvas.drawLines (e.points, strokePaint); 
+				} 
 		} 
 		// Finally, draw the currently being written path: 
 		strokePaint.setColor (mNowErasing ? getContext ().getResources () 

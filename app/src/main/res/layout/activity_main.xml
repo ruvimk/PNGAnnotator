@@ -31,22 +31,22 @@
 			/>
 		<ImageView
 			android:id="@+id/ivGoPageUp"
-			android:layout_width="60dp"
-			android:layout_height="60dp" 
+			android:layout_width="@dimen/pg_up_down_btn_size"
+			android:layout_height="@dimen/pg_up_down_btn_size" 
 			android:layout_gravity="bottom|start"
 			android:src="@drawable/ic_arrow_upward_black_24dp"
 			android:background="@drawable/ic_blank_page"
-			android:padding="8dp"
+			android:padding="@dimen/pg_up_down_btn_pad"
 			android:contentDescription="@string/label_page_up"
 			/>
 		<ImageView
 			android:id="@+id/ivGoPageDown"
-			android:layout_width="60dp"
-			android:layout_height="60dp" 
+			android:layout_width="@dimen/pg_up_down_btn_size"
+			android:layout_height="@dimen/pg_up_down_btn_size" 
 			android:layout_gravity="bottom|end"
 			android:src="@drawable/ic_arrow_downward_black_24dp"
 			android:background="@drawable/ic_blank_page"
-			android:padding="8dp"
+			android:padding="@dimen/pg_up_down_btn_pad"
 			android:contentDescription="@string/label_page_down"
 			/>
 	</com.gradgoose.pngannotator.ScaleDetectorContainer> 

@@ -145,21 +145,21 @@ public class SwipeableRecyclerView extends RecyclerView {
 		float nowX = horizontal ? 0 : -swipeDelta; 
 		float nowY = horizontal ? -swipeDelta : 0; 
 		ViewGroup.LayoutParams lp = getLayoutParams (); 
-		LinearLayout.LayoutParams llParams = lp instanceof LinearLayout.LayoutParams ? 
-													 (LinearLayout.LayoutParams) lp : null; 
-		if (llParams != null) { 
-			llParams.leftMargin = (int) nowX; 
-			llParams.rightMargin = - (int) nowX; 
-			llParams.topMargin = (int) nowY; 
-			llParams.bottomMargin = - (int) nowY; 
-		} else {
-			FrameLayout.LayoutParams flParams = lp instanceof FrameLayout.LayoutParams ? 
-														(FrameLayout.LayoutParams) lp : null; 
-			if (flParams != null) { 
-				flParams.leftMargin = (int) nowX; 
-				flParams.rightMargin = - (int) nowX; 
-				flParams.topMargin = (int) nowY; 
-				flParams.bottomMargin = - (int) nowY; 
+		FrameLayout.LayoutParams flParams = lp instanceof FrameLayout.LayoutParams ? 
+													 (FrameLayout.LayoutParams) lp : null; 
+		if (flParams != null) { 
+			flParams.leftMargin = (int) nowX; 
+			flParams.rightMargin = - (int) nowX; 
+			flParams.topMargin = (int) nowY; 
+			flParams.bottomMargin = - (int) nowY; 
+		} else { 
+			LinearLayout.LayoutParams llParams = lp instanceof LinearLayout.LayoutParams ? 
+														(LinearLayout.LayoutParams) lp : null; 
+			if (llParams != null) {
+				llParams.leftMargin = (int) nowX; 
+				llParams.rightMargin = - (int) nowX; 
+				llParams.topMargin = (int) nowY; 
+				llParams.bottomMargin = - (int) nowY; 
 			} 
 		} 
 		requestLayout (); 

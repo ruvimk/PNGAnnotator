@@ -261,6 +261,7 @@ public class NoteActivity extends Activity {
 	} 
 	
 	MenuItem mMenuGoToPage = null; 
+	MenuItem mMenuShowPageNav = null; 
 	MenuItem mMenuPenMode = null; 
 	MenuItem mMenuToggleOverview = null; 
 //	MenuItem mMenuRecents = null; 
@@ -281,8 +282,10 @@ public class NoteActivity extends Activity {
 		boolean hasImages = hasImages (); 
 		mMenuGoToPage.setVisible (hasImages); 
 		mMenuToggleOverview.setVisible (canShowAsGrid ()); 
+		mMenuShowPageNav.setVisible (hasImages ()); 
 //		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
+		mMenuShowPageNav.setChecked (isPageNavShowing ()); 
 		mMenuPenMode.setChecked (isPenModeEnabled ()); 
 	} 
 	@Override public boolean onPrepareOptionsMenu (Menu menu) { 
@@ -290,6 +293,7 @@ public class NoteActivity extends Activity {
 		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
 		mMenuToggleOverview = menu.findItem (R.id.menu_action_toggle_overview); 
 //		mMenuRecents = menu.findItem (R.id.menu_action_recents); 
+		mMenuShowPageNav = menu.findItem (R.id.menu_action_show_pg_nav); 
 		mMenuPenMode = menu.findItem (R.id.menu_action_pen_mode); 
 		updateMenuItems (); 
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
@@ -317,6 +321,10 @@ public class NoteActivity extends Activity {
 //					finish (); // Finish this activity. 
 //				} 
 //				break; 
+			case R.id.menu_action_show_pg_nav: 
+				item.setChecked (!item.isChecked ()); 
+				showPageNav (item.isChecked ()); 
+				break; 
 			case R.id.menu_action_pen_mode: 
 				item.setChecked (!item.isChecked ()); 
 				enablePenMode (item.isChecked ()); 
@@ -674,6 +682,9 @@ public class NoteActivity extends Activity {
 	View brushWidthButton = null; 
 	TextView brushWidthText = null; 
 	
+	View ivPageUp = null; 
+	View ivPageDown = null; 
+	
 	ProgressBar pbMainProgress = null; 
 	
 	boolean animatingZoomLeave = false; 
@@ -951,6 +962,24 @@ public class NoteActivity extends Activity {
 			} 
 		}); 
 		mPensAdapter.setHeaderItemViews (new View [] {hand, brushWidthButton, eraser}); 
+		
+		// Page navigation buttons: 
+		ivPageUp = findViewById (R.id.ivGoPageUp); 
+		ivPageDown = findViewById (R.id.ivGoPageDown); 
+		ivPageUp.setOnClickListener (new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				if (mRvBigPages != null) 
+					mRvBigPages.pageUp (); 
+			} 
+		}); 
+		ivPageDown.setOnClickListener (new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				if (mRvBigPages != null) 
+					mRvBigPages.pageDown (); 
+			} 
+		}); 
+		updateViewsForPageNav (); 
+		
 		// Progress bar: 
 		pbMainProgress = findViewById (R.id.pbMainProgress); 
 		pbMainProgress.setVisibility (View.GONE); 
@@ -1045,6 +1074,19 @@ public class NoteActivity extends Activity {
 		mPensAdapter.notifyDataSetChanged (); 
 		mNotesAdapter.mPenMode = isPenModeEnabled (); 
 		mNotesAdapter.notifyDataSetChanged (); 
+	} 
+	
+	void showPageNav (boolean show) { 
+		prefs.edit ().putBoolean ("page-nav", show).apply (); 
+		updateViewsForPageNav (); 
+	} 
+	boolean isPageNavShowing () { 
+		return prefs.getBoolean ("page-nav", false); 
+	} 
+	void updateViewsForPageNav () { 
+		boolean pageNavVisible = isPageNavShowing () && hasImages (); 
+		ivPageUp.setVisibility (pageNavVisible ? View.VISIBLE : View.GONE); 
+		ivPageDown.setVisibility (pageNavVisible ? View.VISIBLE : View.GONE); 
 	} 
 	
 	boolean canGoBack () { 

@@ -314,7 +314,11 @@ public class PngEdit {
 			} 
 			void addPoints (float pts []) { 
 				if (points.length < szPoints) { 
-					points = new float [szPoints]; 
+					points = new float [szPoints]; // Note: WE ARE ASSUMING here that szPoints will not change after this. 
+					// If it does change, then we'll need to copy to the new 'points' from the old points, but 
+					// as it is, the size doesn't change once we've started writing important numbers to 'points', so 
+					// for optimization purposes, it is best left just like this, with new float [] *replacing* 'points', 
+					// being initialized to all 0s. 
 				} 
 				System.arraycopy (pts, 0, points, idxPoints, pts.length); 
 				idxPoints += pts.length; 

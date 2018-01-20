@@ -601,7 +601,7 @@ public class PageView extends ImageView {
 			isAnnotatedPage = true; 
 		} else {
 			try {
-				md5 = file != null ? PngEdit.calculateMD5 (file) : "";
+				md5 = file != null ? PngEdit.sparseCalculateMD5 (file) : ""; 
 			} catch (IOException err) {
 				md5 = "";
 			}

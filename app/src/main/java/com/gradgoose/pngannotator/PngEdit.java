@@ -572,6 +572,34 @@ public class PngEdit {
 		mTarget = file; 
 	} 
 	
+	// Sparse calculate MD5 () calculates MD5 of the file, but 
+	// takes into account only 10% of the file's contents 
+	// (reads 10 KB, skips 90 KB, reads 10 KB, skips ..., etc.) 
+	// Meant to make loading some sort of a hash for photos 
+	// faster. 
+	public static @NonNull
+	String sparseCalculateMD5 (File file) throws IOException {
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance ("MD5");
+		} catch (NoSuchAlgorithmException err) {
+			// Kind of wrong, but it should semi-work for our application here 
+			// to identify the file: 
+			return file.getAbsolutePath ().replace ('/', '_');
+		}
+		InputStream inputStream;
+		inputStream = new FileInputStream (file);
+		byte buffer [] = new byte [10 * 1024]; // Read in 10 KB chunks. 
+		int bRead;
+		while ((bRead = inputStream.read (buffer)) > 0) {
+			digest.update (buffer, 0, bRead); 
+			inputStream.skip (90 * 1024); // Skip 90 KB chunks. 
+		} 
+		byte md5sum [] = digest.digest ();
+		BigInteger bigInteger = new BigInteger (1, md5sum);
+		return String.format ("%32s", bigInteger.toString (16)).replace (' ', '0');
+	}
+	
 	public static @NonNull String calculateMD5 (File file) throws IOException { 
 		return calculateMD5 (file, null); 
 	} 
@@ -611,7 +639,7 @@ public class PngEdit {
 		return getFullFileName (context, pngFile, ".dat"); 
 	} 
 	public static String getFullFileName (Context context, File pngFile, String ext) throws IOException { 
-		String md5sum = calculateMD5 (pngFile); 
+		String md5sum = sparseCalculateMD5 (pngFile); 
 		// Create a filename that is based on this version of the file: 
 		return md5sum + "-" + Long.toString (pngFile.lastModified (), 16) + ext; 
 		// The edits' filename takes into account that the user may have created a second copy 

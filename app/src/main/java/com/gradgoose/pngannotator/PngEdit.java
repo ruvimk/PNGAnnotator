@@ -353,6 +353,8 @@ public class PngEdit {
 				} 
 				prev.countPoints (e.points); 
 			} 
+			// Get rid of the trailing extra entries, those past listIndex: 
+			mList.setSize (listIndex); 
 			// Next, go and actually create the structures in memory: 
 			listIndex = 0; 
 			if (mList.size () > 0) mList.elementAt (listIndex).resetPointer (); 

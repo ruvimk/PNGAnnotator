@@ -203,6 +203,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 		@Override public boolean onPrepareActionMode (ActionMode actionMode, Menu menu) { 
 			mMenuRename = menu.findItem (R.id.action_rename); 
+			mMenuCut = menu.findItem (R.id.action_cut); 
 			updateMenuVisibility (); 
 			return true; 
 		} 

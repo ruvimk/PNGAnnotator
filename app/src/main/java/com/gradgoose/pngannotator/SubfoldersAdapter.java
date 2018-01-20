@@ -137,8 +137,13 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	
 	ActionMode mActionMode = null; 
 	boolean mActionModeActive = false; 
-	Vector<String> mSelection = new Vector<> (); 
-	ActionMode.Callback mActionModeCallback = new ActionMode.Callback () { 
+	final Vector<String> mSelection = new Vector<> (); 
+	MyActionModeCallback mActionModeCallback = new MyActionModeCallback (); 
+	class MyActionModeCallback implements ActionMode.Callback { 
+		MenuItem mMenuRename = null; 
+		public void updateMenuVisibility () { 
+			if (mMenuRename != null) mMenuRename.setVisible (mSelection.size () == 1); 
+		} 
 		@Override public boolean onCreateActionMode (ActionMode actionMode, Menu menu) {
 			MenuInflater inflater = actionMode.getMenuInflater (); 
 			inflater.inflate (R.menu.folder_menu, menu); 
@@ -146,9 +151,22 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			return true; 
 		} 
 		@Override public boolean onPrepareActionMode (ActionMode actionMode, Menu menu) { 
-			return false; 
+			mMenuRename = menu.findItem (R.id.action_rename); 
+			updateMenuVisibility (); 
+			return true; 
 		} 
 		@Override public boolean onActionItemClicked (ActionMode actionMode, MenuItem menuItem) { 
+			switch (menuItem.getItemId ()) { 
+				case R.id.action_cut: 
+					
+					return true; 
+				case R.id.action_delete: 
+					
+					return true; 
+				case R.id.action_rename: 
+					
+					return true; 
+			} 
 			return false; 
 		} 
 		@Override public void onDestroyActionMode (ActionMode actionMode) { 
@@ -185,6 +203,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 					mActionMode.finish (); 
 					mActionMode = null; 
 				} 
+				mActionModeCallback.updateMenuVisibility (); 
 				notifyDataSetChanged (); 
 			} 
 		}; 

@@ -68,10 +68,12 @@ public class NoteActivity extends Activity {
 	static final String PREFS_NAME = "com.gradgoose.pngannotator.NoteActivity.prefs"; 
 	static final String LEFTOFF_NAME = "com.gradgoose.pngannotator.NoteActivity.leftOff"; 
 	static final String RECENTS_NAME = "com.gradgoose.pngannotator.NoteActivity.recents"; 
+	static final String OWNED_FOLDERS_NAME = "com.gradgoose.pngannotator.OWNED_FOLDERS";  
 	static final String MD5_CACHE_NAME = "com.gradgoose.pngannotator.MD5_cache"; 
 	SharedPreferences prefs = null; 
 	SharedPreferences leftOff = null; 
 	SharedPreferences recents = null; 
+	SharedPreferences ownedFolders = null; 
 	
 	Vector<String> recentFolders = null; 
 	
@@ -98,6 +100,7 @@ public class NoteActivity extends Activity {
 		prefs = getSharedPreferences (PREFS_NAME, MODE_PRIVATE); 
 		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
 		recents = getSharedPreferences (RECENTS_NAME, MODE_PRIVATE); 
+		ownedFolders = getSharedPreferences (OWNED_FOLDERS_NAME, MODE_PRIVATE); 
 		PageView.mMd5Cache = getSharedPreferences (MD5_CACHE_NAME, MODE_PRIVATE); 
 		String recentText; 
 		recentFolders = new Vector<> (10); // Can change 10 to something else later. From settings, eg. 
@@ -490,6 +493,7 @@ public class NoteActivity extends Activity {
 											 if (oldName == null) { 
 												 File nowFile = new File (activity.mBrowsingFolders.elementAt (0), nowName); 
 												 if (nowFile.mkdirs ()) { 
+												 	activity.ownedFolders.edit ().putBoolean (nowFile.getPath (), true).apply (); 
 													 // Success. Add the subfolders view if it wasn't there yet 
 													 // (we don't add it in the initialization procedure if it 
 													 // is empty, so check if it was empty to begin with): 
@@ -512,15 +516,19 @@ public class NoteActivity extends Activity {
 															 activity.getString (R.string.msg_could_not_new_folder)); 
 												 } 
 											 } else { 
+											 	 SharedPreferences.Editor editor = activity.ownedFolders.edit (); 
 												 for (File oldFile : oldName) { 
 													 File nowFile = new File (oldFile.getParentFile (), 
 																					 nowName); 
 													 if (oldFile.renameTo (nowFile)) { 
 														 success &= true; 
+														 editor.remove (oldFile.getPath ()); 
+														 editor.putBoolean (nowFile.getPath (), true); 
 													 } else { 
 														 success = false; 
 													 } 
 												 } 
+												 editor.apply (); 
 												 if (success) { 
 													 // Renamed. 
 													 activity.mSubfoldersAdapter.reloadList ();

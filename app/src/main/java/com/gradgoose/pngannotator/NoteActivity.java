@@ -270,6 +270,7 @@ public class NoteActivity extends Activity {
 	MenuItem mMenuShowPageNav = null; 
 	MenuItem mMenuPenMode = null; 
 	MenuItem mMenuToggleOverview = null; 
+	MenuItem mMenuPaste = null; 
 //	MenuItem mMenuRecents = null; 
 	@Override public boolean onCreateOptionsMenu (Menu menu) { 
 		getMenuInflater ().inflate (R.menu.main_menu, menu); 
@@ -283,12 +284,13 @@ public class NoteActivity extends Activity {
 	protected boolean canShowAsGrid () { 
 		return hasImages (); 
 	} 
-	private void updateMenuItems () { 
+	void updateMenuItems () { 
 		if (mMenuGoToPage == null) return; // Return if these have not yet been initialized. 
 		boolean hasImages = hasImages (); 
 		mMenuGoToPage.setVisible (hasImages); 
 		mMenuToggleOverview.setVisible (canShowAsGrid ()); 
 		mMenuShowPageNav.setVisible (hasImages ()); 
+		mMenuPaste.setVisible (SubfoldersAdapter.hasClipboardItems ()); 
 //		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
 		mMenuShowPageNav.setChecked (isPageNavShowing ()); 
@@ -301,6 +303,7 @@ public class NoteActivity extends Activity {
 //		mMenuRecents = menu.findItem (R.id.menu_action_recents); 
 		mMenuShowPageNav = menu.findItem (R.id.menu_action_show_pg_nav); 
 		mMenuPenMode = menu.findItem (R.id.menu_action_pen_mode); 
+		mMenuPaste = menu.findItem (R.id.menu_action_paste); 
 		updateMenuItems (); 
 //		menu.findItem (R.id.menu_action_annotate).setVisible (hasImages); 
 		return true; 
@@ -339,6 +342,11 @@ public class NoteActivity extends Activity {
 				prefs.edit ().putBoolean ("notes-overview", !prefs.getBoolean ("notes-overview", false)).apply (); 
 				item.setChecked (prefs.getBoolean ("notes-overview", false)); 
 				setNotesLayoutManager (); // Swap layout. 
+				break; 
+			case R.id.menu_action_paste: 
+				if (mSubfoldersAdapter != null && mSubfoldersAdapter.mBrowsingFolder != null && 
+							mSubfoldersAdapter.mBrowsingFolder.size () > 0) 
+								SubfoldersAdapter.pasteFiles (mSubfoldersAdapter.mBrowsingFolder.elementAt (0), this); 
 				break; 
 			case R.id.menu_action_export_pages: 
 				exportPages (); 

@@ -214,6 +214,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 				case R.id.action_cut: 
 					if (hasNonOwned) return false; 
 					cutFiles (selected); 
+					if (mContext instanceof NoteActivity) 
+						((NoteActivity) mContext).updateMenuItems (); 
 					mActionMode.finish (); 
 					return true; 
 				case R.id.action_delete: 
@@ -257,6 +259,9 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 					editor.putString (f.getPath (), "cut"); 
 			editor.apply (); 
 		} 
+	} 
+	static boolean hasClipboardItems () { 
+		return PRIVATE_CLIPBOARD.getAll ().size () > 0; 
 	} 
 	static void pasteFiles (final File destinationFolder, @Nullable final Context opt_context) { 
 		(new Thread () { 

@@ -135,6 +135,22 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 	}; 
 	
+	Vector<Vector<File>> getSelectedFiles () { 
+		Vector<Vector<File>> result = new Vector<> (mSelection.size ()); 
+		for (String targetName : mSelection) { 
+			for (File[] files : mList) { 
+				if (!files[0].getName ().equals (targetName)) 
+					continue; 
+				Vector<File> item = new Vector<> (files.length); 
+				for (File f : files) 
+					item.add (f); 
+				result.add (item); 
+				break; 
+			} 
+		} 
+		return result; 
+	} 
+	
 	ActionMode mActionMode = null; 
 	boolean mActionModeActive = false; 
 	final Vector<String> mSelection = new Vector<> (); 
@@ -156,6 +172,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			return true; 
 		} 
 		@Override public boolean onActionItemClicked (ActionMode actionMode, MenuItem menuItem) { 
+			Vector<Vector<File>> selected = getSelectedFiles (); 
+			if (selected.size () < 1) return false; 
 			switch (menuItem.getItemId ()) { 
 				case R.id.action_cut: 
 					
@@ -164,17 +182,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 					
 					return true; 
 				case R.id.action_rename: 
-					Vector<File> oldName = null; 
-					String targetName = mSelection.elementAt (0); 
-					for (File [] files : mList){ 
-						if (!files[0].getName ().equals (targetName)) 
-							continue; 
-						oldName = new Vector<> (files.length); 
-						for (File f : files) 
-							oldName.add (f); 
-						break; 
-					} 
-					if (oldName == null) return false; // Not found? This should not happen, but just do nothing if it does. 
+					Vector<File> oldName = selected.elementAt (0); 
 					if (mContext instanceof NoteActivity) 
 						NoteActivity.userRenameFile ((NoteActivity) mContext, 
 								oldName, ""); 

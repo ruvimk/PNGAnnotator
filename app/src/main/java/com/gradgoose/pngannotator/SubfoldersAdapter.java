@@ -1,9 +1,14 @@
 package com.gradgoose.pngannotator;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -129,9 +134,40 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 	}; 
 	
+	boolean mActionModeActive = false; 
+	ActionMode.Callback mActionModeCallback = new ActionMode.Callback () { 
+		@Override public boolean onCreateActionMode (ActionMode actionMode, Menu menu) {
+			MenuInflater inflater = actionMode.getMenuInflater (); 
+			inflater.inflate (R.menu.folder_menu, menu); 
+			mActionModeActive = true; 
+			return true; 
+		} 
+		@Override public boolean onPrepareActionMode (ActionMode actionMode, Menu menu) { 
+			return false; 
+		} 
+		@Override public boolean onActionItemClicked (ActionMode actionMode, MenuItem menuItem) { 
+			return false; 
+		} 
+		@Override public void onDestroyActionMode (ActionMode actionMode) { 
+			mActionModeActive = false; 
+		} 
+	}; 
 	public class Holder extends RecyclerView.ViewHolder { 
 		final ImageView iconView; 
 		final TextView nameView; 
+		View.OnClickListener mOnClick = new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				if (!mActionModeActive) return; // Do nothing if not in select mode. 
+				// TODO: Select/deselect items. 
+			} 
+		}; 
+		View.OnLongClickListener mOnLongClick = new View.OnLongClickListener () { 
+			@Override public boolean onLongClick (View view) { 
+				if (mActionModeActive) return false; 
+				((Activity) mContext).startActionMode (mActionModeCallback); 
+				return true; 
+			} 
+		}; 
 		public Holder (View root) { 
 			super (root); 
 			iconView = root.findViewById (R.id.ivItemIcon); 
@@ -141,6 +177,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		public void bind (File itemFile) { 
 			nameView.setText (itemFile.getName ()); 
 			itemView.setTag (R.id.item_file, itemFile); 
+			itemView.setOnClickListener (mOnClick); 
+			itemView.setOnLongClickListener (mOnLongClick); 
 		} 
 	} 
 	

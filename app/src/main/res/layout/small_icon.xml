@@ -8,13 +8,25 @@
 	android:gravity="center"
 	>
 	
-	<ImageView
-		android:id="@+id/ivItemIcon"
-		android:layout_width="80dp"
-		android:layout_height="80dp" 
-		android:src="@drawable/ic_simple_folder"
-		android:layout_gravity="center"
-		/>
+	<FrameLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content">
+		<ImageView
+			android:id="@+id/ivItemIcon"
+			android:layout_width="80dp"
+			android:layout_height="80dp" 
+			android:src="@drawable/ic_simple_folder"
+			android:layout_gravity="center"
+			/>
+		<ImageView
+			android:id="@+id/ivCutIcon"
+			android:layout_width="40dp"
+			android:layout_height="40dp"
+			android:src="@drawable/ic_content_cut_black_24dp"
+			android:layout_gravity="center"
+			android:paddingTop="4dp"
+			/> 
+	</FrameLayout>
 	
 	<TextView
 		android:id="@+id/tvItemName"

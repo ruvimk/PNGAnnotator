@@ -320,6 +320,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	public class Holder extends RecyclerView.ViewHolder { 
 		final ImageView iconView; 
+		final ImageView cutIcon; 
 		final TextView nameView; 
 		final CheckBox checkboxView; 
 		View.OnClickListener mToggleSelectedItemOnclick = new View.OnClickListener () { 
@@ -354,12 +355,14 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			iconView = root.findViewById (R.id.ivItemIcon); 
 			nameView = root.findViewById (R.id.tvItemName); 
 			checkboxView = root.findViewById (R.id.cbItemName); 
+			cutIcon = root.findViewById (R.id.ivCutIcon); 
 			itemView.setOnLongClickListener (mOnLongClick); 
 		} 
 		public void bind (File itemFile) { 
 			itemView.setTag (R.id.item_file, itemFile); 
 			nameView.setVisibility (mActionModeActive ? View.GONE : View.VISIBLE); 
 			checkboxView.setVisibility (mActionModeActive ? View.VISIBLE : View.GONE); 
+			cutIcon.setVisibility (PRIVATE_CLIPBOARD.contains (itemFile.getPath ()) ? View.VISIBLE : View.GONE); 
 			nameView.setText (itemFile.getName ()); 
 			checkboxView.setText (itemFile.getName ()); 
 			checkboxView.setChecked (isFileSelected (itemFile.getName ())); 

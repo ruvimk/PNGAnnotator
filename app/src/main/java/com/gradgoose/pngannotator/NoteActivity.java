@@ -580,13 +580,25 @@ public class NoteActivity extends Activity {
 		final int sOwned = ownedCount; 
 		final int sOther = otherCount; 
 		// Next, display an appropriate confirmation prompt to the user. 
-		String msg = ownedCount != 0 && otherCount == 0 ? 
-							 getString (R.string.msg_confirm_delete_owned_folders) : 
-							 (ownedCount != 0 /* && otherCount != 0 */ ? 
-									  getString (R.string.msg_confirm_delete_mixed_folders) 
-							 : getString (R.string.msg_confirm_delete_other_folders)); 
+		String msg; 
+		if (folders.elementAt (0).elementAt (0).isDirectory ()) { 
+			msg = ownedCount != 0 && otherCount == 0 ? 
+						  (ownedCount == 1 ? getString (R.string.msg_confirm_delete_owned_folders_s) : 
+								   getString (R.string.msg_confirm_delete_owned_folders)) : 
+						  (ownedCount != 0 /* && otherCount != 0 */ ? 
+								   getString (R.string.msg_confirm_delete_mixed_folders) 
+								   : 
+								   (otherCount == 1 ? getString (R.string.msg_confirm_delete_other_folders_s) : 
+											getString (R.string.msg_confirm_delete_other_folders)) 
+						  ); 
+		} else { 
+			msg = (ownedCount + otherCount) == 1 ? 
+						  getString (R.string.msg_confirm_delete_files_s) 
+						  : getString (R.string.msg_confirm_delete_files); 
+		} 
 		msg = msg.replace ("[owned]", String.valueOf (ownedCount)); 
 		msg = msg.replace ("[other]", String.valueOf (otherCount)); 
+		msg = msg.replace ("[number]", String.valueOf (ownedCount + otherCount)); 
 		AlertDialog dialog = new AlertDialog.Builder (this) 
 				.setTitle (R.string.title_delete) 
 				.setMessage (msg) 

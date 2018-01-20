@@ -50,10 +50,14 @@
 	even not load at all. Try re-opening the app to see if that helps. Sorry for the inconvenience!</string> 
 	<string name="msg_cache_updated">Cache updated, {N} item(s)</string> 
 	<string name="msg_files_deleted">[number] of [total] deleted</string> 
-	<string name="msg_confirm_delete_owned_folders">Are you sure you want to permanently delete [owned] folder(s) and their contents?</string> 
+	<string name="msg_confirm_delete_owned_folders">Are you sure you want to permanently delete [owned] folders and their contents?</string> 
+	<string name="msg_confirm_delete_owned_folders_s">Are you sure you want to permanently delete [owned] folder and its contents?</string> 
 	<string name="msg_confirm_delete_mixed_folders">Are you sure you want to permanently delete [owned] folder(s) and their contents 
 	(created with this app), and hide [other] folder(s) (not created with this app)?</string> 
-	<string name="msg_confirm_delete_other_folders">Are you sure you want to hide [other] folder(s) (can only hide them because they were not created with this app)?</string>
+	<string name="msg_confirm_delete_other_folders">Are you sure you want to hide [other] folders (can only <i>hide</i> them because they were not created with this app)?</string>
+	<string name="msg_confirm_delete_other_folders_s">Are you sure you want to hide [other] folder (can only <i>hide</i> it because it was not created with this app)?</string>
+	<string name="msg_confirm_delete_files">Are you sure you want to permanently delete [number] files?</string> 
+	<string name="msg_confirm_delete_files_s">Are you sure you want to permanently delete [number] file?</string> 
 	<string name="msg_previous_delete_progress">Cannot delete yet. A previous delete operation is still in progress. Please try again in a moment.</string>
 	
 	<string name="label_text_brush_width">(Brush Width)</string> 

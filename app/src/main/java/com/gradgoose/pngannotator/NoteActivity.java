@@ -33,6 +33,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 
+import static com.gradgoose.pngannotator.SubfoldersAdapter.isOwnedByMe;
+
 public class NoteActivity extends Activity { 
 	
 	int mOverviewColumnCount = 3; 
@@ -68,11 +70,11 @@ public class NoteActivity extends Activity {
 	static final String RECENTS_NAME = "com.gradgoose.pngannotator.NoteActivity.recents"; 
 	static final String OWNED_FOLDERS_NAME = "com.gradgoose.pngannotator.OWNED_FOLDERS"; 
 	static final String HIDDEN_FOLDERS_NAME = "com.gradgoose.pngannotator.HIDDEN_FOLDERS"; 
+	static final String PRIVATE_CLIPBOARD_NAME = "com.gradgoose.pngannotator.PRIVATE_CLIPBOARD"; 
 	static final String MD5_CACHE_NAME = "com.gradgoose.pngannotator.MD5_cache"; 
 	SharedPreferences prefs = null; 
 	SharedPreferences leftOff = null; 
 	SharedPreferences recents = null; 
-	SharedPreferences ownedFolders = null; 
 	
 	Vector<String> recentFolders = null; 
 	
@@ -99,8 +101,9 @@ public class NoteActivity extends Activity {
 		prefs = getSharedPreferences (PREFS_NAME, MODE_PRIVATE); 
 		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
 		recents = getSharedPreferences (RECENTS_NAME, MODE_PRIVATE); 
-		ownedFolders = getSharedPreferences (OWNED_FOLDERS_NAME, MODE_PRIVATE); 
+		SubfoldersAdapter.OWNED_FOLDERS = getSharedPreferences (OWNED_FOLDERS_NAME, MODE_PRIVATE); 
 		SubfoldersAdapter.HIDDEN_FOLDERS = getSharedPreferences (HIDDEN_FOLDERS_NAME, MODE_PRIVATE); 
+		SubfoldersAdapter.PRIVATE_CLIPBOARD = getSharedPreferences (PRIVATE_CLIPBOARD_NAME, MODE_PRIVATE); 
 		PageView.mMd5Cache = getSharedPreferences (MD5_CACHE_NAME, MODE_PRIVATE); 
 		String recentText; 
 		recentFolders = new Vector<> (10); // Can change 10 to something else later. From settings, eg. 
@@ -492,8 +495,8 @@ public class NoteActivity extends Activity {
 											 boolean success = true; 
 											 if (oldName == null) { 
 												 File nowFile = new File (activity.mBrowsingFolders.elementAt (0), nowName); 
-												 if (nowFile.mkdirs ()) { 
-												 	activity.ownedFolders.edit ().putBoolean (nowFile.getPath (), true).apply (); 
+												 if (nowFile.mkdirs ()) {
+													 SubfoldersAdapter.OWNED_FOLDERS.edit ().putBoolean (nowFile.getPath (), true).apply (); 
 												 	if (SubfoldersAdapter.HIDDEN_FOLDERS.contains (nowFile.getPath ())) { 
 												 		// In case there is a folder like that on the hidden list, 
 														// the user has manually deleted the folder using a file manager, 
@@ -522,13 +525,13 @@ public class NoteActivity extends Activity {
 															 activity.getString (R.string.msg_could_not_new_folder)); 
 												 } 
 											 } else { 
-											 	 SharedPreferences.Editor editor = activity.ownedFolders.edit (); 
+											 	 SharedPreferences.Editor editor = SubfoldersAdapter.OWNED_FOLDERS.edit (); 
 												 for (File oldFile : oldName) { 
 													 File nowFile = new File (oldFile.getParentFile (), 
 																					 nowName); 
 													 if (oldFile.renameTo (nowFile)) { 
 														 success &= true; 
-														 boolean isOwnedByMe = activity.ownedFolders.contains (oldFile.getPath ()); 
+														 boolean isOwnedByMe = SubfoldersAdapter.OWNED_FOLDERS.contains (oldFile.getPath ()); 
 														 if (isOwnedByMe) { 
 															 editor.remove (oldFile.getPath ()); 
 															 editor.putBoolean (nowFile.getPath (), true); 
@@ -739,9 +742,6 @@ public class NoteActivity extends Activity {
 									 .setNegativeButton (R.string.label_cancel, null) 
 									 .create (); 
 		dialog.show (); 
-	} 
-	boolean isOwnedByMe (File file) { 
-		return file != null && (ownedFolders.contains (file.getPath ()) || isOwnedByMe (file.getParentFile ())); 
 	} 
 	void exportPages () { 
 		mNotesAdapter.reloadList (); // Just in case. 

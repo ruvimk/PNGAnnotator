@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -15,12 +16,14 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -32,9 +35,16 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
 	
+	static SharedPreferences OWNED_FOLDERS = null; 
 	static SharedPreferences HIDDEN_FOLDERS = null; 
+	static SharedPreferences PRIVATE_CLIPBOARD = null; 
+	static final Object CLIPBOARD_MUTEX = new Object (); 
 	
 	File mList [] [] = null; 
+	
+	static boolean isOwnedByMe (File file) { 
+		return file != null && (SubfoldersAdapter.OWNED_FOLDERS.contains (file.getPath ()) || isOwnedByMe (file.getParentFile ())); 
+	} 
 	
 	static Comparator<File []> mFileComparator = new Comparator<File []> () { 
 		@Override public int compare (File a [], File b []) { 
@@ -162,8 +172,28 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	MyActionModeCallback mActionModeCallback = new MyActionModeCallback (); 
 	class MyActionModeCallback implements ActionMode.Callback { 
 		MenuItem mMenuRename = null; 
+		MenuItem mMenuCut = null; 
 		public void updateMenuVisibility () { 
 			if (mMenuRename != null) mMenuRename.setVisible (mSelection.size () == 1); 
+			if (mMenuCut != null) mMenuCut.setVisible (!hasNonOwnedFolders ()); 
+		} 
+		Vector<Vector<File>> lastCalculatedSelected = null; 
+		public boolean hasNonOwnedFolders () { 
+			Vector<Vector<File>> selected = getSelectedFiles (); 
+			if (selected.size () < 1) return false; 
+			boolean hasNonOwnedFolders = false; 
+			for (Vector<File> files : selected) { 
+				for (File file : files) { 
+					if (!file.isDirectory ()) continue; 
+					if (isOwnedByMe (file)) continue; 
+					// Otherwise, not owned by me. 
+					hasNonOwnedFolders = true; 
+					break; 
+				} 
+				if (hasNonOwnedFolders) break; 
+			} 
+			lastCalculatedSelected = selected; 
+			return hasNonOwnedFolders; 
 		} 
 		@Override public boolean onCreateActionMode (ActionMode actionMode, Menu menu) {
 			MenuInflater inflater = actionMode.getMenuInflater (); 
@@ -177,11 +207,14 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			return true; 
 		} 
 		@Override public boolean onActionItemClicked (ActionMode actionMode, MenuItem menuItem) { 
-			Vector<Vector<File>> selected = getSelectedFiles (); 
+			boolean hasNonOwned = hasNonOwnedFolders (); 
+			Vector<Vector<File>> selected = lastCalculatedSelected != null ? lastCalculatedSelected : getSelectedFiles (); 
 			if (selected.size () < 1) return false; 
 			switch (menuItem.getItemId ()) { 
 				case R.id.action_cut: 
-					
+					if (hasNonOwned) return false; 
+					cutFiles (selected); 
+					mActionMode.finish (); 
 					return true; 
 				case R.id.action_delete: 
 					if (mContext instanceof NoteActivity) 
@@ -215,6 +248,75 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			if (f.equals (file)) 
 				return true; 
 		return false; 
+	} 
+	static void cutFiles (Vector<Vector<File>> files) { 
+		synchronized (CLIPBOARD_MUTEX) { 
+			SharedPreferences.Editor editor = PRIVATE_CLIPBOARD.edit ().clear (); 
+			for (Vector<File> fs : files) 
+				for (File f : fs) 
+					editor.putString (f.getPath (), "cut"); 
+			editor.apply (); 
+		} 
+	} 
+	static void pasteFiles (final File destinationFolder, @Nullable final Context opt_context) { 
+		(new Thread () { 
+			@Override public void run () { 
+				int total = 0; 
+				int success = 0; 
+				synchronized (CLIPBOARD_MUTEX) { 
+					Map<String, ?> all = PRIVATE_CLIPBOARD.getAll ();
+					SharedPreferences.Editor editor = PRIVATE_CLIPBOARD.edit ();
+					SharedPreferences.Editor owned = OWNED_FOLDERS.edit (); 
+					for (Map.Entry<String, ?> entry : all.entrySet ()) { 
+						total++; 
+						File source = new File (entry.getKey ()); 
+						Object type = entry.getValue (); 
+						if (type instanceof String) { 
+							if (type.equals ("cut")) { 
+								File needName = new File (destinationFolder, source.getName ()); 
+								String path = needName.getPath (); 
+								String ext = ""; 
+								if (!source.isDirectory ()) { 
+									int lastDotIndex = path.lastIndexOf ('.'); 
+									ext = path.substring (lastDotIndex); 
+									path = path.substring (0, lastDotIndex); // Get rid of the filename extension. 
+								} 
+								File tmp = needName; 
+								int number = 1; 
+								while (tmp.exists ()) { 
+									number++; 
+									tmp = new File (path + " (" + String.valueOf (number) + ")" + ext); 
+								} 
+								needName = tmp; 
+								// Now try to move the file: 
+								if (source.renameTo (needName)) { 
+									owned.remove (source.getPath ()); // Take out old path from our owned list, if applicable. 
+									editor.remove (source.getPath ()); // Done with this file. 
+									owned.putBoolean (needName.getPath (), true); // Take note of it, so we know we own it. 
+									success++; 
+								} 
+							} 
+						} 
+					} 
+					owned.apply (); 
+					editor.apply (); 
+				} 
+				if (opt_context != null && opt_context instanceof Activity) { 
+					// Display a success message. 
+					final int sTot = total; 
+					final int sNow = success; 
+					((Activity) opt_context).runOnUiThread (new Runnable () { 
+						@Override public void run () {
+							Toast.makeText (opt_context, opt_context.getString (R.string.msg_files_pasted) 
+									.replace ("[number]", String.valueOf (sNow)) 
+									.replace ("[total]", String.valueOf (sTot)) 
+									, Toast.LENGTH_SHORT) 
+									.show (); 
+						} 
+					}); 
+				} 
+			} 
+		}).start (); 
 	} 
 	public class Holder extends RecyclerView.ViewHolder { 
 		final ImageView iconView; 

@@ -338,7 +338,7 @@ public class NoteActivity extends Activity {
 				exportPages (); 
 				break; 
 			case R.id.menu_action_new_folder: 
-				userRenameFile (null, ""); 
+				userRenameFile (this, null, ""); 
 				break; 
 			case R.id.menu_action_new_page: 
 				// Insert a new graph paper at the end of the list: 
@@ -457,12 +457,12 @@ public class NoteActivity extends Activity {
 //	void userSelectAnnotateOptions () { 
 //		
 //	} 
-	void userRenameFile (final @Nullable Vector<File> oldName, String userMessage) { 
-		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_file_name, 
-				(ViewGroup) findViewById (R.id.vMainRoot), false); 
+	static void userRenameFile (final NoteActivity activity, final @Nullable Vector<File> oldName, String userMessage) { 
+		final EditText editText = (EditText) activity.getLayoutInflater ().inflate (R.layout.edit_file_name, 
+				(ViewGroup) activity.findViewById (R.id.vMainRoot), false); 
 		String currentName; 
 		if (oldName == null) { 
-			String baseTitle = getString (R.string.label_new_folder); 
+			String baseTitle = activity.getString (R.string.label_new_folder); 
 			int folderNumber = 1; 
 			currentName = baseTitle; 
 			while ((new File (currentName)).exists ()) { 
@@ -472,7 +472,7 @@ public class NoteActivity extends Activity {
 		} else currentName = oldName.elementAt (0).getName (); 
 		editText.setText (currentName); 
 		editText.setSelection (0, currentName.length ()); 
-		AlertDialog dialog = new AlertDialog.Builder (this) 
+		AlertDialog dialog = new AlertDialog.Builder (activity) 
 									 .setTitle ( 
 									 		oldName == null ? R.string.title_new_folder : 
 													(oldName.elementAt (0).isDirectory () ? 
@@ -485,31 +485,31 @@ public class NoteActivity extends Activity {
 									 .setPositiveButton (R.string.label_ok, new DialogInterface.OnClickListener () {
 										 @Override public void onClick (DialogInterface dialogInterface, int i) {
 											 String nowName = editText.getText ().toString (); 
-											 boolean wasEmpty = mSubfoldersAdapter.mList.length > 0; 
+											 boolean wasEmpty = activity.mSubfoldersAdapter.mList.length > 0; 
 											 boolean success = true; 
 											 if (oldName == null) { 
-												 File nowFile = new File (mBrowsingFolders.elementAt (0), nowName); 
+												 File nowFile = new File (activity.mBrowsingFolders.elementAt (0), nowName); 
 												 if (nowFile.mkdirs ()) { 
 													 // Success. Add the subfolders view if it wasn't there yet 
 													 // (we don't add it in the initialization procedure if it 
 													 // is empty, so check if it was empty to begin with): 
-													 if (wasEmpty) 
-														 mNotesAdapter.setHeaderItemViews ( 
-														 		new View [] {mRvSubfolderBrowser}); 
+													 if (wasEmpty)
+														 activity.mNotesAdapter.setHeaderItemViews ( 
+														 		new View [] {activity.mRvSubfolderBrowser}); 
 													 // Now open the new folder. 
-													 Intent intent = new Intent (NoteActivity.this, 
+													 Intent intent = new Intent (activity, 
 																						NoteActivity.class); 
 													 String [] toOpen = new String [] {nowFile.getPath ()}; 
-													 String [] was = new String [mBrowsingFolders.size ()]; 
-													 for (int j = 0; j < mBrowsingFolders.size (); j++) 
-													 	was[j] = mBrowsingFolders.elementAt (j).getAbsolutePath (); 
+													 String [] was = new String [activity.mBrowsingFolders.size ()]; 
+													 for (int j = 0; j < activity.mBrowsingFolders.size (); j++) 
+													 	was[j] = activity.mBrowsingFolders.elementAt (j).getAbsolutePath (); 
 													 intent.putExtra (STATE_BROWSING_PATH, toOpen); 
-													 intent.putExtra (STATE_PARENT_BROWSE, was); 
-													 startActivity (intent); 
+													 intent.putExtra (STATE_PARENT_BROWSE, was);
+													 activity.startActivity (intent); 
 												 } else { 
 													 // Try create again? 
-													 userRenameFile (null, 
-															 getString (R.string.msg_could_not_new_folder)); 
+													 userRenameFile (activity, null,
+															 activity.getString (R.string.msg_could_not_new_folder)); 
 												 } 
 											 } else { 
 												 for (File oldFile : oldName) { 
@@ -523,12 +523,12 @@ public class NoteActivity extends Activity {
 												 } 
 												 if (success) { 
 													 // Renamed. 
-													 mSubfoldersAdapter.reloadList (); 
-													 mNotesAdapter.reloadList (); 
+													 activity.mSubfoldersAdapter.reloadList ();
+													 activity.mNotesAdapter.reloadList (); 
 												 } else { 
 													 // Try rename again? 
-													 userRenameFile (oldName, 
-															 getString (oldName.elementAt (0).isDirectory () ? 
+													 userRenameFile (activity, oldName,
+															 activity.getString (oldName.elementAt (0).isDirectory () ? 
 																				R.string.msg_could_not_ren_folder : 
 																				R.string.msg_could_not_ren_file 
 															 ) 

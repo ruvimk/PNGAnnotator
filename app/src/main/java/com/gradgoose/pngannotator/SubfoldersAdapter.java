@@ -323,6 +323,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 							@Override public void run () { 
 								noteActivity.mSubfoldersAdapter.reloadList (); 
 								noteActivity.mNotesAdapter.reloadList (); 
+								noteActivity.updateUserInterface (); 
+								noteActivity.updateMenuItems (); 
 							} 
 						}); 
 					} 

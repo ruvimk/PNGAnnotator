@@ -125,7 +125,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		intent.putExtra (NoteActivity.STATE_PARENT_BROWSE, parent); 
 		mContext.startActivity (intent); 
 	} 
-	private View.OnClickListener mOnClick = new View.OnClickListener () { 
+	private View.OnClickListener mOpenSubfolderOnclick = new View.OnClickListener () { 
 		@Override public void onClick (View view) { 
 			Object tag = view.getTag (R.id.item_file); 
 			if (tag != null && tag instanceof File) { 
@@ -173,7 +173,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		final ImageView iconView; 
 		final TextView nameView; 
 		final CheckBox checkboxView; 
-		View.OnClickListener mOnClick = new View.OnClickListener () { 
+		View.OnClickListener mToggleSelectedItemOnclick = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				if (!mActionModeActive) return; // Do nothing if not in select mode. 
 				Object itemObject = itemView.getTag (R.id.item_file); 
@@ -204,7 +204,6 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			iconView = root.findViewById (R.id.ivItemIcon); 
 			nameView = root.findViewById (R.id.tvItemName); 
 			checkboxView = root.findViewById (R.id.cbItemName); 
-			itemView.setOnClickListener (mOnClick); 
 			itemView.setOnLongClickListener (mOnLongClick); 
 		} 
 		public void bind (File itemFile) { 
@@ -214,6 +213,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			nameView.setText (itemFile.getName ()); 
 			checkboxView.setText (itemFile.getName ()); 
 			checkboxView.setChecked (isFileSelected (itemFile.getName ())); 
+			itemView.setOnClickListener (mActionModeActive ? mToggleSelectedItemOnclick : mOpenSubfolderOnclick); 
 		} 
 	} 
 	

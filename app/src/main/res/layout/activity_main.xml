@@ -28,6 +28,7 @@
 			android:clipToPadding="false"
 			android:scrollbars="vertical|horizontal"
 			android:animateLayoutChanges="false"
+			android:background="#eee"
 			/>
 		<ImageView
 			android:id="@+id/ivGoPageUp"

@@ -522,8 +522,11 @@ public class NoteActivity extends Activity {
 																					 nowName); 
 													 if (oldFile.renameTo (nowFile)) { 
 														 success &= true; 
-														 editor.remove (oldFile.getPath ()); 
-														 editor.putBoolean (nowFile.getPath (), true); 
+														 boolean isOwnedByMe = activity.ownedFolders.contains (oldFile.getPath ()); 
+														 if (isOwnedByMe) { 
+															 editor.remove (oldFile.getPath ()); 
+															 editor.putBoolean (nowFile.getPath (), true); 
+														 } 
 													 } else { 
 														 success = false; 
 													 } 

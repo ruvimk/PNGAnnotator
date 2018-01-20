@@ -276,6 +276,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 								File needName = new File (destinationFolder, source.getName ()); 
 								String path = needName.getPath (); 
 								String ext = ""; 
+								if (path.startsWith (source.getPath ())) continue; // Skip if we're trying to copy a folder inside itself. 
 								if (!source.isDirectory ()) { 
 									int lastDotIndex = path.lastIndexOf ('.'); 
 									ext = path.substring (lastDotIndex); 

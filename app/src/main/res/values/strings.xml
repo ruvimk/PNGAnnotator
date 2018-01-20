@@ -51,8 +51,8 @@
 	<string name="msg_cache_updated">Cache updated, {N} item(s)</string> 
 	<string name="msg_files_deleted">[number] of [total] deleted</string> 
 	<string name="msg_confirm_delete_owned_folders">Are you sure you want to permanently delete [owned] folder(s) and their contents?</string> 
-	<string name="msg_confirm_delete_mixed_folders">Are you sure you want to permanently delete [owned] folder(s) and their contents (out 
-	of the folders created with this app), and hide [other] folder(s) (can only hide them because they were not created with this app)?</string>
+	<string name="msg_confirm_delete_mixed_folders">Are you sure you want to permanently delete [owned] folder(s) and their contents 
+	(created with this app), and hide [other] folder(s) (not created with this app)?</string> 
 	<string name="msg_confirm_delete_other_folders">Are you sure you want to hide [other] folder(s) (can only hide them because they were not created with this app)?</string>
 	<string name="msg_previous_delete_progress">Cannot delete yet. A previous delete operation is still in progress. Please try again in a moment.</string>
 	

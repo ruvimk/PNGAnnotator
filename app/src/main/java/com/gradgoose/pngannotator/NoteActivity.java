@@ -606,6 +606,7 @@ public class NoteActivity extends Activity {
 									editor.apply (); 
 									editor = null; 
 								} 
+								mDeleteInProgress = false; 
 								runOnUiThread (new Runnable () { 
 									@Override public void run () { 
 										// Reload file lists: 

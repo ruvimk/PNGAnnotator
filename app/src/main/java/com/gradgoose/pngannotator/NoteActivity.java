@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v4.util.ArraySet;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -32,8 +31,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Vector;
 
 public class NoteActivity extends Activity { 
@@ -578,7 +575,7 @@ public class NoteActivity extends Activity {
 		// First count how many of these we own, and how many we don't own. 
 		for (Vector<File> files : folders) { 
 			for (File file : files) { 
-				if (doWeOwnThis (file)) 
+				if (isOwnedByMe (file)) 
 					ownedCount++; 
 				else otherCount++; 
 			} 
@@ -645,7 +642,7 @@ public class NoteActivity extends Activity {
 								boolean success = true; 
 								totalCount++; 
 								if (file.isDirectory ()) { 
-									if (checkOwnership && !doWeOwnThis (file)) { 
+									if (checkOwnership && !isOwnedByMe (file)) { 
 										if (editor == null) { 
 											// This is a separate thread, so commit () should do just fine, as opposed to apply (). 
 											SubfoldersAdapter.HIDDEN_FOLDERS.edit ().putBoolean (file.getPath (), true).commit (); 
@@ -743,8 +740,8 @@ public class NoteActivity extends Activity {
 									 .create (); 
 		dialog.show (); 
 	} 
-	boolean doWeOwnThis (File file) { 
-		return file != null && (ownedFolders.contains (file.getPath ()) || doWeOwnThis (file.getParentFile ())); 
+	boolean isOwnedByMe (File file) { 
+		return file != null && (ownedFolders.contains (file.getPath ()) || isOwnedByMe (file.getParentFile ())); 
 	} 
 	void exportPages () { 
 		mNotesAdapter.reloadList (); // Just in case. 

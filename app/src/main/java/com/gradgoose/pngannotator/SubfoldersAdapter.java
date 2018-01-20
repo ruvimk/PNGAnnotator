@@ -321,8 +321,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 						final NoteActivity noteActivity = (NoteActivity) opt_context; 
 						noteActivity.runOnUiThread (new Runnable () { 
 							@Override public void run () { 
-								noteActivity.mSubfoldersAdapter.notifyDataSetChanged (); 
-								noteActivity.mNotesAdapter.notifyDataSetChanged (); 
+								noteActivity.mSubfoldersAdapter.reloadList (); 
+								noteActivity.mNotesAdapter.reloadList (); 
 							} 
 						}); 
 					} 

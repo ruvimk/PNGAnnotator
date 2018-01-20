@@ -318,9 +318,13 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 				} 
 				if (opt_context != null && opt_context instanceof Activity) { 
 					if (opt_context instanceof NoteActivity) { 
-						NoteActivity noteActivity = (NoteActivity) opt_context; 
-						noteActivity.mSubfoldersAdapter.notifyDataSetChanged (); 
-						noteActivity.mNotesAdapter.notifyDataSetChanged (); 
+						final NoteActivity noteActivity = (NoteActivity) opt_context; 
+						noteActivity.runOnUiThread (new Runnable () { 
+							@Override public void run () { 
+								noteActivity.mSubfoldersAdapter.notifyDataSetChanged (); 
+								noteActivity.mNotesAdapter.notifyDataSetChanged (); 
+							} 
+						}); 
 					} 
 					// Display a success message. 
 					final int sTot = total; 

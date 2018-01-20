@@ -11,6 +11,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -134,7 +135,9 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 	}; 
 	
+	ActionMode mActionMode = null; 
 	boolean mActionModeActive = false; 
+	Vector<String> mSelection = new Vector<> (); 
 	ActionMode.Callback mActionModeCallback = new ActionMode.Callback () { 
 		@Override public boolean onCreateActionMode (ActionMode actionMode, Menu menu) {
 			MenuInflater inflater = actionMode.getMenuInflater (); 
@@ -150,21 +153,49 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 		@Override public void onDestroyActionMode (ActionMode actionMode) { 
 			mActionModeActive = false; 
+			mSelection.clear (); 
+			notifyDataSetChanged (); 
 		} 
 	}; 
+	void selectFile (String file) { 
+		mSelection.add (file); 
+	} 
+	void deselectFile (String file) { 
+		mSelection.remove (file); 
+	} 
+	boolean isFileSelected (String file) { 
+		for (String f : mSelection) 
+			if (f.equals (file)) 
+				return true; 
+		return false; 
+	} 
 	public class Holder extends RecyclerView.ViewHolder { 
 		final ImageView iconView; 
 		final TextView nameView; 
+		final CheckBox checkboxView; 
 		View.OnClickListener mOnClick = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				if (!mActionModeActive) return; // Do nothing if not in select mode. 
-				// TODO: Select/deselect items. 
+				Object itemObject = itemView.getTag (R.id.item_file); 
+				File itemFile = itemObject instanceof File ? (File) itemObject : null; 
+				if (itemFile == null) return; 
+				if (isFileSelected (itemFile.getName ())) deselectFile (itemFile.getName ()); 
+				else selectFile (itemFile.getName ()); 
+				if (mSelection.isEmpty ()) { 
+					mActionMode.finish (); 
+					mActionMode = null; 
+				} 
+				notifyDataSetChanged (); 
 			} 
 		}; 
 		View.OnLongClickListener mOnLongClick = new View.OnLongClickListener () { 
 			@Override public boolean onLongClick (View view) { 
 				if (mActionModeActive) return false; 
-				((Activity) mContext).startActionMode (mActionModeCallback); 
+				Object itemObject = itemView.getTag (R.id.item_file); 
+				File itemFile = itemObject instanceof File ? (File) itemObject : null; 
+				if (itemFile != null) selectFile (itemFile.getName ()); 
+				mActionMode = ((Activity) mContext).startActionMode (mActionModeCallback); 
+				notifyDataSetChanged (); 
 				return true; 
 			} 
 		}; 
@@ -172,13 +203,17 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			super (root); 
 			iconView = root.findViewById (R.id.ivItemIcon); 
 			nameView = root.findViewById (R.id.tvItemName); 
-			itemView.setOnClickListener (mOnClick); 
-		} 
-		public void bind (File itemFile) { 
-			nameView.setText (itemFile.getName ()); 
-			itemView.setTag (R.id.item_file, itemFile); 
+			checkboxView = root.findViewById (R.id.cbItemName); 
 			itemView.setOnClickListener (mOnClick); 
 			itemView.setOnLongClickListener (mOnLongClick); 
+		} 
+		public void bind (File itemFile) { 
+			itemView.setTag (R.id.item_file, itemFile); 
+			nameView.setVisibility (mActionModeActive ? View.GONE : View.VISIBLE); 
+			checkboxView.setVisibility (mActionModeActive ? View.VISIBLE : View.GONE); 
+			nameView.setText (itemFile.getName ()); 
+			checkboxView.setText (itemFile.getName ()); 
+			checkboxView.setChecked (isFileSelected (itemFile.getName ())); 
 		} 
 	} 
 	

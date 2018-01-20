@@ -497,6 +497,12 @@ public class NoteActivity extends Activity {
 												 File nowFile = new File (activity.mBrowsingFolders.elementAt (0), nowName); 
 												 if (nowFile.mkdirs ()) { 
 												 	activity.ownedFolders.edit ().putBoolean (nowFile.getPath (), true).apply (); 
+												 	if (SubfoldersAdapter.HIDDEN_FOLDERS.contains (nowFile.getPath ())) { 
+												 		// In case there is a folder like that on the hidden list, 
+														// the user has manually deleted the folder using a file manager, 
+														// and then is trying to create a folder with the same path here. 
+												 		SubfoldersAdapter.HIDDEN_FOLDERS.edit ().remove (nowFile.getPath ()).apply (); 
+													} 
 													 // Success. Add the subfolders view if it wasn't there yet 
 													 // (we don't add it in the initialization procedure if it 
 													 // is empty, so check if it was empty to begin with): 

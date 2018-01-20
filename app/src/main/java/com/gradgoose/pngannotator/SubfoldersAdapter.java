@@ -164,7 +164,21 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 					
 					return true; 
 				case R.id.action_rename: 
-					
+					Vector<File> oldName = null; 
+					String targetName = mSelection.elementAt (0); 
+					for (File [] files : mList){ 
+						if (!files[0].getName ().equals (targetName)) 
+							continue; 
+						oldName = new Vector<> (files.length); 
+						for (File f : files) 
+							oldName.add (f); 
+						break; 
+					} 
+					if (oldName == null) return false; // Not found? This should not happen, but just do nothing if it does. 
+					if (mContext instanceof NoteActivity) 
+						NoteActivity.userRenameFile ((NoteActivity) mContext, 
+								oldName, ""); 
+					mActionMode.finish (); 
 					return true; 
 			} 
 			return false; 

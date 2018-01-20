@@ -270,6 +270,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 					for (Map.Entry<String, ?> entry : all.entrySet ()) { 
 						total++; 
 						File source = new File (entry.getKey ()); 
+						long lastModified = source.lastModified (); // Just in case renameTo () touches this, we'll save a copy. 
 						Object type = entry.getValue (); 
 						if (type instanceof String) { 
 							if (type.equals ("cut")) { 
@@ -291,6 +292,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 								needName = tmp; 
 								// Now try to move the file: 
 								if (source.renameTo (needName)) { 
+									needName.setLastModified (lastModified); // And restore it here. 
 									owned.remove (source.getPath ()); // Take out old path from our owned list, if applicable. 
 									editor.remove (source.getPath ()); // Done with this file. 
 									owned.putBoolean (needName.getPath (), true); // Take note of it, so we know we own it. 

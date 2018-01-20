@@ -3,6 +3,7 @@ package com.gradgoose.pngannotator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.widget.RecyclerView;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
@@ -30,6 +31,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	final Context mContext; 
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
+	
+	static SharedPreferences HIDDEN_FOLDERS = null; 
 	
 	File mList [] [] = null; 
 	
@@ -90,6 +93,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	
 	static FileFilter mFilterJustFolders = new FileFilter () { 
 		@Override public boolean accept (File file) { 
+			if (HIDDEN_FOLDERS != null && HIDDEN_FOLDERS.contains (file.getPath ())) 
+				return false; // Do not show folders that are on the "hidden" list. 
 			return file.isDirectory (); 
 		} 
 	}; 
@@ -179,7 +184,9 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 					
 					return true; 
 				case R.id.action_delete: 
-					
+					if (mContext instanceof NoteActivity) 
+						if (((NoteActivity) mContext).userDeleteFiles (selected)) 
+							mActionMode.finish (); 
 					return true; 
 				case R.id.action_rename: 
 					Vector<File> oldName = selected.elementAt (0); 

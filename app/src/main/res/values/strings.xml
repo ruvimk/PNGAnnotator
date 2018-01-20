@@ -11,6 +11,8 @@
 	<string name="title_ren_file">Rename File</string> 
 	<string name="title_send_zip_to">Send notes to</string> 
 	<string name="title_out_of_mem">Out of Memory</string> 
+	<string name="title_delete">Confirm Delete</string> 
+	<string name="title_already_progress">Already in progress</string> 
 	
 	<string name="menu_create_folder">New Folder</string> 
 	<string name="menu_create_page">New Page</string> 
@@ -30,6 +32,7 @@
 	
 	<string name="label_ok">OK</string> 
 	<string name="label_cancel">Cancel</string> 
+	<string name="label_delete">Delete</string> 
 	<string name="label_new_folder">Untitled</string> 
 	<string name="label_brush_width">[width] mm</string> 
 	
@@ -46,6 +49,12 @@
 	<string name="msg_out_of_mem">The system ran out of memory, so pictures may load very blurry or 
 	even not load at all. Try re-opening the app to see if that helps. Sorry for the inconvenience!</string> 
 	<string name="msg_cache_updated">Cache updated, {N} item(s)</string> 
+	<string name="msg_files_deleted">[number] of [total] deleted</string> 
+	<string name="msg_confirm_delete_owned_folders">Are you sure you want to permanently delete [owned] folder(s) and their contents?</string> 
+	<string name="msg_confirm_delete_mixed_folders">Are you sure you want to permanently delete [owned] folder(s) and their contents (out 
+	of the folders created with this app), and hide [other] folder(s) (not created with this app)?</string>
+	<string name="msg_confirm_delete_other_folders">Are you sure you want to hide [other] folder(s) (not created with this app)?</string>
+	<string name="msg_previous_delete_progress">Cannot delete yet. A previous delete operation is still in progress. Please try again in a moment.</string>
 	
 	<string name="label_text_brush_width">(Brush Width)</string> 
 	

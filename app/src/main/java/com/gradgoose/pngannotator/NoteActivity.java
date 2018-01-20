@@ -1,5 +1,6 @@
 package com.gradgoose.pngannotator;
 
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -68,7 +69,8 @@ public class NoteActivity extends Activity {
 	static final String PREFS_NAME = "com.gradgoose.pngannotator.NoteActivity.prefs"; 
 	static final String LEFTOFF_NAME = "com.gradgoose.pngannotator.NoteActivity.leftOff"; 
 	static final String RECENTS_NAME = "com.gradgoose.pngannotator.NoteActivity.recents"; 
-	static final String OWNED_FOLDERS_NAME = "com.gradgoose.pngannotator.OWNED_FOLDERS";  
+	static final String OWNED_FOLDERS_NAME = "com.gradgoose.pngannotator.OWNED_FOLDERS"; 
+	static final String HIDDEN_FOLDERS_NAME = "com.gradgoose.pngannotator.HIDDEN_FOLDERS"; 
 	static final String MD5_CACHE_NAME = "com.gradgoose.pngannotator.MD5_cache"; 
 	SharedPreferences prefs = null; 
 	SharedPreferences leftOff = null; 
@@ -101,6 +103,7 @@ public class NoteActivity extends Activity {
 		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
 		recents = getSharedPreferences (RECENTS_NAME, MODE_PRIVATE); 
 		ownedFolders = getSharedPreferences (OWNED_FOLDERS_NAME, MODE_PRIVATE); 
+		SubfoldersAdapter.HIDDEN_FOLDERS = getSharedPreferences (HIDDEN_FOLDERS_NAME, MODE_PRIVATE); 
 		PageView.mMd5Cache = getSharedPreferences (MD5_CACHE_NAME, MODE_PRIVATE); 
 		String recentText; 
 		recentFolders = new Vector<> (10); // Can change 10 to something else later. From settings, eg. 
@@ -552,6 +555,111 @@ public class NoteActivity extends Activity {
 									 .create (); 
 		dialog.show (); 
 	} 
+	boolean mDeleteInProgress = false; 
+	boolean userDeleteFiles (final Vector<Vector<File>> folders) { 
+		if (mDeleteInProgress) { 
+			AlertDialog dialog = new AlertDialog.Builder (this) 
+					.setTitle (R.string.title_already_progress) 
+					.setMessage (R.string.msg_previous_delete_progress) 
+					.setPositiveButton (R.string.label_ok, null) 
+					.create (); 
+			dialog.show (); 
+			return false; 
+		} 
+		mDeleteInProgress = true; 
+		int ownedCount = 0; 
+		int otherCount = 0; 
+		// First count how many of these we own, and how many we don't own. 
+		for (Vector<File> files : folders) { 
+			for (File file : files) { 
+				if (doWeOwnThis (file)) 
+					ownedCount++; 
+				else otherCount++; 
+			} 
+		} 
+		final int sOwned = ownedCount; 
+		final int sOther = otherCount; 
+		// Next, display an appropriate confirmation prompt to the user. 
+		String msg = ownedCount != 0 && otherCount == 0 ? 
+							 getString (R.string.msg_confirm_delete_owned_folders) : 
+							 (ownedCount != 0 /* && otherCount != 0 */ ? 
+									  getString (R.string.msg_confirm_delete_mixed_folders) 
+							 : getString (R.string.msg_confirm_delete_other_folders)); 
+		msg = msg.replace ("[owned]", String.valueOf (ownedCount)); 
+		msg = msg.replace ("[other]", String.valueOf (otherCount)); 
+		AlertDialog dialog = new AlertDialog.Builder (this) 
+				.setTitle (R.string.title_delete) 
+				.setMessage (msg) 
+				.setPositiveButton (R.string.label_delete, new DialogInterface.OnClickListener () { 
+					@Override public void onClick (DialogInterface dialogInterface, int i) { 
+						(new Thread () { 
+							int successCount = 0; 
+							int totalCount = 0; 
+							SharedPreferences.Editor editor = null; 
+							@Override public void run () { 
+								// Task: delete all the folders, except hide the ones that we don't own. 
+								if (sOther != 0) editor = SubfoldersAdapter.HIDDEN_FOLDERS.edit (); 
+								for (Vector<File> files : folders) 
+									for (File f : files) 
+										delete (f, true); 
+								if (editor != null) { 
+									editor.apply (); 
+									editor = null; 
+								} 
+								runOnUiThread (new Runnable () { 
+									@Override public void run () { 
+										// Reload file lists: 
+										mSubfoldersAdapter.reloadList (); 
+										mNotesAdapter.reloadList (); 
+										// Display status message: 
+										Toast.makeText (NoteActivity.this, 
+												getString (R.string.msg_files_deleted) 
+														.replace ("[number]", String.valueOf (successCount)) 
+														.replace ("[total]", String.valueOf (totalCount)), 
+												Toast.LENGTH_SHORT) 
+												.show (); 
+									} 
+								}); 
+							} 
+							@SuppressLint ("ApplySharedPref")
+							boolean delete (File file, boolean checkOwnership) { 
+								boolean success = true; 
+								totalCount++; 
+								if (file.isDirectory ()) { 
+									if (checkOwnership && !doWeOwnThis (file)) { 
+										if (editor == null) { 
+											// This is a separate thread, so commit () should do just fine, as opposed to apply (). 
+											SubfoldersAdapter.HIDDEN_FOLDERS.edit ().putBoolean (file.getPath (), true).commit (); 
+										} else editor.putBoolean (file.getPath (), true); 
+									} else { 
+										File list[] = file.listFiles (); 
+										for (File f : list) { 
+											success &= delete (f, false); 
+										} 
+										success &= file.delete (); 
+									} 
+								} else success = file.delete (); 
+								if (success) successCount++; 
+								return success; 
+							} 
+						}).start (); 
+					} 
+				}) 
+				.setNegativeButton (R.string.label_cancel, new DialogInterface.OnClickListener () { 
+					@Override public void onClick (DialogInterface dialogInterface, int i) { 
+						mDeleteInProgress = false; 
+					} 
+				}) 
+				.setCancelable (true) 
+				.setOnCancelListener (new DialogInterface.OnCancelListener () { 
+					@Override public void onCancel (DialogInterface dialogInterface) { 
+						mDeleteInProgress = false; 
+					} 
+				}) 
+				.create (); 
+		dialog.show (); 
+		return true; 
+	} 
 	void userSelectPage () { 
 		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_number, 
 				(ViewGroup) findViewById (R.id.vMainRoot), false); 
@@ -615,6 +723,9 @@ public class NoteActivity extends Activity {
 									 .setNegativeButton (R.string.label_cancel, null) 
 									 .create (); 
 		dialog.show (); 
+	} 
+	boolean doWeOwnThis (File file) { 
+		return file != null && (ownedFolders.contains (file.getPath ()) || doWeOwnThis (file.getParentFile ())); 
 	} 
 	void exportPages () { 
 		mNotesAdapter.reloadList (); // Just in case. 

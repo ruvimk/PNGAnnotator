@@ -24,17 +24,17 @@ public class PdfMaker {
 		FileOutputStream fos = new FileOutputStream (destinationPDF); 
 		FileChannel channel = fos.getChannel ();
 		OutputStreamWriter writer = new OutputStreamWriter (fos, "UTF-8"); 
-		long offsets [] = new long [3 + sourcePages.length]; // Two (page, strokes) for each page, plus three: catalog, pages, and background strokes (e.g., graph paper). 
+		long offsets [] = new long [4 + 2 * sourcePages.length]; // Two (page, strokes) for each page, plus three: catalog, pages, and background strokes (e.g., graph paper). 
 		writer.write ("%PDF-1.7\r\n\r\n"); writer.flush (); 
 		offsets[0] = channel.position (); 
 		writer.write ("1 0 obj\r\n<<\r\n\t/Type /Catalog\r\n\t/Pages 2 0 R\r\n>>\r\nendobj\r\n\r\n"); writer.flush (); 
 		offsets[1] = channel.position (); 
 		StringBuilder sbKids = new StringBuilder (7 * sourcePages.length); 
 		for (int i = 0; i < sourcePages.length; i++) { 
-			sbKids.append (i + 4); 
+			sbKids.append (2 * i + 4); 
 			sbKids.append (" 0 R "); 
 		} 
-		writer.write ("2 0 obj\r\n<<\r\n\t/Type /Pages\r\n\t/MediaBox [0 0 612 792]\r\n\t/Count 1\r\n\t/Kids [ " + 
+		writer.write ("2 0 obj\r\n<<\r\n\t/Type /Pages\r\n\t/MediaBox [0 0 612 792]\r\n\t/Count " + sourcePages.length + "\r\n\t/Kids [ " + 
 							  sbKids.toString () + "]\r\n>>\r\nendobj\r\n\r\n"); writer.flush (); 
 		offsets[2] = channel.position (); 
 		renderBackground (writer); 
@@ -89,7 +89,7 @@ public class PdfMaker {
 		} else { 
 			contents = (offsetIndex + 1) + " 0 R"; 
 		} 
-		to.write (offsetIndex); 
+		to.write (String.valueOf (offsetIndex)); 
 		to.write (" 0 obj\r\n<<\r\n\t/Type /Page\r\n\t/Parent 2 0 R\r\n\t/Contents " + contents + "\r\n>>\r\nendobj\r\n\r\n"); 
 		to.flush (); 
 		if (outOffsets != null && channel != null) 
@@ -111,7 +111,7 @@ public class PdfMaker {
 		} 
 		sbStrokes.append (' '); 
 		String strokeDataStream = sbStrokes.toString (); 
-		to.write (offsetIndex + 1); 
+		to.write (String.valueOf (offsetIndex + 1)); 
 		to.write (" 0 obj\r\n<<\r\n\t/Length " + strokeDataStream.length () + "\r\n>>\r\nstream\r\n"); 
 		to.write (strokeDataStream); 
 		to.write ("\r\nendstream\r\nendobj\r\n\r\n"); 

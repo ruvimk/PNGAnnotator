@@ -64,7 +64,6 @@ public class PdfMaker {
 		float lines [] = generator.makeGraphPaperLines (612, 792); 
 		StringBuilder ruleStrokes = new StringBuilder (); 
 		for (int i = 0; i < lines.length; i += 4) { 
-			ruleStrokes.append (' '); 
 			ruleStrokes.append (lines[i + 0]); 
 			ruleStrokes.append (' '); 
 			ruleStrokes.append (lines[i + 1]); 
@@ -73,8 +72,9 @@ public class PdfMaker {
 			ruleStrokes.append (' '); 
 			ruleStrokes.append (lines[i + 3]); 
 			ruleStrokes.append (" l"); 
+			ruleStrokes.append (' '); 
 		} 
-		ruleStrokes.append (' '); 
+		ruleStrokes.append ('S'); 
 		to.write ("3 0 obj\r\n<<\r\n\t/Length " + ruleStrokes.length () + "\r\n>>\r\nstream\r\n"); 
 		to.write (ruleStrokes.toString ()); 
 		to.write ("\r\nendstream\r\nendobj\r\n\r\n"); 
@@ -96,7 +96,6 @@ public class PdfMaker {
 			outOffsets[offsetIndex + 0] = channel.position (); 
 		StringBuilder sbStrokes = new StringBuilder (); 
 		for (PngEdit.LittleEdit e : edit.mEdits) { 
-			sbStrokes.append (' '); 
 			sbStrokes.append (e.points[0]); 
 			sbStrokes.append (' '); 
 			sbStrokes.append (edit.windowHeight - e.points[1]); 
@@ -108,8 +107,9 @@ public class PdfMaker {
 				sbStrokes.append (edit.windowHeight - e.points[j + 1]); 
 				sbStrokes.append (" l"); 
 			} 
+			sbStrokes.append (' '); 
 		} 
-		sbStrokes.append (' '); 
+		sbStrokes.append ('S'); 
 		String strokeDataStream = sbStrokes.toString (); 
 		to.write (String.valueOf (offsetIndex + 1)); 
 		to.write (" 0 obj\r\n<<\r\n\t/Length " + strokeDataStream.length () + "\r\n>>\r\nstream\r\n"); 

@@ -18,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -752,54 +753,66 @@ public class NoteActivity extends Activity {
 		dialog.show (); 
 	} 
 	void exportPages () { 
-		mNotesAdapter.reloadList (); // Just in case. 
-		(new AsyncTask<File [], Integer, File> () { 
-			boolean success = true; 
-			int mTotal = 1; 
-			@Override protected File doInBackground (File [] ... params) { 
-				try { 
-					success = true; 
-					return ZipRenderer.render (NoteActivity.this, params[0], 
-							mBrowsingFolders.elementAt (0).getName (), 
-							new ZipRenderer.OnRenderProgress () { 
-								@Override public void onRenderProgress (int current, int total) { 
-									mTotal = total; 
-									publishProgress (current); 
-								} 
-							}); 
-				} catch (IOException err) { 
-					err.printStackTrace (); 
-					success = false; 
-					return null; 
-				} 
-			} 
-			@Override protected void onPreExecute () { 
-				pbMainProgress.setProgress (0); 
-				pbMainProgress.setVisibility (View.VISIBLE); 
-			} 
-			@Override protected void onPostExecute (File result) { 
-				pbMainProgress.setVisibility (View.GONE); 
-				if (success) { 
-					Uri toFile = Uri.fromFile (result); 
-					Intent shareIntent = new Intent (); 
-					shareIntent.setAction (Intent.ACTION_SEND); 
-					shareIntent.putExtra (Intent.EXTRA_STREAM, toFile); 
-					shareIntent.setType ("application/zip"); 
-					startActivity (Intent.createChooser (shareIntent, 
-							getString (R.string.title_send_zip_to))); 
-				} else { 
-					Toast.makeText (NoteActivity.this, R.string.msg_could_not_export_io, 
-							Toast.LENGTH_SHORT).show (); 
-				} 
-			} 
-			@Override protected void onProgressUpdate (Integer ... values) { 
-				for (int current : values) { 
-					if (Build.VERSION.SDK_INT >= 24) { 
-						pbMainProgress.setProgress (current * 100 / mTotal, true); 
-					} else pbMainProgress.setProgress (current * 100 / mTotal); 
-				} 
-			} 
-		}).execute (mNotesAdapter.mList); 
+//		mNotesAdapter.reloadList (); // Just in case. 
+//		(new AsyncTask<File [], Integer, File> () { 
+//			boolean success = true; 
+//			int mTotal = 1; 
+//			@Override protected File doInBackground (File [] ... params) { 
+//				try { 
+//					success = true; 
+//					return ZipRenderer.render (NoteActivity.this, params[0], 
+//							mBrowsingFolders.elementAt (0).getName (), 
+//							new ZipRenderer.OnRenderProgress () { 
+//								@Override public void onRenderProgress (int current, int total) { 
+//									mTotal = total; 
+//									publishProgress (current); 
+//								} 
+//							}); 
+//				} catch (IOException err) { 
+//					err.printStackTrace (); 
+//					success = false; 
+//					return null; 
+//				} 
+//			} 
+//			@Override protected void onPreExecute () { 
+//				pbMainProgress.setProgress (0); 
+//				pbMainProgress.setVisibility (View.VISIBLE); 
+//			} 
+//			@Override protected void onPostExecute (File result) { 
+//				pbMainProgress.setVisibility (View.GONE); 
+//				if (success) { 
+//					Uri toFile = Uri.fromFile (result); 
+//					Intent shareIntent = new Intent (); 
+//					shareIntent.setAction (Intent.ACTION_SEND); 
+//					shareIntent.putExtra (Intent.EXTRA_STREAM, toFile); 
+//					shareIntent.setType ("application/zip"); 
+//					startActivity (Intent.createChooser (shareIntent, 
+//							getString (R.string.title_send_zip_to))); 
+//				} else { 
+//					Toast.makeText (NoteActivity.this, R.string.msg_could_not_export_io, 
+//							Toast.LENGTH_SHORT).show (); 
+//				} 
+//			} 
+//			@Override protected void onProgressUpdate (Integer ... values) { 
+//				for (int current : values) { 
+//					if (Build.VERSION.SDK_INT >= 24) { 
+//						pbMainProgress.setProgress (current * 100 / mTotal, true); 
+//					} else pbMainProgress.setProgress (current * 100 / mTotal); 
+//				} 
+//			} 
+//		}).execute (mNotesAdapter.mList); 
+		PdfMaker maker = new PdfMaker (this); 
+		try { 
+			File pdf = new File (mPictures, mBrowsingFolders.elementAt (0).getName () + ".pdf"); 
+			maker.render (mNotesAdapter.mList, pdf); 
+			Intent share = new Intent (Intent.ACTION_SEND, Uri.fromFile (pdf)); 
+			share.setType ("application/pdf"); 
+			if (pdf.exists ()) 
+				startActivity (Intent.createChooser (share, "Share PDF")); 
+			else Log.e ("NoteActivity", "PDF does not exist"); 
+		} catch (IOException err) {
+			Log.e ("NoteActivity", "IOException"); 
+		} 
 	} 
 	void openSettings () { 
 		

@@ -691,6 +691,8 @@ public class PageView extends ImageView {
 						} 
 						((Activity) getContext ()).runOnUiThread (new Runnable () { 
 							@Override public void run () { 
+								if (isAnnotatedPage) 
+									requestLayout (); // Annotated pages don't point to an image file that has a size, so the size has to be redone here. 
 								invalidate (); 
 							} 
 						}); 

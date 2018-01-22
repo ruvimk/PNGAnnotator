@@ -293,6 +293,7 @@ public class PngEdit {
 	
 	
 	static class Cache { 
+		static final int CACHE_INCREMENT_SIZE = 2048; // For faster editing. 
 		Vector<Entry> mList = new Vector<> (); 
 		static class Entry { 
 			static float [] BLANK = new float [0]; 
@@ -314,7 +315,7 @@ public class PngEdit {
 			} 
 			void addPoints (float pts []) { 
 				if (points.length < szPoints) { 
-					points = new float [szPoints]; // Note: WE ARE ASSUMING here that szPoints will not change after this. 
+					points = new float [szPoints + CACHE_INCREMENT_SIZE]; // Note: WE ARE ASSUMING here that szPoints will not change after this. 
 					// If it does change, then we'll need to copy to the new 'points' from the old points, but 
 					// as it is, the size doesn't change once we've started writing important numbers to 'points', so 
 					// for optimization purposes, it is best left just like this, with new float [] *replacing* 'points', 

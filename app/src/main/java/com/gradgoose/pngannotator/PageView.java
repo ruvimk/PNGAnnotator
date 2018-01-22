@@ -665,8 +665,7 @@ public class PageView extends ImageView {
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
 					.into (this); 
 		else Glide.with (this) 
-					.load (R.drawable.transparent_pixel) 
-					.into (this); 
+					.clear (this); 
 		// Now load our edits for this picture: 
 		if (oldFile == null || !oldFile.equals (itemFile)) {
 			final File targetFile = file; 

@@ -841,8 +841,8 @@ public class PageView extends ImageView {
 			canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 
 					testPolygon[0], testPolygon[1], strokePaint); 
 		} 
-		for (int x = 50; x < 200; x++) 
-			for (int y = 50; y < 200; y++) 
+		for (int x = 50; x < 200; x += 25) 
+			for (int y = 50; y < 200; y += 25) 
 				drawTestCircle (x, y, canvas); 
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 

@@ -21,6 +21,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float currentScale = 1; 
 	float nowPivotX = 0; 
 	float nowPivotY = 0; 
+	float zoomedInScale = 2; 
 	OnScaleDone onScaleDone = null; 
 	void setOnScaleDoneListener (OnScaleDone listener) { 
 		onScaleDone = listener; 
@@ -202,6 +203,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			// It's a double-click. 
 			if (currentScale > 1) { 
 				// Zoomed in. Need to zoom out. 
+				zoomedInScale = currentScale; 
 				initiateZoomAnimation (nowPivotX, nowPivotY, currentScale, 
 						nowPivotX, nowPivotY, 1, 
 						500); 
@@ -210,7 +212,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 				nowPivotX = prevCenterX; 
 				nowPivotY = prevCenterY; 
 				initiateZoomAnimation (nowPivotX, nowPivotY, currentScale, 
-						nowPivotX, nowPivotY, 2, 
+						nowPivotX, nowPivotY, zoomedInScale, 
 						500); 
 			} 
 		} else performClick (); 

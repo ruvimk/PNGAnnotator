@@ -821,6 +821,13 @@ public class PageView extends ImageView {
 	}; 
 //	float [] [] testPolygons = PngEdit.convertPathToPolygons (testPath, 5); 
 	float [] [] testPolygons = null; 
+	Paint testPaint = new Paint (); 
+	void drawTestCircle (float x, float y, Canvas canvas) { 
+		boolean isRed = PngEdit.isPointInPolygon (x, y, testPolygons); 
+		testPaint.setStyle (Paint.Style.FILL); 
+		testPaint.setColor (isRed ? Color.RED : Color.BLUE); 
+		canvas.drawCircle (x, y, 4, testPaint); 
+	} 
 	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
@@ -834,6 +841,9 @@ public class PageView extends ImageView {
 			canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 
 					testPolygon[0], testPolygon[1], strokePaint); 
 		} 
+		for (int x = 50; x < 200; x++) 
+			for (int y = 50; y < 200; y++) 
+				drawTestCircle (x, y, canvas); 
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 
 			paperGenerator.setupGraphPaperPaint (getWidth (), paperPaint); 

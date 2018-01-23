@@ -154,11 +154,14 @@ public class PaperGenerator {
 					canvas.getWidth (), y * canvas.getHeight () / pxPaperH, paint); 
 		} 
 	} 
-	void setupGraphPaperPaint (int width, Paint paint) { 
+	float calcStrokeWidth (int pageWidth) { 
 		int pxPaperW = (int) (mPaperW * mDPI); 
+		return mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
+									  /* scale to window width */ pageWidth / pxPaperW; 
+	} 
+	void setupGraphPaperPaint (int width, Paint paint) { 
 		paint.setStyle (Paint.Style.STROKE); 
-		float strokeWidth = mDPI * 0.3f /*mm*/ / 25.4f /*mm/in*/ * 
-									  /* scale to window width */ width / pxPaperW; 
+		float strokeWidth = calcStrokeWidth (width); 
 		if (strokeWidth < 1f) strokeWidth = 0f; // Use the thinnest option possible. 
 		paint.setStrokeWidth (strokeWidth); 
 		paint.setColor (Color.rgb (150, 200, 255)); 

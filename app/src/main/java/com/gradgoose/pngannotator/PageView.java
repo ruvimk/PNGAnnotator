@@ -828,6 +828,7 @@ public class PageView extends ImageView {
 		if (testPolygons == null) 
 			testPolygons = PngEdit.convertPathToPolygons (testPath, 15); 
 		for (float [] testPolygon : testPolygons) { 
+			canvas.drawCircle (testPolygon[0], testPolygon[1], 5, strokePaint); 
 			canvas.drawLines (testPolygon, 0, testPolygon.length, strokePaint); 
 			canvas.drawLines (testPolygon, 2, testPolygon.length - 2, strokePaint); 
 			canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 

@@ -230,6 +230,47 @@ public class PngEdit {
 		return false; 
 	} 
 	
+	private float EMPTY [] = new float [0]; 
+	public void erase (float [] [] polygons) { 
+		Vector<Float> afterErasing = new Vector<> (); 
+		synchronized (mEdits) { 
+			for (LittleEdit edit : mEdits) { 
+				boolean prevFlag = false; 
+				afterErasing.setSize (0); 
+				afterErasing.ensureCapacity (edit.points.length); 
+				for (int i = 0; i < edit.points.length; i += 2) { 
+					boolean needsErasing = isPointInPolygon (edit.points[i + 0], 
+							edit.points[i + 1], polygons); 
+					if (!needsErasing) { 
+						// This point is not under the eraser's path. Add it to the left-overs-after-erasing list. 
+						afterErasing.add (edit.points[i + 0]); 
+						afterErasing.add (edit.points[i + 1]); 
+						prevFlag = false; 
+						continue; 
+					} 
+					// Needs erasing. 
+					// Check if we just passed the other point belonging to this line segment, 
+					// or if the other point is still coming up. 
+					if (i % 4 != 0 && !prevFlag) // Last two numbers (x, y) are part of this line segment, which we're deleting. 
+						afterErasing.setSize (afterErasing.size () - 2); // Remove them. 
+					else i += 2; // An extra increment, to make sure we skip the next point as well, which is part of this line segment. 
+					prevFlag = true; 
+				} 
+				if (afterErasing.size () == 0) 
+					edit.points = EMPTY; 
+				else { 
+					edit.points = new float [afterErasing.size ()]; 
+					for (int i = 0; i < edit.points.length; i++) 
+						edit.points[i] = afterErasing.elementAt (i); 
+				} 
+			} 
+			// Remove any empty edits (some may have become empty after erasing points): 
+			for (int i = 0; i < mEdits.size (); i++) 
+				if (mEdits.get (i).points.length == 0) 
+					mEdits.remove (i); 
+		} 
+	} 
+	
 	public void erase (float eraserPath [], float eraserRadius) { 
 		if (eraserPath.length < 2) return; 
 		synchronized (mEdits) { 

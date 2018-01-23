@@ -152,7 +152,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 		int touchSlop = conf.getScaledTouchSlop (); 
 		if (dist <= touchSlop) { 
 			clickCount++; 
-			performClick (); 
+			lastClickTime = now; 
+			click (); 
 		} 
 	} 
 	void handlePan (MotionEvent event) { 
@@ -195,14 +196,12 @@ public class ScaleDetectorContainer extends FrameLayout {
 	static float clamp (float number, float low, float high) { 
 		return Math.max (Math.min (number, high), low); 
 	} 
-	@Override public boolean callOnClick () { 
+	void click () { 
 		// Check if it's a double-click, and if so, perform zoom. 
 		if (clickCount == 2) { 
 			// It's a double-click. 
 			Log.i ("ScaleDetector", "Double-click detected. "); 
-		} 
-		// Do other default operations: 
-		return super.callOnClick (); 
+		} else performClick (); 
 	} 
 	void setScale (float scaleX, float scaleY, float pivotX, float pivotY) { 
 		int childCount = getChildCount (); 

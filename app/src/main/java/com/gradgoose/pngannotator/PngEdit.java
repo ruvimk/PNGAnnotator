@@ -110,6 +110,16 @@ public class PngEdit {
 		return polygons; 
 	} 
 	
+	static boolean isPointInPolygon (float x, float y, float [] polygon) { 
+		return false; 
+	} 
+	static boolean isPointInPolygon (float x, float y, float [] [] polygons) { 
+		for (float [] polygon : polygons) 
+			if (isPointInPolygon (x, y, polygon)) 
+				return true; 
+		return false; 
+	} 
+	
 	public void erase (float eraserPath [], float eraserRadius) { 
 		if (eraserPath.length < 2) return; 
 		synchronized (mEdits) { 

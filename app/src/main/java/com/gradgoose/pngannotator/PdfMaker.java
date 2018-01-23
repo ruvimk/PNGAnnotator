@@ -109,8 +109,9 @@ public class PdfMaker {
 		if (outOffsets != null && channel != null) 
 			outOffsets[offsetIndex + 0] = channel.position (); 
 		StringBuilder sbStrokes = new StringBuilder (); 
-		sbStrokes.append ("1 j 1 J "); // Round cap, round join. 
+		sbStrokes.append ("1 j 1 J"); // Round cap, round join. 
 		for (PngEdit.LittleEdit e : edit.mEdits) { 
+			sbStrokes.append (' '); 
 			sbStrokes.append (e.points[0]); 
 			sbStrokes.append (' '); 
 			sbStrokes.append (edit.windowHeight - e.points[1]); 

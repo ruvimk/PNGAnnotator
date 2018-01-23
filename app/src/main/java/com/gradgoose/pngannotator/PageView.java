@@ -109,9 +109,22 @@ public class PageView extends ImageView {
 						executingPushes++; 
 						// Convert the strokes into these little edits of ours: 
 						boolean hasErase = false; 
+						boolean isEraser = mTool == NoteActivity.TOOL_ERASER; 
 						synchronized (edit) { 
 							int oldSize = edit.value.mEdits.size (); 
 							for (WriteDetector.Stroke stroke : params) { 
+								if (isEraser) { 
+									float path [] = new float [2 * stroke.count ()]; 
+									for (int i = 0; i < path.length; i++) { 
+										path[2 * i + 0] = stroke.getX (i); 
+										path[2 * i + 1] = stroke.getY (i); 
+									} 
+									float polygons [] [] = PngEdit.convertPathToPolygons (path, mBrush * PaperGenerator.getPxPerMm ( 
+											mBitmapNaturalWidth, 
+											mBitmapNaturalHeight 
+									)); 
+									edit.value.erase (polygons); 
+								} else { 
 									PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
 									littleEdit.color = mColor; 
 									littleEdit.brushWidth = mBrush * PaperGenerator.getPxPerMm ( 
@@ -131,6 +144,7 @@ public class PageView extends ImageView {
 									littleEdit.points[4 * i - 2] = stroke.getX (i); 
 									littleEdit.points[4 * i - 1] = stroke.getY (i); 
 									edit.value.addEdit (littleEdit); 
+								} 
 							} 
 							// Try to save the strokes: 
 							try { 
@@ -141,6 +155,8 @@ public class PageView extends ImageView {
 								// just appending the last edits. 
 								// SAME applies to UNDO operations, etc., 
 								// whenever we're NOT simply appending. 
+								if (isEraser) 
+									edit.value.useDifferentialSave = false; // TODO: Take this into a separate thread, as non-differential save *is* slow. 
 								edit.value.saveEdits (); // Save. 
 								executingPushes--; // Make the counter 0, so strokes can be edited again. 
 							} catch (IOException err) { 

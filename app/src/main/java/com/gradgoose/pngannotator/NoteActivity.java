@@ -1107,7 +1107,7 @@ public class NoteActivity extends Activity {
 		whiteout.setOnClickListener (new View.OnClickListener () {
 			@Override public void onClick (View view) { 
 				// Select the whiteout as the tool. 
-				hand.findViewById (R.id.flWhiteout).setBackgroundResource (0); 
+				hand.findViewById (R.id.flEraser).setBackgroundResource (0); 
 				eraser.findViewById (R.id.flEraser).setBackgroundResource (0); 
 				whiteout.findViewById (R.id.flWhiteout).setBackgroundResource (R.drawable.black_border); 
 				mPensAdapter.setBorderedItemPosition (-1); 

@@ -63,6 +63,8 @@ public class PdfMaker {
 		PaperGenerator generator = new PaperGenerator (); 
 		float lines [] = generator.makeGraphPaperLines (612, 792); 
 		StringBuilder ruleStrokes = new StringBuilder (); 
+		// Page 133 of https://www.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf is useful. 
+		ruleStrokes.append ("0 j 0 J "); // Default line-cap, line-join. 
 		for (int i = 0; i < lines.length; i += 4) { 
 			ruleStrokes.append (lines[i + 0]); 
 			ruleStrokes.append (' '); 
@@ -95,6 +97,7 @@ public class PdfMaker {
 		if (outOffsets != null && channel != null) 
 			outOffsets[offsetIndex + 0] = channel.position (); 
 		StringBuilder sbStrokes = new StringBuilder (); 
+		sbStrokes.append ("1 j 1 J "); // Round cap, round join. 
 		for (PngEdit.LittleEdit e : edit.mEdits) { 
 			sbStrokes.append (e.points[0]); 
 			sbStrokes.append (' '); 

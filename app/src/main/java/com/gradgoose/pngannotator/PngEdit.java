@@ -116,7 +116,7 @@ public class PngEdit {
 				indexB = polygon.length / 2; 
 			} else { 
 				indexA = polygon.length / 2; 
-				indexB = polygon.length - 1; 
+				indexB = polygon.length - 2; 
 			} 
 			// Second, we do the binary search of that half of the wave. 
 			do { 

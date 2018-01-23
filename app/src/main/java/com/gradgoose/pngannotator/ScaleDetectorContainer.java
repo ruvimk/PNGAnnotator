@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 
 /**
@@ -83,11 +84,13 @@ public class ScaleDetectorContainer extends FrameLayout {
 		if (event.getAction () == MotionEvent.ACTION_UP) { 
 			if (onScaleDone != null) 
 				onScaleDone.onVerticalPanState (false); 
+			checkClick (); 
 		} 
 		return result; 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
+			touchDownTime = System.currentTimeMillis (); 
 			calculateInitialFigures (event); 
 			handlePan (event); 
 		} 
@@ -107,6 +110,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 		if (event.getAction () == MotionEvent.ACTION_UP) { 
 			if (onScaleDone != null) 
 				onScaleDone.onVerticalPanState (false); 
+			checkClick (); 
 		} 
 		return isScaleEvent; 
 	} 
@@ -134,6 +138,23 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float orgCenterY = 0; 
 	int orgPointerId = 0; 
 	boolean verticalPanChanged = false; 
+	long touchDownTime = 0; 
+	long lastClickTime = 0; 
+	int clickCount = 0; 
+	void checkClick () { 
+		long now = System.currentTimeMillis (); 
+		if (lastClickTime != 0 && now - lastClickTime > 500) 
+			clickCount = 0; // Not a double-click. 
+		float dx = prevCenterX - orgCenterX; 
+		float dy = prevCenterY - orgCenterY; 
+		double dist = Math.sqrt (dx * dx + dy * dy);
+		ViewConfiguration conf = ViewConfiguration.get (getContext ()); 
+		int touchSlop = conf.getScaledTouchSlop (); 
+		if (dist <= touchSlop) { 
+			clickCount++; 
+			performClick (); 
+		} 
+	} 
 	void handlePan (MotionEvent event) { 
 //		float centerX = 0; 
 //		float centerY = 0; 
@@ -173,6 +194,15 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	static float clamp (float number, float low, float high) { 
 		return Math.max (Math.min (number, high), low); 
+	} 
+	@Override public boolean callOnClick () { 
+		// Check if it's a double-click, and if so, perform zoom. 
+		if (clickCount == 2) { 
+			// It's a double-click. 
+			Log.i ("ScaleDetector", "Double-click detected. "); 
+		} 
+		// Do other default operations: 
+		return super.callOnClick (); 
 	} 
 	void setScale (float scaleX, float scaleY, float pivotX, float pivotY) { 
 		int childCount = getChildCount (); 

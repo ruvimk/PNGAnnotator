@@ -114,8 +114,9 @@ public class PageView extends ImageView {
 							int oldSize = edit.value.mEdits.size (); 
 							for (WriteDetector.Stroke stroke : params) { 
 								if (isEraser) { 
-									float path [] = new float [2 * stroke.count ()]; 
-									for (int i = 0; i < path.length; i++) { 
+									int pointCount = stroke.count (); 
+									float path [] = new float [2 * pointCount]; 
+									for (int i = 0; i < pointCount; i++) { 
 										path[2 * i + 0] = stroke.getX (i); 
 										path[2 * i + 1] = stroke.getY (i); 
 									} 

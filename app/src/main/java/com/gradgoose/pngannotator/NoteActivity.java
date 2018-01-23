@@ -1043,7 +1043,7 @@ public class NoteActivity extends Activity {
 				if (direction < 0) goBack (); 
 			} 
 			@Override public boolean canSwipe (int direction) { 
-				return direction <= 0 && canGoBack (); 
+				return direction <= 0 && canGoBack () && mScalePageContainer.currentScale == 1; 
 			} 
 		}); 
 		// Put it into the list only if it's not empty (to avoid a scroll bar problem): 

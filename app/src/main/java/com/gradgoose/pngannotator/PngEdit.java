@@ -92,7 +92,7 @@ public class PngEdit {
 		} 
 	} 
 	
-	private static final int CIRCLE_SEGMENT_COUNT = 32; 
+	private static final int CIRCLE_SEGMENT_COUNT = 32; // MUST BE DIVISIBLE BY 4!!! 
 	public static float [] [] convertPathToPolygons (float path [], float strokeRadius) { 
 		if (path.length < 2) return new float [0] []; 
 		float polygons [] [] = new float [path.length / 2 - 1] []; 
@@ -108,13 +108,25 @@ public class PngEdit {
 				polygon[2 * i + 1] = (float) (strokeRadius * Math.sin (angle + (4f * i / CIRCLE_SEGMENT_COUNT - 1) * Math.PI / 2) + path[baseIndex2 + 1]); 
 			} 
 			// Next, (we want the max. y to be the top) find the max. y element's index: 
-			int maxIndex = 0; 
-			float maxVal = polygon[1]; 
-			for (int i = 2; i < polygon.length; i += 2) { 
-				if (maxVal >= polygon[i + 1]) continue; 
-				maxIndex = i; 
-				maxVal = polygon[i + 1]; 
+			int indexA, indexB; 
+			// We need to perform a binary search on one full period of a sine wave (y coordinate of a circle goes as the sine). 
+			// First, we need to find which half of the period has the max/crest (the wave may have a nonzero phase!). 
+			if (polygon[polygon.length / 4 + 1] > polygon[polygon.length * 3 / 4 + 1]) { 
+				indexA = 0; 
+				indexB = polygon.length / 2; 
+			} else { 
+				indexA = polygon.length / 2; 
+				indexB = polygon.length - 1; 
 			} 
+			// Second, we do the binary search of that half of the wave. 
+			do { 
+				float valA = polygon[indexA]; 
+				float valB = polygon[indexB]; 
+				if (valB > valA) 
+					indexA = (indexA + indexB) / 2; 
+				else indexB = (indexA + indexB) / 2; 
+			} while (indexA != indexB); 
+			int maxIndex = indexA; 
 			// Finally, rotate the array so that the max. is the first element: 
 			if (maxIndex > 0) { 
 				// a. Swap; put our data into sparePolygon; 

@@ -125,7 +125,7 @@ public class PageView extends ImageView {
 									float polygons [] [] = PngEdit.convertPathToPolygons (path, mBrush * PaperGenerator.getPxPerMm ( 
 											mBitmapNaturalWidth, 
 											mBitmapNaturalHeight 
-									)); 
+									) / 2); 
 									edit.value.erase (polygons); 
 									debug_polygons = polygons; 
 								} else { 

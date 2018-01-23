@@ -367,7 +367,8 @@ public class NoteActivity extends Activity {
 				exportPages (); 
 				break; 
 			case R.id.menu_action_enable_log: 
-				prefs.edit ().putBoolean ("time-log", item.isChecked ()).apply (); 
+				prefs.edit ().putBoolean ("time-log", !prefs.getBoolean ("time-log", true)).apply (); 
+				item.setChecked (prefs.getBoolean ("time-log", true)); 
 				break; 
 			case R.id.menu_action_view_time_log: 
 				viewTimeLog (); 

@@ -23,6 +23,7 @@ public class PaperGenerator {
 	int mDPI = 300; 
 	float mPaperW = 8.5f; // inches 
 	float mPaperH = 11f; // inches 
+	static int COLOR_GRAPH_PAPER = Color.rgb (150, 200, 255); 
 	static float getPxPerMm (float pageW, float pageH) { 
 		return pageW / 8.5f / 25.4f; // Pixels per inch / mm/in = Pixels / mm; 
 	} 
@@ -164,7 +165,7 @@ public class PaperGenerator {
 		float strokeWidth = calcStrokeWidth (width); 
 		if (strokeWidth < 1f) strokeWidth = 0f; // Use the thinnest option possible. 
 		paint.setStrokeWidth (strokeWidth); 
-		paint.setColor (Color.rgb (150, 200, 255)); 
+		paint.setColor (COLOR_GRAPH_PAPER); 
 	} 
 	float [] makeGraphPaperLines (int width, int height) { 
 		int pxPaperW = (int) (mPaperW * mDPI); 

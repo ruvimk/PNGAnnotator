@@ -813,9 +813,24 @@ public class PageView extends ImageView {
 	
 	DisplayMetrics metrics = new DisplayMetrics (); 
 	
+	float [] testPath = new float [] { 
+											 100, 100, 
+											 200, 100, 
+											 300, 200, 
+											 250, 200 
+	}; 
+//	float [] [] testPolygons = PngEdit.convertPathToPolygons (testPath, 5); 
+	float [] [] testPolygons = null; 
+	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
+		if (testPolygons == null) 
+			testPolygons = PngEdit.convertPathToPolygons (testPath, 5); 
+		for (float [] testPolygon : testPolygons) { 
+			canvas.drawLines (testPolygon, 0, testPolygon.length, strokePaint); 
+			canvas.drawLines (testPolygon, 2, testPolygon.length - 2, strokePaint); 
+		} 
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 
 			paperGenerator.setupGraphPaperPaint (getWidth (), paperPaint); 

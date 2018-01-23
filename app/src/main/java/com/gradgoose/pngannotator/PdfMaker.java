@@ -61,10 +61,13 @@ public class PdfMaker {
 	} 
 	private void renderBackground (@NonNull Writer to) throws IOException { 
 		PaperGenerator generator = new PaperGenerator (); 
+		generator.mDPI = 72; // PDF uses PT, and there's 72 PT per inch. 
 		float lines [] = generator.makeGraphPaperLines (612, 792); 
 		StringBuilder ruleStrokes = new StringBuilder (); 
 		// Page 133 of https://www.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf is useful. 
 		ruleStrokes.append ("0 j 0 J "); // Default line-cap, line-join. 
+		ruleStrokes.append (String.valueOf (generator.calcStrokeWidth (612))); 
+		ruleStrokes.append (" w "); // Stroke width. 
 		for (int i = 0; i < lines.length; i += 4) { 
 			ruleStrokes.append (lines[i + 0]); 
 			ruleStrokes.append (' '); 
@@ -110,9 +113,10 @@ public class PdfMaker {
 				sbStrokes.append (edit.windowHeight - e.points[j + 1]); 
 				sbStrokes.append (" l"); 
 			} 
-			sbStrokes.append (' '); 
+			sbStrokes.append (String.valueOf (e.brushWidth)); 
+			sbStrokes.append (" w "); // Stroke-width. 
+			sbStrokes.append (" S"); 
 		} 
-		sbStrokes.append ('S'); 
 		String strokeDataStream = sbStrokes.toString (); 
 		to.write (String.valueOf (offsetIndex + 1)); 
 		to.write (" 0 obj\r\n<<\r\n\t/Length " + strokeDataStream.length () + "\r\n>>\r\nstream\r\n"); 

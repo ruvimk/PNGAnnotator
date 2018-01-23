@@ -93,6 +93,37 @@ public class PngEdit {
 	} 
 	
 	private static final int CIRCLE_SEGMENT_COUNT = 32; // MUST BE DIVISIBLE BY 4!!! 
+	static int binarySearchMaxInPointArray (int searchFromIndex, int searchToIndex, float pointList [], int probeIndexOffset) { 
+		int indexA = searchFromIndex; 
+		int indexB = searchToIndex; 
+		do { 
+			float valA = pointList[indexA + probeIndexOffset]; 
+			float valB = pointList[indexB + probeIndexOffset]; 
+			if (valB > valA) { 
+				int prev = indexA; 
+				indexA = (indexA + indexB) / 2 & -2; 
+				if (prev == indexA) { 
+					// We need this check because the "& -2" creates the opportunity for being stuck in the loop forever. 
+					// For example, suppose indexA = 6, and indexB = 8, and valB > valA. 
+					// Then the index update is: indexA = (indexA + indexB) / 2 & -2; 
+					// indexA = (6 + 8) / 2 & -2; 
+					// indexA = 7 & -2; 
+					// indexA = 6; 
+					// That brings indexA back to where it just was!!! 
+					// In that case, we need to realize that valB > valA, so we need to return indexB. 
+					indexA = indexB; 
+				} 
+			} else { 
+				int prev = indexB; 
+				indexB = (indexA + indexB) / 2 & -2; 
+				if (prev == indexB) { 
+					// Read comments for the 'if' statement above ... 
+					indexB = indexA; 
+				} 
+			} 
+		} while (indexA != indexB); 
+		return indexA; 
+	} 
 	public static float [] [] convertPathToPolygons (float path [], float strokeRadius) { 
 		if (path.length < 2) return new float [0] []; 
 		float polygons [] [] = new float [path.length / 2 - 1] []; 
@@ -111,42 +142,10 @@ public class PngEdit {
 			// Next, (we want the max. y to be the top) find the max. y element's index: 
 			int indexA, indexB; 
 			// We need to perform a binary search on one full period of a sine wave (y coordinate of a circle goes as the sine). 
-			// First, we need to find which half of the period has the max/crest (the wave may have a nonzero phase!). 
-			if (polygon[polygon.length / 4 + 1] > polygon[polygon.length * 3 / 4 + 1]) { 
-				indexA = 0; 
-				indexB = polygon.length / 2; 
-			} else { 
-				indexA = polygon.length / 2; 
-				indexB = polygon.length - 2; 
-			} 
-			// Second, we do the binary search of that half of the wave. 
-			do { 
-				float valA = polygon[indexA + 1]; 
-				float valB = polygon[indexB + 1]; 
-				if (valB > valA) { 
-					int prev = indexA; 
-					indexA = (indexA + indexB) / 2 & -2; 
-					if (prev == indexA) { 
-						// We need this check because the "& -2" creates the opportunity for being stuck in the loop forever. 
-						// For example, suppose indexA = 6, and indexB = 8, and valB > valA. 
-						// Then the index update is: indexA = (indexA + indexB) / 2 & -2; 
-						// indexA = (6 + 8) / 2 & -2; 
-						// indexA = 7 & -2; 
-						// indexA = 6; 
-						// That brings indexA back to where it just was!!! 
-						// In that case, we need to realize that valB > valA, so we need to return indexB. 
-						indexA = indexB; 
-					} 
-				} else { 
-					int prev = indexB; 
-					indexB = (indexA + indexB) / 2 & -2; 
-					if (prev == indexB) { 
-						// Read comments for the 'if' statement above ... 
-						indexB = indexA; 
-					} 
-				} 
-			} while (indexA != indexB); 
-			int maxIndex = indexA; 
+			// We do the binary search of each half of the sine wave. 
+			int max0 = binarySearchMaxInPointArray (0, polygon.length / 2, polygon, 1); 
+			int max1 = binarySearchMaxInPointArray (polygon.length / 2, polygon.length - 2, polygon, 1); 
+			int maxIndex = polygon[max0 + 1] > polygon[max1 + 1] ? max0 : max1; 
 			// Finally, rotate the array so that the max. is the first element: 
 			if (maxIndex > 0) { 
 				// a. Swap; put our data into sparePolygon; 

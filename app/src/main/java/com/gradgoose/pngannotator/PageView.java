@@ -112,6 +112,9 @@ public class PageView extends ImageView {
 						// Convert the strokes into these little edits of ours: 
 						boolean hasErase = false; 
 						boolean isEraser = mTool == NoteActivity.TOOL_ERASER; 
+						float brushScale = mBitmapNaturalWidth != 0 ? 
+												   edit.value.windowWidth / mBitmapNaturalWidth 
+												   : paperGenerator.getScaleFactor ((int) edit.value.windowWidth); 
 						synchronized (edit) { 
 							int oldSize = edit.value.mEdits.size (); 
 							for (WriteDetector.Stroke stroke : params) { 
@@ -125,7 +128,7 @@ public class PageView extends ImageView {
 									float polygons [] [] = PngEdit.convertPathToPolygons (path, mBrush * PaperGenerator.getPxPerMm ( 
 											mBitmapNaturalWidth, 
 											mBitmapNaturalHeight 
-									) / 2); 
+									) / 2 * brushScale); 
 									edit.value.erase (polygons); 
 									debug_polygons = polygons; 
 								} else { 

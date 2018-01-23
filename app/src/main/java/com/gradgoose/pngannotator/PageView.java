@@ -813,37 +813,37 @@ public class PageView extends ImageView {
 	
 	DisplayMetrics metrics = new DisplayMetrics (); 
 	
-	float [] testPath = new float [] { 
-											 100, 100, 
-											 200, 100, 
-											 300, 200, 
-											 250, 200 
-	}; 
-//	float [] [] testPolygons = PngEdit.convertPathToPolygons (testPath, 5); 
-	float [] [] testPolygons = null; 
-	Paint testPaint = new Paint (); 
-	void drawTestCircle (float x, float y, Canvas canvas) { 
-		boolean isRed = PngEdit.isPointInPolygon (x, y, testPolygons); 
-		testPaint.setStyle (Paint.Style.FILL); 
-		testPaint.setColor (isRed ? Color.RED : Color.BLUE); 
-		canvas.drawCircle (x, y, 2, testPaint); 
-	} 
+//	float [] testPath = new float [] { 
+//											 100, 100, 
+//											 200, 100, 
+//											 300, 200, 
+//											 250, 200 
+//	}; 
+////	float [] [] testPolygons = PngEdit.convertPathToPolygons (testPath, 5); 
+//	float [] [] testPolygons = null; 
+//	Paint testPaint = new Paint (); 
+//	void drawTestCircle (float x, float y, Canvas canvas) { 
+//		boolean isRed = PngEdit.isPointInPolygon (x, y, testPolygons); 
+//		testPaint.setStyle (Paint.Style.FILL); 
+//		testPaint.setColor (isRed ? Color.RED : Color.BLUE); 
+//		canvas.drawCircle (x, y, 2, testPaint); 
+//	} 
 	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
-		if (testPolygons == null) 
-			testPolygons = PngEdit.convertPathToPolygons (testPath, 15); 
-		for (float [] testPolygon : testPolygons) { 
-			canvas.drawCircle (testPolygon[0], testPolygon[1], 5, strokePaint); 
-			canvas.drawLines (testPolygon, 0, testPolygon.length, strokePaint); 
-			canvas.drawLines (testPolygon, 2, testPolygon.length - 2, strokePaint); 
-			canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 
-					testPolygon[0], testPolygon[1], strokePaint); 
-		} 
-		for (int x = 50; x < 500; x += 5) 
-			for (int y = 50; y < 500; y += 5) 
-				drawTestCircle (x, y, canvas); 
+//		if (testPolygons == null) 
+//			testPolygons = PngEdit.convertPathToPolygons (testPath, 15); 
+//		for (float [] testPolygon : testPolygons) { 
+//			canvas.drawCircle (testPolygon[0], testPolygon[1], 5, strokePaint); 
+//			canvas.drawLines (testPolygon, 0, testPolygon.length, strokePaint); 
+//			canvas.drawLines (testPolygon, 2, testPolygon.length - 2, strokePaint); 
+//			canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 
+//					testPolygon[0], testPolygon[1], strokePaint); 
+//		} 
+//		for (int x = 50; x < 500; x += 5) 
+//			for (int y = 50; y < 500; y += 5) 
+//				drawTestCircle (x, y, canvas); 
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 
 			paperGenerator.setupGraphPaperPaint (getWidth (), paperPaint); 

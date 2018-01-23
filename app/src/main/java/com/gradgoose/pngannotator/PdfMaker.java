@@ -99,6 +99,7 @@ public class PdfMaker {
 		String contents; 
 		if (edit.srcPageBackground == 1) { 
 			edit.setWindowSize (612, 792); // Letter size. 
+			edit.setImageSize (612, 792); 
 			contents = "[3 0 R " + (offsetIndex + 1) + " 0 R]"; 
 		} else { 
 			contents = (offsetIndex + 1) + " 0 R"; 

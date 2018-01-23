@@ -826,7 +826,7 @@ public class PageView extends ImageView {
 		boolean isRed = PngEdit.isPointInPolygon (x, y, testPolygons); 
 		testPaint.setStyle (Paint.Style.FILL); 
 		testPaint.setColor (isRed ? Color.RED : Color.BLUE); 
-		canvas.drawCircle (x, y, 4, testPaint); 
+		canvas.drawCircle (x, y, 2, testPaint); 
 	} 
 	
 	@Override public void onDraw (Canvas canvas) { 
@@ -841,8 +841,8 @@ public class PageView extends ImageView {
 			canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 
 					testPolygon[0], testPolygon[1], strokePaint); 
 		} 
-		for (int x = 50; x < 200; x += 25) 
-			for (int y = 50; y < 200; y += 25) 
+		for (int x = 50; x < 500; x += 5) 
+			for (int y = 50; y < 500; y += 5) 
 				drawTestCircle (x, y, canvas); 
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 

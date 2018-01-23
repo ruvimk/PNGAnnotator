@@ -122,7 +122,7 @@ public class PngEdit {
 				} 
 			} 
 		} while (indexA != indexB); 
-		return indexA; 
+		return indexA % pointList.length; 
 	} 
 	public static float [] [] convertPathToPolygons (float path [], float strokeRadius) { 
 		if (path.length < 2) return new float [0] []; 

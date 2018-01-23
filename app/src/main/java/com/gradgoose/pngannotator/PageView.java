@@ -830,6 +830,8 @@ public class PageView extends ImageView {
 		for (float [] testPolygon : testPolygons) { 
 			canvas.drawLines (testPolygon, 0, testPolygon.length, strokePaint); 
 			canvas.drawLines (testPolygon, 2, testPolygon.length - 2, strokePaint); 
+			canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 
+					testPolygon[0], testPolygon[1], strokePaint); 
 		} 
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 

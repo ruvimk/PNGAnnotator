@@ -26,6 +26,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 	public interface OnScaleDone { 
 		void onZoomLeave (float pivotX, float pivotY); 
 	} 
+	float xp0 = 0; 
+	float yp0 = 0; 
+	float x1 = 0; 
+	float y1 = 0; 
 	public ScaleDetectorContainer (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
 		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
@@ -33,12 +37,11 @@ public class ScaleDetectorContainer extends FrameLayout {
 			float orgScale = 1; 
 			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
 				float scale = prevScale * scaleGestureDetector.getScaleFactor (); 
-				float x = scaleGestureDetector.getFocusX (); 
-				float y = scaleGestureDetector.getFocusY (); 
 				if (scale > 1 && !allowZoomIn) scale = 1; 
 				if (scale < 1 && !allowZoomOut) scale = 1; // If zoom-out not allowed, don't allow scale below 1. 
 				if (orgScale > 1 && scale < 1) scale = 1; // If we're zooming out from a zoomed in position, don't allow overshooting. 
-				setScale (scale, scale, x, y); 
+				setScale (scale, scale, (xp0 - x1 * scale) / (1 - scale), 
+						(yp0 - y1 * scale) / (1 - scale)); 
 				prevScale = scale; 
 				isScaleEvent = true; 
 				return true; 
@@ -47,6 +50,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 			@Override public boolean onScaleBegin (ScaleGestureDetector scaleGestureDetector) { 
 				prevScale = currentScale; 
 				orgScale = currentScale; 
+				xp0 = scaleGestureDetector.getFocusX (); 
+				yp0 = scaleGestureDetector.getFocusY (); 
+				x1 = (xp0 - nowPivotX) / currentScale + nowPivotX; 
+				y1 = (yp0 - nowPivotY) / currentScale + nowPivotY; 
 				return true; 
 			} 
 			
@@ -66,13 +73,53 @@ public class ScaleDetectorContainer extends FrameLayout {
 		}); 
 	} 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
-		if (isScaleEvent) return mScaleGestureDetector.onTouchEvent (event); 
-		else return super.onTouchEvent (event); 
+		boolean result; 
+		if (isScaleEvent) result = mScaleGestureDetector.onTouchEvent (event); 
+		else result = super.onTouchEvent (event); 
+		if (currentScale > 1 && event.getPointerCount () <= 2) { 
+			// This may be a pan event. 
+			handlePan (event); 
+		} 
+		return result; 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 		else getParent ().requestDisallowInterceptTouchEvent (true); 
+		if (currentScale > 1 && event.getPointerCount () <= 2) { 
+			// May be a pan event. 
+			if (!isScaleEvent) 
+				handlePan (event); 
+		} 
 		return isScaleEvent; 
+	} 
+	float prevCenterX = 0; 
+	float prevCenterY = 0; 
+	boolean nowPanning = false; 
+	void handlePan (MotionEvent event) { 
+		if (event.getAction () == MotionEvent.ACTION_UP) { 
+			nowPanning = false; 
+			return; 
+		} 
+		float centerX = 0; 
+		float centerY = 0; 
+		for (int i = 0; i < event.getPointerCount () && i < 2; i++) { 
+			centerX += event.getX (i); 
+			centerY += event.getY (i); 
+		} 
+		centerX /= Math.min (event.getPointerCount (), 2); 
+		centerY /= Math.min (event.getPointerCount (), 2); 
+		if (!nowPanning) { 
+			nowPanning = true; 
+		} else { 
+			float deltaXP = centerX - prevCenterX; 
+			float deltaYP = centerY - prevCenterY; 
+			setPivot ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 
+					(yp0 + deltaYP - y1 * currentScale) / (1 - currentScale)); 
+			xp0 += deltaXP; 
+			yp0 += deltaYP; 
+		} 
+		prevCenterX = centerX; 
+		prevCenterY = centerY; 
 	} 
 	void setScale (float scaleX, float scaleY, float pivotX, float pivotY) { 
 		int childCount = getChildCount (); 

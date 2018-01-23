@@ -189,7 +189,7 @@ public class PngEdit {
 		do { 
 			i = (indexA + indexB) / 2 & -2; 
 			yProbe = polygon[i + 1]; 
-			if (yProbe > y) 
+			if (yProbe < y) 
 				indexA = i; 
 			else indexB = i; 
 		} while (Math.abs (indexA - indexB) > 2); 
@@ -198,11 +198,30 @@ public class PngEdit {
 		// Check the winding here: 
 		float pax = polygon[ia + 0]; 
 		float pay = polygon[ia + 1]; 
+		float pbx = polygon[ib + 0]; 
+		float pby = polygon[ib + 1]; 
 		float pcx = polygon[ic + 0]; 
 		float pcy = polygon[ic + 1]; 
-		float leftOfAB = ((polygon[ib + 0] - pax) * (y - pay) - (x - pax) * (polygon[ib + 1] - pay)); 
-		float leftOfCD = ((polygon[id + 0] - pcx) * (y - pcy) - (x - pcx) * (polygon[id + 1] - pcy)); 
-		return leftOfAB >= 0 && leftOfCD < 0; 
+		float pdx = polygon[id + 0]; 
+		float pdy = polygon[id + 1]; 
+		float leftOfAB = ((pbx - pax) * (y - pay) - (x - pax) * (pby - pay)); 
+		float leftOfCD = ((pdx - pcx) * (y - pcy) - (x - pcx) * (pdy - pcy)); 
+		int windingNumber = 0; 
+		if (pay <= y) { 
+			if (pby > y && leftOfAB > 0) 
+				windingNumber++; 
+		} else { 
+			if (pby <= y && leftOfAB < 0) 
+				windingNumber--; 
+		} 
+		if (pcy <= y) { 
+			if (pdy > y && leftOfCD > 0) 
+				windingNumber++; 
+		} else { 
+			if (pdy <= y && leftOfCD < 0) 
+				windingNumber--; 
+		} 
+		return windingNumber != 0; 
 	} 
 	static boolean isPointInPolygon (float x, float y, float [] [] polygons) { 
 		for (float [] polygon : polygons) 

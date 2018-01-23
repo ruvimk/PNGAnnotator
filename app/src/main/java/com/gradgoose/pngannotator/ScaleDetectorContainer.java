@@ -260,7 +260,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 				float pivotX = mAnimatePivotToX * t + mAnimatePivotFromX * (1 - t); 
 				float pivotY = mAnimatePivotToY * t + mAnimatePivotFromY * (1 - t); 
 				setScale (nowScale, nowScale, pivotX, pivotY); 
-				getHandler ().postDelayed (this, 50); 
+				getHandler ().postDelayed (this, 25); 
 			} 
 		} 
 	}; 

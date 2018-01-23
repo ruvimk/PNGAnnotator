@@ -1,6 +1,7 @@
 package com.gradgoose.pngannotator;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -59,6 +60,12 @@ public class PdfMaker {
 		writer.close (); 
 		fos.close (); 
 	} 
+	static String makePdfColor (int color) { 
+		float r = (float) Color.red (color) / 255f; 
+		float g = (float) Color.green (color) / 255f; 
+		float b = (float) Color.blue (color) / 255f; 
+		return r + " " + g + " " + b; 
+	} 
 	private void renderBackground (@NonNull Writer to) throws IOException { 
 		PaperGenerator generator = new PaperGenerator (); 
 		generator.mDPI = 72; // PDF uses PT, and there's 72 PT per inch. 
@@ -68,6 +75,8 @@ public class PdfMaker {
 		ruleStrokes.append ("0 j 0 J "); // Default line-cap, line-join. 
 		ruleStrokes.append (String.valueOf (generator.calcStrokeWidth (612))); 
 		ruleStrokes.append (" w "); // Stroke width. 
+		ruleStrokes.append (makePdfColor (PaperGenerator.COLOR_GRAPH_PAPER)); 
+		ruleStrokes.append (" RG "); 
 		for (int i = 0; i < lines.length; i += 4) { 
 			ruleStrokes.append (lines[i + 0]); 
 			ruleStrokes.append (' '); 
@@ -115,7 +124,9 @@ public class PdfMaker {
 			} 
 			sbStrokes.append (String.valueOf (e.brushWidth)); 
 			sbStrokes.append (" w "); // Stroke-width. 
-			sbStrokes.append (" S"); 
+			sbStrokes.append (makePdfColor (e.color)); 
+			sbStrokes.append (" RG "); // Set color. 
+			sbStrokes.append ('S'); 
 		} 
 		String strokeDataStream = sbStrokes.toString (); 
 		to.write (String.valueOf (offsetIndex + 1)); 

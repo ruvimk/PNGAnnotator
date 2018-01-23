@@ -96,8 +96,10 @@ public class PngEdit {
 	public static float [] [] convertPathToPolygons (float path [], float strokeRadius) { 
 		if (path.length < 2) return new float [0] []; 
 		float polygons [] [] = new float [path.length / 2 - 1] []; 
+		float sparePolygon [] = new float [2 * CIRCLE_SEGMENT_COUNT]; 
 		for (int segment = 1; 2 * segment < path.length; segment++) { 
 			float polygon [] = new float [2 * CIRCLE_SEGMENT_COUNT]; 
+			// First, make all the points of the polygon: 
 			int basePathIndex = 2 * (segment - 1); 
 			double angle = Math.atan2 (path[basePathIndex + 3] - path[basePathIndex + 1], path[basePathIndex + 2] - path[basePathIndex + 0]); 
 			for (int i = 0; i < CIRCLE_SEGMENT_COUNT; i++) { 
@@ -105,6 +107,25 @@ public class PngEdit {
 				polygon[2 * i + 0] = (float) (strokeRadius * Math.cos (angle + (4f * i / CIRCLE_SEGMENT_COUNT - 1) * Math.PI / 2) + path[baseIndex2 + 0]); 
 				polygon[2 * i + 1] = (float) (strokeRadius * Math.sin (angle + (4f * i / CIRCLE_SEGMENT_COUNT - 1) * Math.PI / 2) + path[baseIndex2 + 1]); 
 			} 
+			// Next, (we want the max. y to be the top) find the max. y element's index: 
+			int maxIndex = 0; 
+			float maxVal = polygon[1]; 
+			for (int i = 2; i < polygon.length; i += 2) { 
+				if (maxVal >= polygon[i + 1]) continue; 
+				maxIndex = i; 
+				maxVal = polygon[i + 1]; 
+			} 
+			// Finally, rotate the array so that the max. is the first element: 
+			// a. Swap; put our data into sparePolygon; 
+			float [] tmp = sparePolygon; 
+			sparePolygon = polygon; 
+			polygon = tmp; 
+			// b. Copy; 
+			if (maxIndex > 0) { 
+				System.arraycopy (sparePolygon, maxIndex, polygon, 0, polygon.length - maxIndex); 
+				System.arraycopy (sparePolygon, 0, polygon, polygon.length - maxIndex, maxIndex); 
+			} 
+			// Continue loop: 
 			polygons[segment - 1] = polygon; 
 		} 
 		return polygons; 

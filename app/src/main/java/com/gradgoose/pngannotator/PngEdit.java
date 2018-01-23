@@ -99,15 +99,14 @@ public class PngEdit {
 		for (int segment = 1; 2 * segment < path.length; segment++) { 
 			float polygon [] = new float [2 * 2 * HALF_CIRCLE_SEGMENT_COUNT]; 
 			int basePathIndex = 2 * (segment - 1); 
-			int resultBaseIndex = 4 * HALF_CIRCLE_SEGMENT_COUNT * (segment - 1); 
 			double angle = Math.atan2 (path[basePathIndex + 3] - path[basePathIndex + 1], path[basePathIndex + 2] - path[basePathIndex + 0]); 
 			for (int i = 0; i < HALF_CIRCLE_SEGMENT_COUNT; i++) { 
-				polygon[resultBaseIndex + 2 * i + 0] = (float) (strokeRadius * Math.cos (angle + (.5f + (float) i / HALF_CIRCLE_SEGMENT_COUNT) * Math.PI) + path[basePathIndex + 0]); 
-				polygon[resultBaseIndex + 2 * i + 1] = (float) (strokeRadius * Math.sin (angle + (.5f + (float) i / HALF_CIRCLE_SEGMENT_COUNT) * Math.PI) + path[basePathIndex + 1]); 
+				polygon[2 * i + 0] = (float) (strokeRadius * Math.cos (angle + (.5f + (float) i / HALF_CIRCLE_SEGMENT_COUNT) * Math.PI) + path[basePathIndex + 0]); 
+				polygon[2 * i + 1] = (float) (strokeRadius * Math.sin (angle + (.5f + (float) i / HALF_CIRCLE_SEGMENT_COUNT) * Math.PI) + path[basePathIndex + 1]); 
 			} 
-			for (int i = 0; i < HALF_CIRCLE_SEGMENT_COUNT; i++) { 
-				polygon[resultBaseIndex + 2 * i + 0] = (float) (strokeRadius + Math.cos (angle + (.5f + (float) i / HALF_CIRCLE_SEGMENT_COUNT) * Math.PI) + path[basePathIndex + 2]); 
-				polygon[resultBaseIndex + 2 * i + 1] = (float) (strokeRadius + Math.sin (angle + (.5f + (float) i / HALF_CIRCLE_SEGMENT_COUNT) * Math.PI) + path[basePathIndex + 3]); 
+			for (int i = HALF_CIRCLE_SEGMENT_COUNT; i < 2 * HALF_CIRCLE_SEGMENT_COUNT; i++) { 
+				polygon[2 * i + 0] = (float) (strokeRadius + Math.cos (angle + (.5f + (float) i / HALF_CIRCLE_SEGMENT_COUNT) * Math.PI) + path[basePathIndex + 2]); 
+				polygon[2 * i + 1] = (float) (strokeRadius + Math.sin (angle + (.5f + (float) i / HALF_CIRCLE_SEGMENT_COUNT) * Math.PI) + path[basePathIndex + 3]); 
 			} 
 			polygons[segment - 1] = polygon; 
 		} 

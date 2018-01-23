@@ -162,8 +162,47 @@ public class PngEdit {
 		return polygons; 
 	} 
 	
+	// isPointInPolygon () determines if a point is in a polygon. For efficiency, assumes that: 
+	// 1. It is a simple, *convex* polygon. 
+	// 2.A. The vertex with maximum Y coordinate is first in the float [] point list. 
+	// 2.B. The vertex with minimum Y is in the *middle* of the list, i.e., length/2 position. 
+	// In other words, it assumes the polygon was made using convertPathToPolygons () of this class. 
 	static boolean isPointInPolygon (float x, float y, float [] polygon) { 
-		return false; 
+		int indexA, indexB, i; 
+		int ia, ib, ic, id; 
+		float yProbe; 
+		// Search the RIGHT side. 
+		indexA = 0; 
+		indexB = polygon.length / 2; 
+		do {
+			i = (indexA + indexB) / 2 & -2; 
+			yProbe = polygon[i + 1]; 
+			if (yProbe > y) 
+				indexA = i; 
+			else indexB = i; 
+		} while (Math.abs (indexA - indexB) > 2); 
+		ia = indexA; 
+		ib = indexB; 
+		// Search the LEFT side. 
+		indexA = polygon.length / 2; 
+		indexB = polygon.length - 2; 
+		do { 
+			i = (indexA + indexB) / 2 & -2; 
+			yProbe = polygon[i + 1]; 
+			if (yProbe > y) 
+				indexA = i; 
+			else indexB = i; 
+		} while (Math.abs (indexA - indexB) > 2); 
+		ic = indexA; 
+		id = indexB; 
+		// Check the winding here: 
+		float pax = polygon[ia + 0]; 
+		float pay = polygon[ia + 1]; 
+		float pcx = polygon[ic + 0]; 
+		float pcy = polygon[ic + 1]; 
+		float leftOfAB = ((polygon[ib + 0] - pax) * (y - pay) - (x - pax) * (polygon[ib + 1] - pay)); 
+		float leftOfCD = ((polygon[id + 0] - pcx) * (y - pcy) - (x - pcx) * (polygon[id + 1] - pcy)); 
+		return leftOfAB >= 0 && leftOfCD < 0; 
 	} 
 	static boolean isPointInPolygon (float x, float y, float [] [] polygons) { 
 		for (float [] polygon : polygons) 

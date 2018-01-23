@@ -235,7 +235,7 @@ public class PngEdit {
 		Vector<Float> afterErasing = new Vector<> (); 
 		synchronized (mEdits) { 
 			for (LittleEdit edit : mEdits) { 
-				boolean prevFlag = false; 
+				boolean isDirty = false; 
 				afterErasing.setSize (0); 
 				afterErasing.ensureCapacity (edit.points.length); 
 				for (int i = 0; i + 2 < edit.points.length; i += 4) { 
@@ -249,8 +249,9 @@ public class PngEdit {
 						afterErasing.add (edit.points[i + 1]); 
 						afterErasing.add (edit.points[i + 2]); 
 						afterErasing.add (edit.points[i + 3]); 
-					} 
+					} else isDirty = true; // One or more line segments go erased; need remake points [] array. 
 				} 
+				if (!isDirty) continue; // Nothing changed. Don't touch this stroke. 
 				if (afterErasing.size () == 0) 
 					edit.points = EMPTY; 
 				else { 

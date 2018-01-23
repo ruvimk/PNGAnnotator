@@ -375,6 +375,13 @@ public class NoteActivity extends Activity {
 				break; 
 			case R.id.menu_action_enable_log: 
 				boolean nowTimeLogEnabled = !isTimeLogEnabled (); 
+				if (nowTimeLogEnabled) { 
+					// The user has just enabled time-log. 
+					initTimeLog (); 
+				} else { 
+					// The user is disabling the time-log. Save what's logged so far, if applicable. 
+					saveTimeLog (); 
+				} 
 				prefs.edit ().putBoolean ("time-log", nowTimeLogEnabled).apply (); 
 				item.setChecked (nowTimeLogEnabled); 
 				break; 

@@ -2,6 +2,7 @@ package com.gradgoose.pngannotator;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -109,6 +110,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 		centerX /= Math.min (event.getPointerCount (), 2); 
 		centerY /= Math.min (event.getPointerCount (), 2); 
 		calculateInitialFigures (centerX, centerY); 
+//		Log.e ("ScaleDetector", "calculateInitialFigures (); p0: (" + xp0 + ", " + yp0 + "); (x1, y1): (" + x1 + ", " + y1 + "); "); 
 	} 
 	void calculateInitialFigures (float focusX, float focusY) { 
 		xp0 = focusX; 

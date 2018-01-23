@@ -258,12 +258,7 @@ public class NoteActivity extends Activity {
 		mPaused = true; 
 		if (mNotesAdapter != null) 
 			mNotesAdapter.recycleBitmaps (); 
-		activityPauseTime = System.currentTimeMillis (); 
-		if (prefs.getBoolean ("time-log", true) && !isBrowsingRootFolder ()) try { 
-			TimeLog.logTime (mBrowsingFolders.elementAt (0), activityResumeTime, activityPauseTime); 
-		} catch (IOException err) { 
-			Log.e (TAG, "Error writing to time-log file. "); 
-		} 
+		saveTimeLog (); 
 		super.onPause (); 
 	} 
 	@Override public void onResume () { 
@@ -277,7 +272,19 @@ public class NoteActivity extends Activity {
 			// in which case we would have just been done creating the adapters, 
 			// so the lists are already up to date. 
 		} 
+		initTimeLog (); 
+	} 
+	
+	void initTimeLog () { 
 		activityResumeTime = System.currentTimeMillis (); 
+	} 
+	void saveTimeLog () { 
+		activityPauseTime = System.currentTimeMillis (); 
+		if (isTimeLogEnabled () && !isBrowsingRootFolder ()) try { 
+			TimeLog.logTime (mBrowsingFolders.elementAt (0), activityResumeTime, activityPauseTime); 
+		} catch (IOException err) { 
+			Log.e (TAG, "Error writing to time-log file. "); 
+		} 
 	} 
 	
 	MenuItem mMenuGoToPage = null; 
@@ -312,7 +319,7 @@ public class NoteActivity extends Activity {
 	} 
 	@Override public boolean onPrepareOptionsMenu (Menu menu) { 
 		super.onPrepareOptionsMenu (menu); 
-		menu.findItem (R.id.menu_action_enable_log).setChecked (prefs.getBoolean ("time-log", true)); 
+		menu.findItem (R.id.menu_action_enable_log).setChecked (isTimeLogEnabled ()); 
 		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
 		mMenuToggleOverview = menu.findItem (R.id.menu_action_toggle_overview); 
 //		mMenuRecents = menu.findItem (R.id.menu_action_recents); 
@@ -367,8 +374,9 @@ public class NoteActivity extends Activity {
 				exportPages (); 
 				break; 
 			case R.id.menu_action_enable_log: 
-				prefs.edit ().putBoolean ("time-log", !prefs.getBoolean ("time-log", true)).apply (); 
-				item.setChecked (prefs.getBoolean ("time-log", true)); 
+				boolean nowTimeLogEnabled = !isTimeLogEnabled (); 
+				prefs.edit ().putBoolean ("time-log", nowTimeLogEnabled).apply (); 
+				item.setChecked (nowTimeLogEnabled); 
 				break; 
 			case R.id.menu_action_view_time_log: 
 				viewTimeLog (); 
@@ -1281,6 +1289,10 @@ public class NoteActivity extends Activity {
 			actionBar.setDisplayShowHomeEnabled (true); 
 			actionBar.setHomeButtonEnabled (canGoBack ()); 
 		} 
+	} 
+	
+	boolean isTimeLogEnabled () { 
+		return prefs.getBoolean ("time-log", false); 
 	} 
 	
 	void enablePenMode (boolean penMode) { 

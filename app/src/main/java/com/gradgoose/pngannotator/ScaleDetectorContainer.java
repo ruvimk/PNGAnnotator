@@ -50,10 +50,6 @@ public class ScaleDetectorContainer extends FrameLayout {
 			@Override public boolean onScaleBegin (ScaleGestureDetector scaleGestureDetector) { 
 				prevScale = currentScale; 
 				orgScale = currentScale; 
-				xp0 = scaleGestureDetector.getFocusX (); 
-				yp0 = scaleGestureDetector.getFocusY (); 
-				x1 = (xp0 - nowPivotX) / currentScale + nowPivotX; 
-				y1 = (yp0 - nowPivotY) / currentScale + nowPivotY; 
 				return true; 
 			} 
 			
@@ -83,6 +79,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 		return result; 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
+		if (event.getAction () == MotionEvent.ACTION_DOWN || event.getAction () == MotionEvent.ACTION_POINTER_DOWN) 
+			calculateInitialFigures (event); 
 		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 		else getParent ().requestDisallowInterceptTouchEvent (true); 
 		if (currentScale > 1 && event.getPointerCount () <= 2) { 
@@ -91,6 +89,23 @@ public class ScaleDetectorContainer extends FrameLayout {
 				handlePan (event); 
 		} 
 		return isScaleEvent; 
+	} 
+	void calculateInitialFigures (MotionEvent event) { 
+		float centerX = 0; 
+		float centerY = 0; 
+		for (int i = 0; i < event.getPointerCount () && i < 2; i++) { 
+			centerX += event.getX (i); 
+			centerY += event.getY (i); 
+		} 
+		centerX /= Math.min (event.getPointerCount (), 2); 
+		centerY /= Math.min (event.getPointerCount (), 2); 
+		calculateInitialFigures (centerX, centerY); 
+	} 
+	void calculateInitialFigures (float focusX, float focusY) { 
+		xp0 = focusX; 
+		yp0 = focusY; 
+		x1 = (xp0 - nowPivotX) / currentScale + nowPivotX; 
+		y1 = (yp0 - nowPivotY) / currentScale + nowPivotY; 
 	} 
 	float prevCenterX = 0; 
 	float prevCenterY = 0; 
@@ -113,13 +128,16 @@ public class ScaleDetectorContainer extends FrameLayout {
 		} else { 
 			float deltaXP = centerX - prevCenterX; 
 			float deltaYP = centerY - prevCenterY; 
-			setPivot ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 
-					(yp0 + deltaYP - y1 * currentScale) / (1 - currentScale)); 
+			setPivot (clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()), 
+					clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ())); 
 			xp0 += deltaXP; 
 			yp0 += deltaYP; 
 		} 
 		prevCenterX = centerX; 
 		prevCenterY = centerY; 
+	} 
+	static float clamp (float number, float low, float high) { 
+		return Math.max (Math.min (number, high), low); 
 	} 
 	void setScale (float scaleX, float scaleY, float pivotX, float pivotY) { 
 		int childCount = getChildCount (); 

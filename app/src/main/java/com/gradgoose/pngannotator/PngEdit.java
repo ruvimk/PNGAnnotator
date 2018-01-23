@@ -97,8 +97,8 @@ public class PngEdit {
 		int indexA = searchFromIndex; 
 		int indexB = searchToIndex; 
 		do { 
-			float valA = pointList[indexA + probeIndexOffset]; 
-			float valB = pointList[indexB + probeIndexOffset]; 
+			float valA = pointList[(indexA + probeIndexOffset) % pointList.length]; 
+			float valB = pointList[(indexB + probeIndexOffset) % pointList.length]; 
 			if (valB > valA) { 
 				int prev = indexA; 
 				indexA = (indexA + indexB) / 2 & -2; 
@@ -144,7 +144,7 @@ public class PngEdit {
 			// We need to perform a binary search on one full period of a sine wave (y coordinate of a circle goes as the sine). 
 			// We do the binary search of each half of the sine wave. 
 			int imax0 = binarySearchMaxInPointArray (0, polygon.length / 2, polygon, 1); 
-			int imax1 = binarySearchMaxInPointArray (polygon.length / 2, polygon.length - 2, polygon, 1); 
+			int imax1 = binarySearchMaxInPointArray (polygon.length / 2, polygon.length, polygon, 1); 
 			int maxIndex = polygon[imax0 + 1] > polygon[imax1 + 1] ? imax0 : imax1; 
 			// Finally, rotate the array so that the max. is the first element: 
 			if (maxIndex > 0) { 

@@ -184,17 +184,17 @@ public class PngEdit {
 		ia = indexA; 
 		ib = indexB; 
 		// Search the LEFT side. 
-		indexA = polygon.length / 2; 
-		indexB = polygon.length - 2; 
+		indexA = polygon.length - 2; 
+		indexB = polygon.length / 2; 
 		do { 
 			i = (indexA + indexB) / 2 & -2; 
 			yProbe = polygon[i + 1]; 
-			if (yProbe < y) 
+			if (yProbe > y) 
 				indexA = i; 
 			else indexB = i; 
 		} while (Math.abs (indexA - indexB) > 2); 
-		ic = indexA; 
-		id = indexB; 
+		id = indexA; 
+		ic = indexB; 
 		// Check the winding here: 
 		float pax = polygon[ia + 0]; 
 		float pay = polygon[ia + 1]; 

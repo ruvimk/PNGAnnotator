@@ -16,20 +16,25 @@
 		android:background="@drawable/pen_selection_background"
 		/>
 	
-	<com.gradgoose.pngannotator.ScaleDetectorContainer
-		android:id="@+id/flScaleDetectorContainer"
+	<FrameLayout
+		android:id="@+id/flNotesArea"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
 		android:layout_weight="1">
-		<com.gradgoose.pngannotator.SwipeableRecyclerView
-			android:id="@+id/rvBigPages"
+		<com.gradgoose.pngannotator.ScaleDetectorContainer
+			android:id="@+id/flScaleDetectorContainer"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:clipToPadding="false"
-			android:scrollbars="vertical|horizontal"
-			android:animateLayoutChanges="false"
-			android:background="#eee"
-			/>
+			android:layout_height="match_parent">
+			<com.gradgoose.pngannotator.SwipeableRecyclerView
+				android:id="@+id/rvBigPages"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:clipToPadding="false"
+				android:scrollbars="vertical|horizontal"
+				android:animateLayoutChanges="false"
+				android:background="#eee"
+				/>
+		</com.gradgoose.pngannotator.ScaleDetectorContainer> 
 		<ImageView
 			android:id="@+id/ivGoPageUp"
 			android:layout_width="@dimen/pg_up_down_btn_size"
@@ -50,7 +55,7 @@
 			android:padding="@dimen/pg_up_down_btn_pad"
 			android:contentDescription="@string/label_page_down"
 			/>
-	</com.gradgoose.pngannotator.ScaleDetectorContainer> 
+	</FrameLayout> 
 	
 	<ProgressBar
 		android:id="@+id/pbMainProgress"

@@ -37,6 +37,7 @@ import java.util.Vector;
 import static com.gradgoose.pngannotator.SubfoldersAdapter.isOwnedByMe;
 
 public class NoteActivity extends Activity { 
+	static final String TAG = "NoteActivity"; 
 	
 	int mOverviewColumnCount = 3; 
 	
@@ -86,6 +87,10 @@ public class NoteActivity extends Activity {
 	
 	int currentTool = 0; // None. 
 	int currentColor = Color.TRANSPARENT; 
+	
+	// For time tracking: 
+	long activityResumeTime = 0; 
+	long activityPauseTime = 0; 
 	
 	static final String STATE_BROWSING_PATH = "com.gradgoose.pngannotator.browse_path"; 
 	static final String STATE_PARENT_BROWSE = "com.gradgoose.pngannotator.parent_browse"; 
@@ -253,6 +258,12 @@ public class NoteActivity extends Activity {
 		mPaused = true; 
 		if (mNotesAdapter != null) 
 			mNotesAdapter.recycleBitmaps (); 
+		activityPauseTime = System.currentTimeMillis (); 
+		if (prefs.getBoolean ("time-log", true) && !isBrowsingRootFolder ()) try { 
+			TimeLog.logTime (mBrowsingFolders.elementAt (0), activityResumeTime, activityPauseTime); 
+		} catch (IOException err) { 
+			Log.e (TAG, "Error writing to time-log file. "); 
+		} 
 		super.onPause (); 
 	} 
 	@Override public void onResume () { 
@@ -266,6 +277,7 @@ public class NoteActivity extends Activity {
 			// in which case we would have just been done creating the adapters, 
 			// so the lists are already up to date. 
 		} 
+		activityResumeTime = System.currentTimeMillis (); 
 	} 
 	
 	MenuItem mMenuGoToPage = null; 

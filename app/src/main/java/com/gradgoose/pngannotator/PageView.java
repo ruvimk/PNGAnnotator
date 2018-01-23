@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.nfc.tech.NfcA;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
@@ -79,6 +80,7 @@ public class PageView extends ImageView {
 	
 	boolean mNowWriting = false; 
 	boolean mNowErasing = false; 
+	boolean mNowWhiting = false; 
 	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
@@ -155,7 +157,7 @@ public class PageView extends ImageView {
 							} 
 							strokeCache.update (edit.value); 
 						} 
-						if (!mNowErasing && !mNowWriting) 
+						if (!mNowErasing && !mNowWriting && !mNowWhiting) 
 							tmpPointCount = 0; 
 						return ""; 
 					} 
@@ -256,6 +258,8 @@ public class PageView extends ImageView {
 				tmpPoints[1] = y; 
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = true; 
+				else if (mTool == NoteActivity.TOOL_WHITEOUT) 
+					mNowWhiting = true; 
 				else mNowWriting = true; 
 				return true; 
 			} 
@@ -282,6 +286,8 @@ public class PageView extends ImageView {
 				WriteDetector.Stroke stroke = mWriteDetector.getStroke (strokeID); 
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = false; 
+				else if (mTool == NoteActivity.TOOL_WHITEOUT) 
+					mNowWhiting = false; 
 				else mNowWriting = false; 
 				tmpPointCount -= 2; // The last two coordinates are the beginning 
 				// of a new line segment, which is not needed anymore if the stroke is done. 
@@ -306,7 +312,8 @@ public class PageView extends ImageView {
 			} 
 			
 			@Override public void onEraseEnd (int strokeID, float x, float y) { 
-				mNowErasing = false; 
+				mNowErasing = false;
+				pushStrokesInThisThread (mWriteDetector.getStroke (strokeID)); 
 			} 
 			
 			@Override public void onEraseCancel (int strokeID) { 
@@ -927,7 +934,7 @@ public class PageView extends ImageView {
 				} 
 		} 
 		// Finally, draw the currently being written path: 
-		strokePaint.setColor (mNowErasing ? getContext ().getResources () 
+		strokePaint.setColor (mNowErasing || mNowWhiting ? getContext ().getResources () 
 													.getColor (R.color.colorEraser) : mColor); 
 		strokePaint.setStrokeWidth (Math.max (PaperGenerator.getPxPerMm (mBitmapNaturalWidth, 
 				mBitmapNaturalHeight) * mBrush * brushScale, 1f)); // Just cap this to 1+, for simple one-liner code. 

@@ -132,6 +132,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float prevCenterY = 0; 
 	float orgCenterX = 0; 
 	float orgCenterY = 0; 
+	int orgPointerId = 0; 
 	boolean verticalPanChanged = false; 
 	void handlePan (MotionEvent event) { 
 //		float centerX = 0; 
@@ -144,9 +145,21 @@ public class ScaleDetectorContainer extends FrameLayout {
 //		centerY /= Math.min (event.getPointerCount (), 2); 
 		float x = event.getX (0); 
 		float y = event.getY (0); 
-		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
+		int pointerId = event.getPointerId (0); 
+		if (pointerId != orgPointerId) { 
+			for (int i = 1; i < event.getPointerCount (); i++) { 
+				int id = event.getPointerId (i); 
+				if (id != orgPointerId) continue; 
+				x = event.getX (i); 
+				y = event.getY (i); 
+				pointerId = orgPointerId; 
+				break; 
+			} 
+		} 
+		if (event.getAction () == MotionEvent.ACTION_DOWN || pointerId != orgPointerId) { 
 			orgCenterX = x; 
 			orgCenterY = y; 
+			orgPointerId = event.getPointerId (0); 
 		} else { 
 			float deltaXP = x - orgCenterX; 
 			float deltaYP = y - orgCenterY; 

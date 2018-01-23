@@ -826,7 +826,7 @@ public class PageView extends ImageView {
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
 		if (testPolygons == null) 
-			testPolygons = PngEdit.convertPathToPolygons (testPath, 5); 
+			testPolygons = PngEdit.convertPathToPolygons (testPath, 15); 
 		for (float [] testPolygon : testPolygons) { 
 			canvas.drawLines (testPolygon, 0, testPolygon.length, strokePaint); 
 			canvas.drawLines (testPolygon, 2, testPolygon.length - 2, strokePaint); 

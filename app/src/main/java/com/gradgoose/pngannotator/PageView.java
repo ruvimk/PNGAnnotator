@@ -792,6 +792,11 @@ public class PageView extends ImageView {
 				synchronized (edit) { 
 					edit.value.setWindowSize (w, h); 
 					strokeCache.update (edit.value); 
+					// Now update the background pattern, since it sort of depends on the view size: 
+					int background = 0; 
+					if (edit.value != null) background = edit.value.srcPageBackground; 
+					if (background == 1) paperPoints = paperGenerator.makeGraphPaperLines (getWidth (), getHeight ()); 
+					else paperPoints = null; 
 				} 
 				((Activity) getContext ()).runOnUiThread (new Runnable () { 
 					@Override public void run () { 

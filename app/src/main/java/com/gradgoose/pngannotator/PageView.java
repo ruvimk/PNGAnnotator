@@ -851,9 +851,9 @@ public class PageView extends ImageView {
 	Paint testPaint = new Paint (); 
 	void drawTestCircle (float x, float y, Canvas canvas) { 
 		boolean isRed = PngEdit.isPointInPolygon (x, y, debug_polygons); 
-		testPaint.setStyle (Paint.Style.FILL); 
+		testPaint.setStyle (Paint.Style.STROKE); 
 		testPaint.setColor (isRed ? Color.RED : Color.BLUE); 
-		canvas.drawPoint (x, y, testPaint); 
+		canvas.drawCircle (x, y, 4, testPaint); 
 	} 
 	
 	@Override public void onDraw (Canvas canvas) { 

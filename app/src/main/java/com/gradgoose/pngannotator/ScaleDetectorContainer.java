@@ -15,7 +15,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 	ScaleGestureDetector mScaleGestureDetector = null; 
 	boolean isScaleEvent = false; 
 	boolean allowZoomOut = false; 
+	boolean allowZoomIn = true; 
 	float currentScale = 1; 
+	float nowPivotX = 0; 
+	float nowPivotY = 0; 
 	OnScaleDone onScaleDone = null; 
 	void setOnScaleDoneListener (OnScaleDone listener) { 
 		onScaleDone = listener; 
@@ -27,11 +30,14 @@ public class ScaleDetectorContainer extends FrameLayout {
 		super (context, attributeSet); 
 		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
 			float prevScale = 1; 
+			float orgScale = 1; 
 			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
 				float scale = prevScale * scaleGestureDetector.getScaleFactor (); 
 				float x = scaleGestureDetector.getFocusX (); 
 				float y = scaleGestureDetector.getFocusY (); 
+				if (scale > 1 && !allowZoomIn) scale = 1; 
 				if (scale < 1 && !allowZoomOut) scale = 1; // If zoom-out not allowed, don't allow scale below 1. 
+				if (orgScale > 1 && scale < 1) scale = 1; // If we're zooming out from a zoomed in position, don't allow overshooting. 
 				setScale (scale, scale, x, y); 
 				prevScale = scale; 
 				isScaleEvent = true; 
@@ -40,15 +46,21 @@ public class ScaleDetectorContainer extends FrameLayout {
 			
 			@Override public boolean onScaleBegin (ScaleGestureDetector scaleGestureDetector) { 
 				prevScale = currentScale; 
+				orgScale = currentScale; 
 				return true; 
 			} 
 			
 			@Override public void onScaleEnd (ScaleGestureDetector scaleGestureDetector) { 
-				if (currentScale > .75 && currentScale < 1) 
+				if (currentScale > .75 && currentScale <= 1) 
 					setScale (1, 1, 0, 0); 
-				else if (onScaleDone != null) onScaleDone.onZoomLeave (scaleGestureDetector.getFocusX (), 
+				else if (currentScale > 1) { 
+					// Don't change currentScale; leave it zoomed in. 
+					isScaleEvent = false; 
+					return; 
+				} if (onScaleDone != null) onScaleDone.onZoomLeave (scaleGestureDetector.getFocusX (), 
 						scaleGestureDetector.getFocusY ()); 
 				else setScale (1, 1, 0, 0); 
+				currentScale = 1; 
 				isScaleEvent = false; 
 			} 
 		}); 
@@ -71,6 +83,11 @@ public class ScaleDetectorContainer extends FrameLayout {
 			child.setPivotX (pivotX); 
 			child.setPivotY (pivotY); 
 		} 
+		nowPivotX = pivotX; 
+		nowPivotY = pivotY; 
 		currentScale = scaleX; 
+	} 
+	void setPivot (float pivotX, float pivotY) { 
+		setScale (currentScale, currentScale, pivotX, pivotY); 
 	} 
 } 

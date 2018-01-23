@@ -103,9 +103,10 @@ public class PngEdit {
 			int basePathIndex = 2 * (segment - 1); 
 			double angle = Math.atan2 (path[basePathIndex + 3] - path[basePathIndex + 1], path[basePathIndex + 2] - path[basePathIndex + 0]); 
 			for (int i = 0; i < CIRCLE_SEGMENT_COUNT; i++) { 
-				int baseIndex2 = basePathIndex + (i >= CIRCLE_SEGMENT_COUNT / 2 ? 0 : 2); 
-				polygon[2 * i + 0] = (float) (strokeRadius * Math.cos (angle + (4f * i / CIRCLE_SEGMENT_COUNT - 1) * Math.PI / 2) + path[baseIndex2 + 0]); 
-				polygon[2 * i + 1] = (float) (strokeRadius * Math.sin (angle + (4f * i / CIRCLE_SEGMENT_COUNT - 1) * Math.PI / 2) + path[baseIndex2 + 1]); 
+				int j = i + CIRCLE_SEGMENT_COUNT / 4; 
+				int baseIndex2 = basePathIndex + (j >= CIRCLE_SEGMENT_COUNT / 2 && j < CIRCLE_SEGMENT_COUNT ? 0 : 2); 
+				polygon[2 * i + 0] = (float) (strokeRadius * Math.cos (angle + (4f * j / CIRCLE_SEGMENT_COUNT - 1) * Math.PI / 2) + path[baseIndex2 + 0]); 
+				polygon[2 * i + 1] = (float) (strokeRadius * Math.sin (angle + (4f * j / CIRCLE_SEGMENT_COUNT - 1) * Math.PI / 2) + path[baseIndex2 + 1]); 
 			} 
 			// Next, (we want the max. y to be the top) find the max. y element's index: 
 			int indexA, indexB; 

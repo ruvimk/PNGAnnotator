@@ -200,9 +200,70 @@ public class ScaleDetectorContainer extends FrameLayout {
 		// Check if it's a double-click, and if so, perform zoom. 
 		if (clickCount == 2) { 
 			// It's a double-click. 
-			Log.i ("ScaleDetector", "Double-click detected. "); 
+			if (currentScale > 1) { 
+				// Zoomed in. Need to zoom out. 
+				initiateZoomAnimation (nowPivotX, nowPivotY, currentScale, 
+						nowPivotX, nowPivotY, 1, 
+						500); 
+			} else if (allowZoomIn) { 
+				// Zoomed out. Need to zoom in. 
+				nowPivotX = prevCenterX; 
+				nowPivotY = prevCenterY; 
+				initiateZoomAnimation (nowPivotX, nowPivotY, currentScale, 
+						nowPivotX, nowPivotY, 2, 
+						500); 
+			} 
 		} else performClick (); 
 	} 
+	void initiateZoomAnimation (float fromPivotX, float fromPivotY, float fromZoom,
+								float toPivotX, float toPivotY, float toZoom, 
+								long duration) { 
+		long now = System.currentTimeMillis (); 
+		initiateZoomAnimation (fromPivotX, fromPivotY, fromZoom, 
+				toPivotX, toPivotY, toZoom, 
+				now, now + duration); 
+	} 
+	void initiateZoomAnimation (float fromPivotX, float fromPivotY, float fromZoom,
+								float toPivotX, float toPivotY, float toZoom, 
+								long timeStart, long timeStop) { 
+		synchronized (mAnimateZoomMutex) { 
+			mAnimatePivotFromX = fromPivotX; 
+			mAnimatePivotFromY = fromPivotY; 
+			mAnimateScaleFrom = fromZoom; 
+			mAnimatePivotToX = toPivotX; 
+			mAnimatePivotToY = toPivotY; 
+			mAnimateScaleTo = toZoom; 
+			mAnimateStart = timeStart; 
+			mAnimateStop = timeStop; 
+		} 
+		mAnimateZoomInOut.run (); 
+	} 
+	final Object mAnimateZoomMutex = new Object ();
+	float mAnimatePivotFromX = 0;
+	float mAnimatePivotFromY = 0; 
+	float mAnimateScaleFrom = 1;
+	float mAnimatePivotToX = 0;
+	float mAnimatePivotToY = 0; 
+	float mAnimateScaleTo = 1; 
+	long mAnimateStart = 0; 
+	long mAnimateStop = 0; 
+	Runnable mAnimateZoomInOut = new Runnable () { 
+		@Override public void run () { 
+			synchronized (mAnimateZoomMutex) { 
+				long now = System.currentTimeMillis (); 
+				if (now >= mAnimateStop) { 
+					setScale (mAnimateScaleTo, mAnimateScaleTo, mAnimatePivotToX, mAnimatePivotToY); 
+					return; 
+				} 
+				float t = (float) (now - mAnimateStart) / (float) (mAnimateStop - mAnimateStart); 
+				float nowScale = mAnimateScaleTo * t + mAnimateScaleFrom * (1 - t); 
+				float pivotX = mAnimatePivotToX * t + mAnimatePivotFromX * (1 - t); 
+				float pivotY = mAnimatePivotToY * t + mAnimatePivotFromY * (1 - t); 
+				setScale (nowScale, nowScale, pivotX, pivotY); 
+				getHandler ().postDelayed (this, 50); 
+			} 
+		} 
+	}; 
 	void setScale (float scaleX, float scaleY, float pivotX, float pivotY) { 
 		int childCount = getChildCount (); 
 		for (int childIndex = 0; childIndex < childCount; childIndex++) { 

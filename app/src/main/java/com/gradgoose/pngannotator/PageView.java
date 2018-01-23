@@ -138,18 +138,29 @@ public class PageView extends ImageView {
 											mBitmapNaturalWidth, 
 											mBitmapNaturalHeight 
 									); 
-									littleEdit.points = new float[(stroke.count () - 1) * 4]; 
-									littleEdit.points[0] = stroke.getX (0); 
-									littleEdit.points[1] = stroke.getY (0); 
-									int i; 
-									for (i = 1; i + 1 < stroke.count (); i++) { 
+									if (stroke.count () == 1) { 
+										littleEdit.points = new float [8]; 
+										float centerX = stroke.getX (0); 
+										float centerY = stroke.getY (0); 
+										for (int i = 0; i < 4; i++) { 
+											double angle = (double) i / 4 * (2 * Math.PI); 
+											littleEdit.points[2 * i + 0] = (float) Math.cos (angle) + centerX; 
+											littleEdit.points[2 * i + 1] = (float) Math.sin (angle) + centerY; 
+										} 
+									} else { 
+										littleEdit.points = new float [(stroke.count () - 1) * 4]; 
+										littleEdit.points[0] = stroke.getX (0); 
+										littleEdit.points[1] = stroke.getY (0); 
+										int i; 
+										for (i = 1; i + 1 < stroke.count (); i++) { 
+											littleEdit.points[4 * i - 2] = stroke.getX (i); 
+											littleEdit.points[4 * i - 1] = stroke.getY (i); 
+											littleEdit.points[4 * i + 0] = stroke.getX (i); 
+											littleEdit.points[4 * i + 1] = stroke.getY (i); 
+										} 
 										littleEdit.points[4 * i - 2] = stroke.getX (i); 
 										littleEdit.points[4 * i - 1] = stroke.getY (i); 
-										littleEdit.points[4 * i + 0] = stroke.getX (i); 
-										littleEdit.points[4 * i + 1] = stroke.getY (i); 
 									} 
-									littleEdit.points[4 * i - 2] = stroke.getX (i); 
-									littleEdit.points[4 * i - 1] = stroke.getY (i); 
 									edit.value.addEdit (littleEdit); 
 								} 
 							} 

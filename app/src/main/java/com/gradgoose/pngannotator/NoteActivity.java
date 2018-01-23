@@ -1025,6 +1025,9 @@ public class NoteActivity extends Activity {
 				prefs.edit ().putBoolean ("notes-overview", true).apply (); 
 				animateZoomLeave (pivotX, pivotY); 
 			} 
+			@Override public void onVerticalPanState (boolean isPanning) { 
+				mRvBigPages.allowTouch = !isPanning; 
+			} 
 		}); 
 		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
 		mSubfoldersGridLayoutManager = new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 

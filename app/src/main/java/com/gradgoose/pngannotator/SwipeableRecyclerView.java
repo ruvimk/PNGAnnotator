@@ -165,6 +165,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 		requestLayout (); 
 		invalidate (); 
 	} 
+	// Touch override: 
+	boolean allowTouch = true; 
 	// Touch event data: 
 	float firstCoordinate = 0; 
 	float currentCoordinate = 0; 
@@ -186,6 +188,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float MIN_DISPLACEMENT_TO_SCROLL; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
 //		if (isScaleEvent) mScaleGestureDetector.onTouchEvent (event); 
+		if (!allowTouch) return false; 
 		if (event.getAction () == MotionEvent.ACTION_UP) isScaleEvent = false; 
 		if (handleTouch ()) { 
 			if (isScaleEvent) { 
@@ -263,7 +266,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float firstInterceptX = 0; 
 	float firstInterceptY = 0; 
 	boolean isScaleEvent = false; 
-	@Override public boolean onInterceptTouchEvent (MotionEvent event) {
+	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
+		if (!allowTouch) return false; 
 		float x = event.getX (); 
 		float y = event.getY (); 
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 

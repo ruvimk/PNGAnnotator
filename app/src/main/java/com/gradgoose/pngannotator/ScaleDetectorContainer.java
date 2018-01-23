@@ -70,15 +70,15 @@ public class ScaleDetectorContainer extends FrameLayout {
 		}); 
 	} 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
-		boolean result; 
+		boolean result = true; 
 		if (isScaleEvent) result = mScaleGestureDetector.onTouchEvent (event); 
-		else result = super.onTouchEvent (event); 
 		if (currentScale > 1 && event.getPointerCount () <= 2) { 
 			// This may be a pan event. 
 			handlePan (event); 
 			if (onScaleDone != null) 
 				onScaleDone.onVerticalPanState (verticalPanChanged); 
 		} 
+		if (!isScaleEvent) result = super.onTouchEvent (event); 
 		return result; 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 

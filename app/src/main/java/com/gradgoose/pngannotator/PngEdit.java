@@ -116,12 +116,12 @@ public class PngEdit {
 				maxVal = polygon[i + 1]; 
 			} 
 			// Finally, rotate the array so that the max. is the first element: 
-			// a. Swap; put our data into sparePolygon; 
-			float [] tmp = sparePolygon; 
-			sparePolygon = polygon; 
-			polygon = tmp; 
-			// b. Copy; 
 			if (maxIndex > 0) { 
+				// a. Swap; put our data into sparePolygon; 
+				float [] tmp = sparePolygon; 
+				sparePolygon = polygon; 
+				polygon = tmp; 
+				// b. Copy; 
 				System.arraycopy (sparePolygon, maxIndex, polygon, 0, polygon.length - maxIndex); 
 				System.arraycopy (sparePolygon, 0, polygon, polygon.length - maxIndex, maxIndex); 
 			} 

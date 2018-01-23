@@ -123,8 +123,8 @@ public class PngEdit {
 				float valA = polygon[indexA]; 
 				float valB = polygon[indexB]; 
 				if (valB > valA) 
-					indexA = (indexA + indexB) / 2; 
-				else indexB = (indexA + indexB) / 2; 
+					indexA = (indexA + indexB) / 2 & -2; 
+				else indexB = (indexA + indexB) / 2 & -2; 
 			} while (indexA != indexB); 
 			int maxIndex = indexA; 
 			// Finally, rotate the array so that the max. is the first element: 

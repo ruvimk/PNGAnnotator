@@ -80,11 +80,17 @@ public class ScaleDetectorContainer extends FrameLayout {
 				onScaleDone.onVerticalPanState (verticalPanChanged); 
 		} 
 		if (!isScaleEvent) result = super.onTouchEvent (event); 
+		if (event.getAction () == MotionEvent.ACTION_UP) { 
+			if (onScaleDone != null) 
+				onScaleDone.onVerticalPanState (false); 
+		} 
 		return result; 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
-		if (event.getAction () == MotionEvent.ACTION_DOWN || event.getAction () == MotionEvent.ACTION_POINTER_DOWN) 
+		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
 			calculateInitialFigures (event); 
+			handlePan (event); 
+		} 
 		if (!isScaleEvent) { 
 			mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 		} else { 
@@ -97,6 +103,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 				if (onScaleDone != null) 
 					onScaleDone.onVerticalPanState (verticalPanChanged); 
 			} 
+		} 
+		if (event.getAction () == MotionEvent.ACTION_UP) { 
+			if (onScaleDone != null) 
+				onScaleDone.onVerticalPanState (false); 
 		} 
 		return isScaleEvent; 
 	} 
@@ -120,35 +130,33 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	float prevCenterX = 0; 
 	float prevCenterY = 0; 
-	boolean nowPanning = false; 
+	float orgCenterX = 0; 
+	float orgCenterY = 0; 
 	boolean verticalPanChanged = false; 
 	void handlePan (MotionEvent event) { 
-		if (event.getAction () == MotionEvent.ACTION_UP) { 
-			nowPanning = false; 
-			return; 
-		} 
-		float centerX = 0; 
-		float centerY = 0; 
-		for (int i = 0; i < event.getPointerCount () && i < 2; i++) { 
-			centerX += event.getX (i); 
-			centerY += event.getY (i); 
-		} 
-		centerX /= Math.min (event.getPointerCount (), 2); 
-		centerY /= Math.min (event.getPointerCount (), 2); 
-		if (!nowPanning) { 
-			nowPanning = true; 
+//		float centerX = 0; 
+//		float centerY = 0; 
+//		for (int i = 0; i < event.getPointerCount () && i < 2; i++) { 
+//			centerX += event.getX (i); 
+//			centerY += event.getY (i); 
+//		} 
+//		centerX /= Math.min (event.getPointerCount (), 2); 
+//		centerY /= Math.min (event.getPointerCount (), 2); 
+		float x = event.getX (0); 
+		float y = event.getY (0); 
+		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
+			orgCenterX = x; 
+			orgCenterY = y; 
 		} else { 
-			float deltaXP = centerX - prevCenterX; 
-			float deltaYP = centerY - prevCenterY; 
+			float deltaXP = x - orgCenterX; 
+			float deltaYP = y - orgCenterY; 
 			float needPivotY = clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
 			verticalPanChanged = needPivotY != nowPivotY; 
 			setPivot (clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()), 
 					needPivotY); 
-			xp0 += deltaXP; 
-			yp0 += deltaYP; 
 		} 
-		prevCenterX = centerX; 
-		prevCenterY = centerY; 
+		prevCenterX = x; 
+		prevCenterY = y; 
 	} 
 	static float clamp (float number, float low, float high) { 
 		return Math.max (Math.min (number, high), low); 

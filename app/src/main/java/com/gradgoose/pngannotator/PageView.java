@@ -840,8 +840,10 @@ public class PageView extends ImageView {
 							break; 
 						} 
 					getParent ().requestDisallowInterceptTouchEvent (oneIsAPen); 
-				} else getParent ().requestDisallowInterceptTouchEvent (true); 
+				} //else getParent ().requestDisallowInterceptTouchEvent (event.getPointerCount () < 2); 
 			} 
+			if (!mWriteDetector.isInPenMode ()) 
+				getParent ().requestDisallowInterceptTouchEvent (event.getPointerCount () < 2); 
 			mOtherGestureDetector.onTouchEvent (event); // For detecting clicks and long-clicks. 
 			return mWriteDetector.onTouchEvent (event); 
 		} else return super.onTouchEvent (event); 

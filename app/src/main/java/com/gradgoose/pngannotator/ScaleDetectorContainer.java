@@ -54,6 +54,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			@Override public boolean onScaleBegin (ScaleGestureDetector scaleGestureDetector) { 
 				prevScale = currentScale; 
 				orgScale = currentScale; 
+				isScaleEvent = true; 
 				return true; 
 			} 
 			

@@ -56,9 +56,9 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 			
 			@Override public void onScaleEnd (ScaleGestureDetector scaleGestureDetector) { 
-				if (currentScale > .75 && currentScale <= 1) 
+				if (currentScale > .75 && currentScale <= 1.25) 
 					setScale (1, 1, 0, 0); 
-				else if (currentScale > 1) { 
+				else if (currentScale > 1.25) { 
 					// Don't change currentScale; leave it zoomed in. 
 					isScaleEvent = false; 
 					return; 

@@ -21,6 +21,8 @@
 	<string name="menu_recents">Switch to Recent</string> 
 	<string name="menu_annotate">Annotate</string> 
 	<string name="menu_export_pages">Export Pages</string> 
+	<string name="menu_log_time">Log Usage Time</string> 
+	<string name="menu_view_logs">View Time Log</string> 
 	<string name="menu_show_pg_nav">Show Page Up/Down</string> 
 	<string name="menu_pen_mode">Pen Mode</string> 
 	<string name="menu_settings">Settings</string> 

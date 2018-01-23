@@ -312,6 +312,7 @@ public class NoteActivity extends Activity {
 	} 
 	@Override public boolean onPrepareOptionsMenu (Menu menu) { 
 		super.onPrepareOptionsMenu (menu); 
+		menu.findItem (R.id.menu_action_enable_log).setChecked (prefs.getBoolean ("time-log", true)); 
 		mMenuGoToPage = menu.findItem (R.id.menu_action_goto_page); 
 		mMenuToggleOverview = menu.findItem (R.id.menu_action_toggle_overview); 
 //		mMenuRecents = menu.findItem (R.id.menu_action_recents); 
@@ -364,6 +365,12 @@ public class NoteActivity extends Activity {
 				break; 
 			case R.id.menu_action_export_pages: 
 				exportPages (); 
+				break; 
+			case R.id.menu_action_enable_log: 
+				prefs.edit ().putBoolean ("time-log", item.isChecked ()).apply (); 
+				break; 
+			case R.id.menu_action_view_time_log: 
+				viewTimeLog (); 
 				break; 
 			case R.id.menu_action_new_folder: 
 				userRenameFile (this, null, ""); 
@@ -765,6 +772,11 @@ public class NoteActivity extends Activity {
 									 .create (); 
 		dialog.show (); 
 	} 
+	
+	void viewTimeLog () { 
+		
+	} 
+	
 	void exportPages () { 
 //		mNotesAdapter.reloadList (); // Just in case. 
 //		(new AsyncTask<File [], Integer, File> () { 

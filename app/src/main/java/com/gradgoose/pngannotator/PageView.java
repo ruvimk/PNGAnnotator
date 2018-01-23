@@ -862,15 +862,17 @@ public class PageView extends ImageView {
 //		if (testPolygons == null) 
 //			testPolygons = PngEdit.convertPathToPolygons (testPath, 15); 
 		if (debug_polygons != null) { 
+			testPaint.setColor (Color.BLACK); 
+			testPaint.setStyle (Paint.Style.STROKE); 
 			for (float[] testPolygon : debug_polygons) { 
-				canvas.drawCircle (testPolygon[0], testPolygon[1], 5, strokePaint); 
-				canvas.drawLines (testPolygon, 0, testPolygon.length, strokePaint); 
-				canvas.drawLines (testPolygon, 2, testPolygon.length - 2, strokePaint); 
+				canvas.drawCircle (testPolygon[0], testPolygon[1], 5, testPaint); 
+				canvas.drawLines (testPolygon, 0, testPolygon.length, testPaint); 
+				canvas.drawLines (testPolygon, 2, testPolygon.length - 2, testPaint); 
 				canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 
-						testPolygon[0], testPolygon[1], strokePaint); 
+						testPolygon[0], testPolygon[1], testPaint); 
 			} 
 			for (int x = 0; x < getWidth (); x += 15) 
-				for (int y = 0; y < getHeight (); y += 15) 
+				for (int y = (int) debug_polygons[0][33] - 60; y < (int) debug_polygons[debug_polygons.length - 1][1] + 60; y += 15) 
 					drawTestCircle (x, y, canvas); 
 		} 
 		// If the target image is a small version, use it: 

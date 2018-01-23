@@ -82,6 +82,7 @@ public class NoteActivity extends Activity {
 	static final int TOOL_NONE = 0; 
 	static final int TOOL_PEN = 1; 
 	static final int TOOL_ERASER = 2; 
+	static final int TOOL_WHITEOUT = 3; 
 	
 	int currentTool = 0; // None. 
 	int currentColor = Color.TRANSPARENT; 
@@ -743,7 +744,7 @@ public class NoteActivity extends Activity {
 											 updateBrushWidthTextShowing (); 
 											 // Save this in the quick-preferences: 
 											 prefs.edit ().putFloat ( 
-											 		currentTool == TOOL_ERASER ? 
+											 		currentTool == TOOL_ERASER || currentTool == TOOL_WHITEOUT ? 
 															"erase-width" : "write-width" 
 											 		, number).apply (); 
 										 }
@@ -836,8 +837,10 @@ public class NoteActivity extends Activity {
 	LinearLayoutManager mPensLayoutManager = null;
 	
 	View eraser = null; 
+	View whiteout = null; 
 	View hand = null; 
 	View eraser_miniHand = null; 
+	View whiteout_miniHand = null; 
 	View brushWidthButton = null; 
 	TextView brushWidthText = null; 
 	
@@ -918,12 +921,14 @@ public class NoteActivity extends Activity {
 																		 R.drawable.black_border : 0); 
 		eraser.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_ERASER ? 
 																		   R.drawable.black_border : 0); 
+		whiteout.findViewById (R.id.flWhiteout).setBackgroundResource (currentTool == TOOL_WHITEOUT ? 
+																			   R.drawable.black_border : 0); 
 		if (currentTool == TOOL_PEN) 
 			mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (currentColor)); 
-		if (currentTool == TOOL_ERASER) 
+		if (currentTool == TOOL_ERASER || currentTool == TOOL_WHITEOUT) 
 			currentColor = PageView.ERASE_COLOR; 
 		mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
-		mNotesAdapter.mBrush = currentTool == TOOL_ERASER ? 
+		mNotesAdapter.mBrush = currentTool == TOOL_ERASER || currentTool == TOOL_WHITEOUT ? 
 									   prefs.getFloat ("erase-width", 10.0f) 
 									   : prefs.getFloat ("write-width", 1.0f); 
 		mNotesAdapter.mTool = currentTool; 
@@ -1051,6 +1056,8 @@ public class NoteActivity extends Activity {
 		mRvPenOptions.setAdapter (mPensAdapter = new PensAdapter (this)); 
 		eraser = getLayoutInflater ().inflate (R.layout.icon_eraser, 
 				vgRoot, false); 
+		whiteout = getLayoutInflater ().inflate (R.layout.icon_whiteout, 
+				vgRoot, false); 
 		hand = getLayoutInflater ().inflate (R.layout.icon_eraser, 
 				vgRoot, false); 
 		brushWidthButton = getLayoutInflater ().inflate (R.layout.icon_brush_width, 
@@ -1058,10 +1065,12 @@ public class NoteActivity extends Activity {
 		((ImageView) hand.findViewById (R.id.ivEraser)).setImageResource (R.mipmap.ic_hand); 
 		hand.findViewById (R.id.ivMiniHand).setVisibility (View.GONE); 
 		eraser_miniHand = eraser.findViewById (R.id.ivMiniHand); 
+		whiteout_miniHand = whiteout.findViewById (R.id.ivMiniHand); 
 		hand.setOnClickListener (new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				// Select the hand tool ("none"). 
 				hand.findViewById (R.id.flEraser).setBackgroundResource (R.drawable.black_border); 
+				whiteout.findViewById (R.id.flWhiteout).setBackgroundResource (0); 
 				eraser.findViewById (R.id.flEraser).setBackgroundResource (0); 
 				mPensAdapter.setBorderedItemPosition (-1); 
 				currentTool = TOOL_NONE; 
@@ -1079,6 +1088,7 @@ public class NoteActivity extends Activity {
 			@Override public void onClick (View view) { 
 				// Select the eraser as the tool. 
 				hand.findViewById (R.id.flEraser).setBackgroundResource (0); 
+				whiteout.findViewById (R.id.flWhiteout).setBackgroundResource (0); 
 				eraser.findViewById (R.id.flEraser).setBackgroundResource (R.drawable.black_border); 
 				mPensAdapter.setBorderedItemPosition (-1); 
 				currentTool = TOOL_ERASER; 
@@ -1094,10 +1104,31 @@ public class NoteActivity extends Activity {
 				updateBrushWidthTextShowing (); 
 			} 
 		}); 
+		whiteout.setOnClickListener (new View.OnClickListener () {
+			@Override public void onClick (View view) { 
+				// Select the whiteout as the tool. 
+				hand.findViewById (R.id.flWhiteout).setBackgroundResource (0); 
+				eraser.findViewById (R.id.flEraser).setBackgroundResource (0); 
+				whiteout.findViewById (R.id.flWhiteout).setBackgroundResource (R.drawable.black_border); 
+				mPensAdapter.setBorderedItemPosition (-1); 
+				currentTool = TOOL_WHITEOUT; 
+				currentColor = PageView.ERASE_COLOR; 
+				prefs.edit ().putInt ("tool", currentTool).apply (); 
+				// Update the touch event handler for PageView: 
+				mNotesAdapter.mToolMode = currentTool != TOOL_NONE; 
+				mNotesAdapter.mColor = currentColor; 
+				mNotesAdapter.mTool = currentTool; 
+				mNotesAdapter.mBrush = prefs.getFloat ("erase-width", 10.0f); 
+				mNotesAdapter.notifyDataSetChanged (); 
+				// Update the brush width text that's displayed to the user at the top: 
+				updateBrushWidthTextShowing (); 
+			}
+		}); 
 		mPensAdapter.setOnPenColorSelectedListener (new PensAdapter.OnPenColorSelectedListener () { 
 			@Override public void onPenColorSelected (int penColor) { 
 				hand.findViewById (R.id.flEraser).setBackgroundResource (0); 
 				eraser.findViewById (R.id.flEraser).setBackgroundResource (0); 
+				whiteout.findViewById (R.id.flWhiteout).setBackgroundResource (0); 
 				mPensAdapter.setBorderedItemPosition (mPensAdapter.findColorPosition (penColor)); 
 				currentTool = TOOL_PEN; 
 				currentColor = penColor; 
@@ -1120,7 +1151,7 @@ public class NoteActivity extends Activity {
 				userChangeBrushWidth (); 
 			} 
 		}); 
-		mPensAdapter.setHeaderItemViews (new View [] {hand, brushWidthButton, eraser}); 
+		mPensAdapter.setHeaderItemViews (new View [] {hand, brushWidthButton, eraser, whiteout}); 
 		
 		// Page navigation buttons: 
 		ivPageUp = findViewById (R.id.ivGoPageUp); 
@@ -1229,6 +1260,7 @@ public class NoteActivity extends Activity {
 	} 
 	void updateViewsForPenMode () { 
 		eraser_miniHand.setVisibility (isPenModeEnabled () ? View.VISIBLE : View.GONE); 
+		whiteout_miniHand.setVisibility (isPenModeEnabled () ? View.VISIBLE : View.GONE); 
 		mPensAdapter.mPenModeMiniHands = isPenModeEnabled (); 
 		mPensAdapter.notifyDataSetChanged (); 
 		mNotesAdapter.mPenMode = isPenModeEnabled (); 

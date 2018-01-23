@@ -3,7 +3,7 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="wrap_content"
 	android:layout_height="wrap_content"
-	android:id="@+id/flEraser"
+	android:id="@+id/flWhiteout"
 	>
 	<ImageView
 		android:id="@+id/ivMiniHand"
@@ -12,11 +12,11 @@
 		android:src="@mipmap/ic_hand"
 		/>
 	<ImageView 
-		android:id="@+id/ivEraser"
+		android:id="@+id/ivWhiteout"
 		android:layout_width="wrap_content" 
 		android:layout_height="wrap_content"
-		android:src="@mipmap/ic_eraser"
-		android:contentDescription="@string/access_eraser"
+		android:src="@mipmap/ic_whiteout"
+		android:contentDescription="@string/access_whiteout"
 		android:padding="2dp"
 		/>
 </FrameLayout> 

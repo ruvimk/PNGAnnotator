@@ -64,6 +64,7 @@
 	<string name="label_text_brush_width">(Brush Width)</string> 
 	
 	<string name="access_eraser">Eraser</string> 
+	<string name="access_whiteout">Whiteout</string> 
 	<string name="access_pen">Pen Color [number]</string> 
 	
 	

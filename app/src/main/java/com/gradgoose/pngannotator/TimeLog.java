@@ -14,9 +14,10 @@ public class TimeLog {
 		File logFile = new File (inFolder, "time-spent.log");
 		FileOutputStream fos = new FileOutputStream (logFile, true);
 		ByteBuffer buffer = ByteBuffer.allocate (16); 
-		long arr [] = buffer.asLongBuffer ().array (); 
+		long arr [] = new long [2]; 
 		arr[0] = timestampFrom; 
 		arr[1] = timestampTo; 
+		buffer.asLongBuffer ().put (arr); 
 		fos.write (buffer.array ()); 
 		fos.close (); 
 	} 

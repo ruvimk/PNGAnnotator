@@ -57,7 +57,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 					// Don't change currentScale; leave it zoomed in. 
 					isScaleEvent = false; 
 					return; 
-				} if (onScaleDone != null) onScaleDone.onZoomLeave (scaleGestureDetector.getFocusX (), 
+				} else if (onScaleDone != null) onScaleDone.onZoomLeave (scaleGestureDetector.getFocusX (), 
 						scaleGestureDetector.getFocusY ()); 
 				else setScale (1, 1, 0, 0); 
 				currentScale = 1; 

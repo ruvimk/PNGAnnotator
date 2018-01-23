@@ -1205,6 +1205,10 @@ public class NoteActivity extends Activity {
 		mDoNotResetInitialScrollYet = true; 
 		mStillWaitingToScroll = true; 
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
+		// Set the flag whether to allow zooming or not: 
+		boolean allowZoom = hasImages () && !useGrid; 
+		mScalePageContainer.allowZoomOut = allowZoom; 
+		mScalePageContainer.allowZoomIn = allowZoom; 
 	} 
 	void updateBrushWidthTextShowing () { 
 		brushWidthText.setText (getString (R.string.label_brush_width) 

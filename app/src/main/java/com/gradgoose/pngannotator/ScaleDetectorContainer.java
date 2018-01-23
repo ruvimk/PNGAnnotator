@@ -25,6 +25,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	public interface OnScaleDone { 
 		void onZoomLeave (float pivotX, float pivotY); 
+		void onVerticalPanState (boolean panning); 
 	} 
 	float xp0 = 0; 
 	float yp0 = 0; 
@@ -75,18 +76,26 @@ public class ScaleDetectorContainer extends FrameLayout {
 		if (currentScale > 1 && event.getPointerCount () <= 2) { 
 			// This may be a pan event. 
 			handlePan (event); 
+			if (onScaleDone != null) 
+				onScaleDone.onVerticalPanState (verticalPanChanged); 
 		} 
 		return result; 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (event.getAction () == MotionEvent.ACTION_DOWN || event.getAction () == MotionEvent.ACTION_POINTER_DOWN) 
 			calculateInitialFigures (event); 
-		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
-		else getParent ().requestDisallowInterceptTouchEvent (true); 
+		if (!isScaleEvent) { 
+			mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
+		} else { 
+			getParent ().requestDisallowInterceptTouchEvent (true); 
+		} 
 		if (currentScale > 1 && event.getPointerCount () <= 2) { 
 			// May be a pan event. 
-			if (!isScaleEvent) 
+			if (!isScaleEvent) { 
 				handlePan (event); 
+				if (onScaleDone != null) 
+					onScaleDone.onVerticalPanState (verticalPanChanged); 
+			} 
 		} 
 		return isScaleEvent; 
 	} 
@@ -110,6 +119,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float prevCenterX = 0; 
 	float prevCenterY = 0; 
 	boolean nowPanning = false; 
+	boolean verticalPanChanged = false; 
 	void handlePan (MotionEvent event) { 
 		if (event.getAction () == MotionEvent.ACTION_UP) { 
 			nowPanning = false; 
@@ -128,8 +138,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 		} else { 
 			float deltaXP = centerX - prevCenterX; 
 			float deltaYP = centerY - prevCenterY; 
+			float needPivotY = clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
+			verticalPanChanged = needPivotY != nowPivotY; 
 			setPivot (clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()), 
-					clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ())); 
+					needPivotY); 
 			xp0 += deltaXP; 
 			yp0 += deltaYP; 
 		} 

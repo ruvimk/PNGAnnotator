@@ -120,11 +120,30 @@ public class PngEdit {
 			} 
 			// Second, we do the binary search of that half of the wave. 
 			do { 
-				float valA = polygon[indexA]; 
-				float valB = polygon[indexB]; 
-				if (valB > valA) 
+				float valA = polygon[indexA + 1]; 
+				float valB = polygon[indexB + 1]; 
+				if (valB > valA) { 
+					int prev = indexA; 
 					indexA = (indexA + indexB) / 2 & -2; 
-				else indexB = (indexA + indexB) / 2 & -2; 
+					if (prev == indexA) { 
+						// We need this check because the "& -2" creates the opportunity for being stuck in the loop forever. 
+						// For example, suppose indexA = 6, and indexB = 8, and valB > valA. 
+						// Then the index update is: indexA = (indexA + indexB) / 2 & -2; 
+						// indexA = (6 + 8) / 2 & -2; 
+						// indexA = 7 & -2; 
+						// indexA = 6; 
+						// That brings indexA back to where it just was!!! 
+						// In that case, we need to realize that valB > valA, so we need to return indexB. 
+						indexA = indexB; 
+					} 
+				} else { 
+					int prev = indexB; 
+					indexB = (indexA + indexB) / 2 & -2; 
+					if (prev == indexB) { 
+						// Read comments for the 'if' statement above ... 
+						indexB = indexA; 
+					} 
+				} 
 			} while (indexA != indexB); 
 			int maxIndex = indexA; 
 			// Finally, rotate the array so that the max. is the first element: 

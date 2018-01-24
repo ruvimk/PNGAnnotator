@@ -413,6 +413,7 @@ public class PageView extends ImageView {
 		mode.enableErase (true); 
 		mode.enablePan (false); // We'll use the default RecyclerView pan, so disable this. 
 		mode.enableWrite (true); 
+		mode.setMaximumHandleTouchCount (1); // We'll handle zoom from ScaleDetectorContainer. 
 	} 
 	public void setPenMode (boolean penMode) { 
 		mWriteDetector.setPenMode (penMode); 

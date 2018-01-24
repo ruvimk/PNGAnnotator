@@ -64,6 +64,7 @@ public class WriteDetector {
 		private long dpMinPenModePanDistance = 40; 
 		private long maxRejectPointCount = 3; 
 		private float maxRejectDeltaT = 0.05f; 
+		private int maxHandleTouchCount = 10; 
 		public Mode setPenMode (boolean mode) { inPenMode = mode; return this; } 
 		public Mode enableWrite (boolean enable) { writeEnabled = enable; return this; } 
 		public Mode enableErase (boolean enable) { eraseEnabled = enable; return this; } 
@@ -77,6 +78,7 @@ public class WriteDetector {
 		public Mode setMinimumPenModePanDistance (long distance) { dpMinPenModePanDistance = distance; return this; } 
 		public Mode setMaximumRejectPointCount (long count) { maxRejectPointCount = count; return this; } 
 		public Mode setMaximumRejectDeltaT (float fraction) { maxRejectDeltaT = fraction; return this; } 
+		public Mode setMaximumHandleTouchCount (int count) { maxHandleTouchCount = count; return this; } 
 		public boolean isInPenMode () { return inPenMode; } 
 		public boolean isWriteEnabled () { return writeEnabled; } 
 		public boolean isEraseEnabled () { return eraseEnabled; } 
@@ -90,6 +92,7 @@ public class WriteDetector {
 		public long getMinimumPenModePanDistance () { return dpMinPenModePanDistance; } 
 		public long getMaximumRejectPointCount () { return maxRejectPointCount; } 
 		public float getMaximumRejectDeltaT () { return maxRejectDeltaT; } 
+		public int getMaximumHandleTouchCount () { return maxHandleTouchCount; } 
 		// Serialization: 
 		private static final String PREFIX = "writedetector.mode."; 
 		private static final String STATE_IN_PEN_MODE     = PREFIX + "inpenmode"; 
@@ -189,6 +192,14 @@ public class WriteDetector {
 		for (int i = 0; i < event.getPointerCount (); i++) { 
 			specialToolType = isSpecialToolType (event.getToolType (i)); 
 			if (specialToolType) specialToolCount++; 
+		} 
+		if (pCount > mMode.maxHandleTouchCount) { 
+			mCurrentWriteStrokeCancelled = true; 
+			if (mListener != null) 
+				for (Stroke s : mStrokeList) { 
+					s.cancel (mListener); 
+				} 
+			return false; 
 		} 
 		switch (event.getActionMasked ()) { 
 			case MotionEvent.ACTION_CANCEL: 

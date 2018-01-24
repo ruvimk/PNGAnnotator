@@ -1,12 +1,14 @@
 package com.gradgoose.pngannotator;
 
 import android.content.Context;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.widget.AbsListView;
 import android.widget.FrameLayout;
 
 /**
@@ -83,7 +85,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			disallowScale = true; 
 		} 
 		if (isScaleEvent && !disallowScale) result = mScaleGestureDetector.onTouchEvent (event); 
-		if (currentScale > 1 && event.getPointerCount () <= 3) { 
+		if (event.getPointerCount () <= 3) { // If this is called when scale == 1, that's OK; it means we intercepted the touch, and the RecyclerView won't get this event anyway ... 
 			// This may be a pan event. 
 			handlePan (event); 
 			if (onScaleDone != null) 
@@ -207,6 +209,16 @@ public class ScaleDetectorContainer extends FrameLayout {
 			verticalPanChanged = needPivotY != nowPivotY; 
 			setPivot (clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()), 
 					needPivotY); 
+			if (!verticalPanChanged && getChildCount () > 0) { 
+				for (int i = 0; i < getChildCount (); i++) { 
+					View view = getChildAt (i); 
+//					if (view instanceof RecyclerView) { 
+//						RecyclerView rv = (RecyclerView) view;
+//						rv.smoothScrollBy (0, -(int) deltaYP); 
+//					} else getChildAt (i).scrollBy (0, (int) deltaYP); 
+					view.dispatchTouchEvent (event); 
+				} 
+			} 
 		} 
 		prevCenterX = x; 
 		prevCenterY = y; 

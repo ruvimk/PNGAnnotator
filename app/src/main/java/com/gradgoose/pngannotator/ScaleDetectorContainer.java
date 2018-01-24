@@ -97,6 +97,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			touchDownTime = System.currentTimeMillis (); 
 			calculateInitialFigures (event); 
 			handlePan (event); 
+			disallowScale = false; // Sometimes this does not get reset with ACTION_UP or ACTION_CANCEL, so reset it here. 
 		} 
 		if (!isScaleEvent && !disallowScale && event.getPointerCount () < 3) { 
 			mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 

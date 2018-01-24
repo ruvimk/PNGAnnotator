@@ -103,6 +103,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
 			touchDownTime = System.currentTimeMillis (); 
+			orgPointerId = -1; // Set this like that so we don't confuse the pointers; we want to prevent unnecessary jumpiness ... 
 			calculateInitialFigures (event); 
 			handlePan (event); 
 			disallowScale = false; // Sometimes this does not get reset with ACTION_UP or ACTION_CANCEL, so reset it here. 

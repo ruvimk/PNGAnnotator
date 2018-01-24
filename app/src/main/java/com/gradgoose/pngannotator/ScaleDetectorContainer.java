@@ -18,7 +18,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	boolean isScaleEvent = false; 
 	boolean allowZoomOut = false; 
 	boolean allowZoomIn = true; 
-	float orgScale = 1; 
+	float lastStayingScale = 1; 
 	float currentScale = 1; 
 	float nowPivotX = 0; 
 	float nowPivotY = 0; 
@@ -39,6 +39,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 		super (context, attributeSet); 
 		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
 			float prevScale = 1; 
+			float orgScale = 1; 
 			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
 				float scale = prevScale * scaleGestureDetector.getScaleFactor (); 
 				if (scale > 1 && !allowZoomIn) scale = 1; 
@@ -76,6 +77,11 @@ public class ScaleDetectorContainer extends FrameLayout {
 	private boolean disallowScale = false; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
 		boolean result = true; 
+		if (event.getPointerCount () >= 3) { 
+			isScaleEvent = false; // Don't allow scale if three or more fingers are touching the screen. 
+			setScale (lastStayingScale, lastStayingScale, nowPivotX, nowPivotY); 
+			disallowScale = true; 
+		} 
 		if (isScaleEvent && !disallowScale) result = mScaleGestureDetector.onTouchEvent (event); 
 		if (currentScale > 1 && event.getPointerCount () <= 3) { 
 			// This may be a pan event. 
@@ -98,6 +104,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			calculateInitialFigures (event); 
 			handlePan (event); 
 			disallowScale = false; // Sometimes this does not get reset with ACTION_UP or ACTION_CANCEL, so reset it here. 
+			lastStayingScale = currentScale; 
 		} 
 		if (!isScaleEvent && !disallowScale && event.getPointerCount () < 3) { 
 			mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
@@ -106,7 +113,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 		} 
 		if (event.getPointerCount () >= 3) { 
 			isScaleEvent = false; // Don't allow scale if three or more fingers are touching the screen. 
-			setScale (orgScale, orgScale, nowPivotX, nowPivotY); 
+			setScale (lastStayingScale, lastStayingScale, nowPivotX, nowPivotY); 
 			disallowScale = true; 
 		} 
 		if (currentScale > 1 && event.getPointerCount () <= 3) { 

@@ -18,6 +18,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	boolean isScaleEvent = false; 
 	boolean allowZoomOut = false; 
 	boolean allowZoomIn = true; 
+	float orgScale = 1; 
 	float currentScale = 1; 
 	float nowPivotX = 0; 
 	float nowPivotY = 0; 
@@ -38,7 +39,6 @@ public class ScaleDetectorContainer extends FrameLayout {
 		super (context, attributeSet); 
 		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
 			float prevScale = 1; 
-			float orgScale = 1; 
 			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
 				float scale = prevScale * scaleGestureDetector.getScaleFactor (); 
 				if (scale > 1 && !allowZoomIn) scale = 1; 
@@ -73,20 +73,22 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 		}); 
 	} 
+	private boolean disallowScale = false; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
 		boolean result = true; 
-		if (isScaleEvent) result = mScaleGestureDetector.onTouchEvent (event); 
-		if (currentScale > 1 && event.getPointerCount () <= 2) { 
+		if (isScaleEvent && !disallowScale) result = mScaleGestureDetector.onTouchEvent (event); 
+		if (currentScale > 1 && event.getPointerCount () <= 3) { 
 			// This may be a pan event. 
 			handlePan (event); 
 			if (onScaleDone != null) 
 				onScaleDone.onVerticalPanState (verticalPanChanged); 
 		} 
 		if (!isScaleEvent) result = super.onTouchEvent (event); 
-		if (event.getAction () == MotionEvent.ACTION_UP) { 
+		if (event.getAction () == MotionEvent.ACTION_UP || event.getAction () == MotionEvent.ACTION_CANCEL) { 
 			if (onScaleDone != null) 
 				onScaleDone.onVerticalPanState (false); 
 			checkClick (); 
+			disallowScale = false; 
 		} 
 		return result; 
 	} 
@@ -96,23 +98,29 @@ public class ScaleDetectorContainer extends FrameLayout {
 			calculateInitialFigures (event); 
 			handlePan (event); 
 		} 
-		if (!isScaleEvent) { 
+		if (!isScaleEvent && !disallowScale && event.getPointerCount () < 3) { 
 			mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 		} else { 
 			getParent ().requestDisallowInterceptTouchEvent (true); 
 		} 
-		if (currentScale > 1 && event.getPointerCount () <= 2) { 
+		if (event.getPointerCount () >= 3) { 
+			isScaleEvent = false; // Don't allow scale if three or more fingers are touching the screen. 
+			setScale (orgScale, orgScale, nowPivotX, nowPivotY); 
+			disallowScale = true; 
+		} 
+		if (currentScale > 1 && event.getPointerCount () <= 3) { 
 			// May be a pan event. 
+			handlePan (event); 
 			if (!isScaleEvent) { 
-				handlePan (event); 
 				if (onScaleDone != null) 
 					onScaleDone.onVerticalPanState (verticalPanChanged); 
 			} 
 		} 
-		if (event.getAction () == MotionEvent.ACTION_UP) { 
+		if (event.getAction () == MotionEvent.ACTION_UP || event.getAction () == MotionEvent.ACTION_CANCEL) { 
 			if (onScaleDone != null) 
 				onScaleDone.onVerticalPanState (false); 
 			checkClick (); 
+			disallowScale = false; 
 		} 
 		return isScaleEvent; 
 	} 

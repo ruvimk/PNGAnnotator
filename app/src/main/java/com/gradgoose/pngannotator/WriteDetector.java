@@ -194,7 +194,6 @@ public class WriteDetector {
 			if (specialToolType) specialToolCount++; 
 		} 
 		if (pCount > mMode.maxHandleTouchCount) { 
-			mCurrentWriteStrokeCancelled = true; 
 			if (mListener != null) 
 				for (Stroke s : mStrokeList) { 
 					s.cancel (mListener); 

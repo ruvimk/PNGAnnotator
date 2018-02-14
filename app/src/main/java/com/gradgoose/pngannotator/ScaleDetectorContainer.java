@@ -209,6 +209,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			orgCenterX = x; 
 			orgCenterY = y; 
 			orgPointerId = event.getPointerId (0); 
+			calculateInitialFigures (event); 
 		} else { 
 			float deltaXP = x - orgCenterX; 
 			float deltaYP = y - orgCenterY; 

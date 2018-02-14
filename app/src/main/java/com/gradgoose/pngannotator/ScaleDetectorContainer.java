@@ -102,6 +102,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
+			isPanEvent = false; 
 			touchDownTime = System.currentTimeMillis (); 
 			orgPointerId = -1; // Set this like that so we don't confuse the pointers; we want to prevent unnecessary jumpiness ... 
 			calculateInitialFigures (event); 
@@ -133,7 +134,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			checkClick (); 
 			disallowScale = false; 
 		} 
-		return isScaleEvent; 
+		return isScaleEvent || isPanEvent; 
 	} 
 	void calculateInitialFigures (MotionEvent event) { 
 		float centerX = 0; 
@@ -159,6 +160,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float orgCenterY = 0; 
 	int orgPointerId = 0; 
 	boolean verticalPanChanged = false; 
+	boolean isPanEvent = false; 
 	long touchDownTime = 0; 
 	long lastClickTime = 0; 
 	int clickCount = 0; 
@@ -208,18 +210,19 @@ public class ScaleDetectorContainer extends FrameLayout {
 			float deltaYP = y - orgCenterY; 
 			float needPivotY = clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
 			verticalPanChanged = needPivotY != nowPivotY; 
+			isPanEvent |= verticalPanChanged || deltaXP > deltaYP; 
 			setPivot (clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()), 
 					needPivotY); 
-			if (!verticalPanChanged && getChildCount () > 0) { 
-				for (int i = 0; i < getChildCount (); i++) { 
-					View view = getChildAt (i); 
-//					if (view instanceof RecyclerView) { 
-//						RecyclerView rv = (RecyclerView) view;
-//						rv.smoothScrollBy (0, -(int) deltaYP); 
-//					} else getChildAt (i).scrollBy (0, (int) deltaYP); 
-					view.dispatchTouchEvent (event); 
-				} 
-			} 
+//			if (!verticalPanChanged && getChildCount () > 0) { 
+//				for (int i = 0; i < getChildCount (); i++) { 
+//					View view = getChildAt (i); 
+////					if (view instanceof RecyclerView) { 
+////						RecyclerView rv = (RecyclerView) view;
+////						rv.smoothScrollBy (0, -(int) deltaYP); 
+////					} else getChildAt (i).scrollBy (0, (int) deltaYP); 
+//					view.dispatchTouchEvent (event); 
+//				} 
+//			} 
 		} 
 		prevCenterX = x; 
 		prevCenterY = y; 

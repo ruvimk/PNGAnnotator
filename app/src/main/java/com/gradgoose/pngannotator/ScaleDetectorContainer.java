@@ -100,6 +100,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			checkClick (); 
 			disallowScale = false; 
 			getParent ().requestDisallowInterceptTouchEvent (false); 
+			finishFlingAnimation (); 
 		} 
 		return result; 
 	} 
@@ -158,11 +159,14 @@ public class ScaleDetectorContainer extends FrameLayout {
 		x1 = (xp0 - nowPivotX) / currentScale + nowPivotX; 
 		y1 = (yp0 - nowPivotY) / currentScale + nowPivotY; 
 	} 
+	float panVX = 0; 
+	float panVY = 0; 
 	float prevCenterX = 0; 
 	float prevCenterY = 0; 
 	float orgCenterX = 0; 
 	float orgCenterY = 0; 
 	int orgPointerId = 0; 
+	long orgPointerT = 0; 
 	boolean verticalPanChanged = false; 
 	boolean isPanEvent = false; 
 	long touchDownTime = 0; 
@@ -209,15 +213,19 @@ public class ScaleDetectorContainer extends FrameLayout {
 			orgCenterX = x; 
 			orgCenterY = y; 
 			orgPointerId = event.getPointerId (0); 
+			orgPointerT = System.currentTimeMillis (); 
 			calculateInitialFigures (event); 
 		} else { 
 			float deltaXP = x - orgCenterX; 
 			float deltaYP = y - orgCenterY; 
+			float needPivotX = clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()); 
 			float needPivotY = clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
+			long now = System.currentTimeMillis (); 
+			panVX = (needPivotX - nowPivotX) / (now - orgPointerT); 
+			panVY = (needPivotY - nowPivotY) / (now - orgPointerT); 
 			verticalPanChanged = needPivotY != nowPivotY; 
 			isPanEvent |= (Math.abs (deltaXP) > Math.abs (deltaYP)) && Math.abs (deltaXP) > mTouchSlop; // verticalPanChanged || 
-			setPivot (clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()), 
-					needPivotY); 
+			setPivot (needPivotX, needPivotY); 
 //			if (!verticalPanChanged && getChildCount () > 0) { 
 //				for (int i = 0; i < getChildCount (); i++) { 
 //					View view = getChildAt (i); 
@@ -231,6 +239,12 @@ public class ScaleDetectorContainer extends FrameLayout {
 		} 
 		prevCenterX = x; 
 		prevCenterY = y; 
+	} 
+	void finishFlingAnimation () { 
+		if (!isPanEvent && !isScaleEvent) return; 
+		initiateZoomAnimation (nowPivotX, nowPivotY, currentScale, 
+				nowPivotX + panVX * panVX, nowPivotY + panVY * panVY, 
+				currentScale, 100); 
 	} 
 	static float clamp (float number, float low, float high) { 
 		return Math.max (Math.min (number, high), low); 

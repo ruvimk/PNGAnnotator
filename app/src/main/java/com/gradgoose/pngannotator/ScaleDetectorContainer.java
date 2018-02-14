@@ -37,8 +37,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float yp0 = 0; 
 	float x1 = 0; 
 	float y1 = 0; 
+	final float mTouchSlop; 
 	public ScaleDetectorContainer (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
+		mTouchSlop = ViewConfiguration.get (context).getScaledTouchSlop (); 
 		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
 			float prevScale = 1; 
 			float orgScale = 1; 
@@ -212,7 +214,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			float deltaYP = y - orgCenterY; 
 			float needPivotY = clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
 			verticalPanChanged = needPivotY != nowPivotY; 
-			isPanEvent |= verticalPanChanged || (deltaXP > deltaYP && deltaXP > 50f); 
+			isPanEvent |= (verticalPanChanged || Math.abs (deltaXP) > Math.abs (deltaYP)) && Math.abs (deltaXP) > mTouchSlop; 
 			setPivot (clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()), 
 					needPivotY); 
 //			if (!verticalPanChanged && getChildCount () > 0) { 

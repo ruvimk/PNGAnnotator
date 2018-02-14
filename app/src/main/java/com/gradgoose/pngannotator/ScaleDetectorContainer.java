@@ -215,7 +215,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			float deltaYP = y - orgCenterY; 
 			float needPivotY = clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
 			verticalPanChanged = needPivotY != nowPivotY; 
-			isPanEvent |= (verticalPanChanged || Math.abs (deltaXP) > Math.abs (deltaYP)) && Math.abs (deltaXP) > mTouchSlop; 
+			isPanEvent |= (Math.abs (deltaXP) > Math.abs (deltaYP)) && Math.abs (deltaXP) > mTouchSlop; // verticalPanChanged || 
 			setPivot (clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()), 
 					needPivotY); 
 //			if (!verticalPanChanged && getChildCount () > 0) { 

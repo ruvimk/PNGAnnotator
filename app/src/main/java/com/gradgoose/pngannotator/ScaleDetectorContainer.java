@@ -97,6 +97,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 				onScaleDone.onVerticalPanState (false); 
 			checkClick (); 
 			disallowScale = false; 
+			getParent ().requestDisallowInterceptTouchEvent (false); 
 		} 
 		return result; 
 	} 
@@ -133,6 +134,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 				onScaleDone.onVerticalPanState (false); 
 			checkClick (); 
 			disallowScale = false; 
+			getParent ().requestDisallowInterceptTouchEvent (false); 
 		} 
 		return isScaleEvent || isPanEvent; 
 	} 

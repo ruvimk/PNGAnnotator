@@ -846,6 +846,8 @@ public class PageView extends ImageView {
 			if (!mWriteDetector.isInPenMode ()) 
 				getParent ().requestDisallowInterceptTouchEvent (event.getPointerCount () < 2); 
 			mOtherGestureDetector.onTouchEvent (event); // For detecting clicks and long-clicks. 
+			if (event.getAction () == MotionEvent.ACTION_UP || event.getAction () == MotionEvent.ACTION_CANCEL) 
+				getParent ().requestDisallowInterceptTouchEvent (false); 
 			return mWriteDetector.onTouchEvent (event); 
 		} else return super.onTouchEvent (event); 
 	} 

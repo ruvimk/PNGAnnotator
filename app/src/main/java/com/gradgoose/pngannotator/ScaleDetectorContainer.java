@@ -1,14 +1,12 @@
 package com.gradgoose.pngannotator;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.widget.AbsListView;
 import android.widget.FrameLayout;
 
 /**
@@ -107,6 +105,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
+			cancelFlingAnimation (); // Cancel any animations running ... 
 			isPanEvent = false; 
 			touchDownTime = System.currentTimeMillis (); 
 			orgPointerId = -1; // Set this like that so we don't confuse the pointers; we want to prevent unnecessary jumpiness ... 
@@ -168,6 +167,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float orgCenterY = 0; 
 	int orgPointerId = 0; 
 	long orgPointerT = 0; 
+	long prevPointerT = 0; 
 	boolean verticalPanChanged = false; 
 	boolean isPanEvent = false; 
 	long touchDownTime = 0; 
@@ -198,16 +198,22 @@ public class ScaleDetectorContainer extends FrameLayout {
 		prevCenterX = x; 
 		prevCenterY = y; 
 		orgPointerT = System.currentTimeMillis (); 
+		prevPointerT = orgPointerT; 
 		calculateInitialFigures (x, y); 
 	} 
 	@Override public void scrollBy (int offsetX, int offsetY) { 
+		if (offsetX == 0 && offsetY == 0) return; // Let's just say: calling this method with (0, 0) has no effect, not even on velocity calculations. 
+		if (currentScale <= 1) { 
+			for (int i = 0; i < getChildCount (); i++) { 
+				View child = getChildAt (i); 
+				child.scrollBy (offsetX, offsetY); 
+			} 
+			return; 
+		} 
 		float deltaXP = -offsetX; 
 		float deltaYP = -offsetY; 
 		float needPivotX = clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()); 
 		float needPivotY = clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
-		long now = System.currentTimeMillis (); 
-		panVX = (needPivotX - nowPivotX) / (now - orgPointerT); 
-		panVY = (needPivotY - nowPivotY) / (now - orgPointerT); 
 		verticalPanChanged = needPivotY != nowPivotY; 
 		if (!verticalPanChanged && getChildCount () > 0) { 
 			int direction = deltaYP > 0 ? -1 : +1; 
@@ -232,8 +238,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 		} else setPivot (needPivotX, needPivotY); 
 	} 
 	@Override public boolean canScrollVertically (int direction) { 
-		return _childrenCanScrollVertically (direction) && 
-					   (direction > 0 ? nowPivotY < getHeight () : nowPivotY > 0); 
+		return _childrenCanScrollVertically (direction) || 
+					   (currentScale > 1 && (direction > 0 ? nowPivotY < getHeight () : nowPivotY > 0)); 
 	} 
 	private boolean _childrenCanScrollVertically (int direction) { 
 		boolean canScroll = true; 
@@ -252,6 +258,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 //		centerY /= Math.min (event.getPointerCount (), 2); 
 		float x = event.getX (0); 
 		float y = event.getY (0); 
+		long now = System.currentTimeMillis (); 
+		float dt = (now - prevPointerT) * 1e-3f; 
 		int pointerId = event.getPointerId (0); 
 		if (pointerId != orgPointerId) { 
 			for (int i = 1; i < event.getPointerCount (); i++) { 
@@ -272,16 +280,56 @@ public class ScaleDetectorContainer extends FrameLayout {
 			prevCenterX = x; 
 			prevCenterY = y; 
 			scrollBy ((int) -deltaXP, (int) -deltaYP); 
+			if (dt > 0 && (prevCenterX != x || prevCenterY != y)) { 
+				panVX = (prevCenterX - x) / dt; 
+				panVY = (prevCenterY - y) / dt; 
+			} 
 		} 
 		prevCenterX = x; 
 		prevCenterY = y; 
+		prevPointerT = now; 
 	} 
 	void finishFlingAnimation () { 
-		if (!isPanEvent && !isScaleEvent) return; 
-		initiateZoomAnimation (nowPivotX, nowPivotY, currentScale, 
-				nowPivotX + panVX * panVX, nowPivotY + panVY * panVY, 
-				currentScale, 100); 
+		if (isScaleEvent || !isPanEvent) return; 
+		synchronized (mFlingMutex) { 
+			mFlingCancel = false; 
+			mFlingPrevT = System.currentTimeMillis (); 
+			if (!mFlingRunning) { 
+				mFlingRunning = true; 
+				post (mRunFling); 
+			} 
+		} 
 	} 
+	void cancelFlingAnimation () { 
+		synchronized (mFlingMutex) { 
+			if (mFlingRunning) 
+				mFlingCancel = true; 
+		} 
+	} 
+	final Object mFlingMutex = new Object (); 
+	boolean mFlingRunning = false; 
+	boolean mFlingCancel = false; 
+	float mFlingDieout = 0.9f; 
+	long mFlingPrevT = 0; 
+	Runnable mRunFling = new Runnable () { 
+		@Override public void run () { 
+			synchronized (mFlingMutex) { 
+				if (mFlingCancel) { 
+					mFlingRunning = false; 
+					return; 
+				} 
+				long now = System.currentTimeMillis (); 
+				float dt = (float) (now - mFlingPrevT) * 1e-3f; 
+				scrollBy ((int) panVX, (int) panVY); 
+				panVX *= Math.pow (mFlingDieout, dt); 
+				panVY *= Math.pow (mFlingDieout, dt); 
+				Log.i (TAG, "Next pan: (" + panVX + ", " + panVY + ")"); 
+				if (panVX > 1 || panVY > 1) { 
+					postDelayed (this, 25); 
+				} else mFlingRunning = false; 
+			} 
+		} 
+	}; 
 	static float clamp (float number, float low, float high) { 
 		return Math.max (Math.min (number, high), low); 
 	} 

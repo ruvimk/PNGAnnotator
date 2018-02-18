@@ -201,41 +201,44 @@ public class ScaleDetectorContainer extends FrameLayout {
 		prevPointerT = orgPointerT; 
 		calculateInitialFigures (x, y); 
 	} 
-	@Override public void scrollBy (int offsetX, int offsetY) { 
+	public void scrollByFloat (float offsetX, float offsetY) { 
 		if (offsetX == 0 && offsetY == 0) return; // Let's just say: calling this method with (0, 0) has no effect, not even on velocity calculations. 
 		if (currentScale <= 1) { 
 			for (int i = 0; i < getChildCount (); i++) { 
 				View child = getChildAt (i); 
-				child.scrollBy (offsetX, offsetY); 
+				child.scrollBy ((int) offsetX, (int) offsetY); 
 			} 
 			return; 
 		} 
-		float deltaXP = -offsetX; 
-		float deltaYP = -offsetY; 
-		float needPivotX = clamp ((xp0 + deltaXP - x1 * currentScale) / (1 - currentScale), 0, getWidth ()); 
-		float needPivotY = clamp ((yp0 + deltaYP - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
+		float needPivotX = clamp (nowPivotX + offsetX / (currentScale - 1), 0, getWidth ()); 
+		float needPivotY = nowPivotY + offsetY / (currentScale - 1); 
 		verticalPanChanged = needPivotY != nowPivotY; 
-		if (!verticalPanChanged && getChildCount () > 0) { 
-			int direction = deltaYP > 0 ? -1 : +1; 
+		setPivot (needPivotX, clamp (needPivotY, 0, getHeight ())); 
+		if ((needPivotY > getHeight () || needPivotY < 0) && getChildCount () > 0) { 
+			int direction = offsetY < 0 ? -1 : +1; 
 			boolean canScroll = _childrenCanScrollVertically (direction); 
 			if (canScroll) { 
-				int h = (int) mTouchSlop; // Just use some small amount. 
-				int sY = h * (deltaYP > 0 ? -1 : +1); 
-				float syp = (float) sY * currentScale; 
+				float h = (needPivotY > 0 ? needPivotY - getHeight () : needPivotY) * (currentScale - 1); 
+//				int sY = h * (offsetY < 0 ? -1 : +1); 
+//				float syp = (float) sY * currentScale; 
 				float oldPivotY = needPivotY; 
-				needPivotY = clamp ((yp0 + deltaYP + syp - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
-				Log.i (TAG, "End of pivot space reached; scrolling child views by " + sY + "; old pivot Y: " + oldPivotY + "; now pivot Y: " + needPivotY); 
+//				needPivotY = clamp ((yp0 + deltaYP + syp - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
+				needPivotY -= h / (currentScale - 1); 
+				Log.i (TAG, "End of pivot space reached; scrolling child views by " + h + "; old pivot Y: " + oldPivotY + "; now pivot Y: " + needPivotY); 
 				for (int i = 0; i < getChildCount (); i++) { 
 					View view = getChildAt (i); 
-					view.scrollBy (0, sY); 
+					view.scrollBy (0, (int) (h / currentScale)); 
 				} 
 				setPivot (needPivotX, needPivotY); 
 				resetTouchVariables (prevCenterX, prevCenterY); 
 			} else { 
 				// TODO: Show feedback shadow thing that the user can't scroll anymore. 
-				setPivot (needPivotX, needPivotY); 
+				setPivot (needPivotX, clamp (needPivotY, 0, getHeight ())); 
 			} 
-		} else setPivot (needPivotX, needPivotY); 
+		} else setPivot (needPivotX, clamp (needPivotY, 0, getHeight ())); 
+	} 
+	@Override public void scrollBy (int offsetX, int offsetY) { 
+		scrollByFloat (offsetX, offsetY); 
 	} 
 	@Override public boolean canScrollVertically (int direction) { 
 		return _childrenCanScrollVertically (direction) || 
@@ -277,9 +280,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			float deltaXP = x - orgCenterX; 
 			float deltaYP = y - orgCenterY; 
 			isPanEvent |= Math.abs (deltaYP) > mTouchSlop || Math.abs (deltaXP) > mTouchSlop; 
-			prevCenterX = x; 
-			prevCenterY = y; 
-			scrollBy ((int) -deltaXP, (int) -deltaYP); 
+			scrollByFloat (prevCenterX - x, prevCenterY - y); 
 			if (dt > 0 && (prevCenterX != x || prevCenterY != y)) { 
 				panVX = (prevCenterX - x) / dt; 
 				panVY = (prevCenterY - y) / dt; 
@@ -291,14 +292,14 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	void finishFlingAnimation () { 
 		if (isScaleEvent || !isPanEvent) return; 
-		synchronized (mFlingMutex) { 
-			mFlingCancel = false; 
-			mFlingPrevT = System.currentTimeMillis (); 
-			if (!mFlingRunning) { 
-				mFlingRunning = true; 
-				post (mRunFling); 
-			} 
-		} 
+//		synchronized (mFlingMutex) { 
+//			mFlingCancel = false; 
+//			mFlingPrevT = System.currentTimeMillis (); 
+//			if (!mFlingRunning) { 
+//				mFlingRunning = true; 
+//				post (mRunFling); 
+//			} 
+//		} 
 	} 
 	void cancelFlingAnimation () { 
 		synchronized (mFlingMutex) { 
@@ -320,9 +321,9 @@ public class ScaleDetectorContainer extends FrameLayout {
 				} 
 				long now = System.currentTimeMillis (); 
 				float dt = (float) (now - mFlingPrevT) * 1e-3f; 
-				scrollBy ((int) panVX, (int) panVY); 
-				panVX *= Math.pow (mFlingDieout, dt); 
-				panVY *= Math.pow (mFlingDieout, dt); 
+				scrollByFloat (panVX * dt, panVY * dt); 
+				panVX *= (1 - dt + mFlingDieout * dt); 
+				panVY *= (1 - dt + mFlingDieout * dt); 
 				Log.i (TAG, "Next pan: (" + panVX + ", " + panVY + ")"); 
 				if (panVX > 1 || panVY > 1) { 
 					postDelayed (this, 25); 

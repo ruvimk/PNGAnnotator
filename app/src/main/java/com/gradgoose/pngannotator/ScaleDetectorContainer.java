@@ -3,11 +3,13 @@ package com.gradgoose.pngannotator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
+import android.widget.Scroller;
 
 /**
  * Created by Ruvim Kondratyev on 12/23/2017.
@@ -16,6 +18,10 @@ import android.widget.FrameLayout;
 public class ScaleDetectorContainer extends FrameLayout { 
 	static final String TAG = "ScaleDetectorContainer"; 
 	ScaleGestureDetector mScaleGestureDetector = null; 
+	GestureDetector mGeneralGestureDetector = null; 
+	float PREV_VEL_FACTOR = 0.5f; 
+	float INST_VEL_FACTOR = 0.5f; 
+	float VEL_CAP = 500f; 
 	boolean isScaleEvent = false; 
 	boolean allowZoomOut = false; 
 	boolean allowZoomIn = true; 
@@ -42,6 +48,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	public ScaleDetectorContainer (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
 		mTouchSlop = ViewConfiguration.get (context).getScaledTouchSlop (); 
+		mFlingScroller = new Scroller (context); 
 		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
 			float prevScale = 1; 
 			float orgScale = 1; 
@@ -78,10 +85,34 @@ public class ScaleDetectorContainer extends FrameLayout {
 				isScaleEvent = false; 
 			} 
 		}); 
+		mGeneralGestureDetector = new GestureDetector (context, new GestureDetector.OnGestureListener () { 
+			@Override public boolean onDown (MotionEvent motionEvent) { 
+				return true; 
+			} 
+			@Override public void onShowPress (MotionEvent motionEvent) { 
+				
+			} 
+			@Override public boolean onSingleTapUp (MotionEvent motionEvent) { 
+				return false; 
+			} 
+			@Override public boolean onScroll (MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) { 
+				return true; 
+			} 
+			@Override public void onLongPress (MotionEvent motionEvent) { 
+				
+			} 
+			@Override public boolean onFling (MotionEvent motionEvent, MotionEvent motionEvent1, float vx, float vy) { 
+				panVX = -vx; 
+				panVY = -vy; 
+				finishFlingAnimation (); 
+				return true; 
+			} 
+		}); 
 	} 
 	private boolean disallowScale = false; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
 		boolean result = true; 
+		mGeneralGestureDetector.onTouchEvent (event); // Listen for fling velocity. 
 		if (event.getPointerCount () >= 3) { 
 			isScaleEvent = false; // Don't allow scale if three or more fingers are touching the screen. 
 			setScale (lastStayingScale, lastStayingScale, nowPivotX, nowPivotY); 
@@ -101,15 +132,16 @@ public class ScaleDetectorContainer extends FrameLayout {
 			checkClick (); 
 			disallowScale = false; 
 			getParent ().requestDisallowInterceptTouchEvent (false); 
-			finishFlingAnimation (); 
 		} 
 		return result; 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
+		mGeneralGestureDetector.onTouchEvent (event); // Listen for fling velocity. 
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
 			cancelFlingAnimation (); // Cancel any animations running ... 
 			isPanEvent = false; 
 			touchDownTime = System.currentTimeMillis (); 
+			panVX = panVY = 0; 
 			orgPointerId = -1; // Set this like that so we don't confuse the pointers; we want to prevent unnecessary jumpiness ... 
 			calculateInitialFigures (event); 
 			handlePan (event); 
@@ -287,10 +319,6 @@ public class ScaleDetectorContainer extends FrameLayout {
 			dy1 = deltaYP; 
 			isPanEvent |= Math.abs (deltaYP) > mTouchSlop || Math.abs (deltaXP) > mTouchSlop; 
 			scrollByFloat (prevCenterX - x, prevCenterY - y); 
-			if (dt > 0 && (prevCenterX != x || prevCenterY != y)) { 
-				panVX = (prevCenterX - x) / dt; 
-				panVY = (prevCenterY - y) / dt; 
-			} 
 		} 
 		prevCenterX = x; 
 		prevCenterY = y; 
@@ -298,26 +326,35 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	void finishFlingAnimation () { 
 		if (isScaleEvent || !isPanEvent) return; 
-//		synchronized (mFlingMutex) { 
-//			mFlingCancel = false; 
-//			mFlingPrevT = System.currentTimeMillis (); 
-//			if (!mFlingRunning) { 
-//				mFlingRunning = true; 
-//				post (mRunFling); 
-//			} 
-//		} 
+		synchronized (mFlingMutex) { 
+			mFlingCancel = false; 
+			mFlingPrevT = System.currentTimeMillis (); 
+			mFlingScroller.forceFinished (true); 
+			mFlingPrevX = nowPivotX; 
+			mFlingPrevY = 0; 
+			mFlingScroller.fling ((int) nowPivotX, 0, (int) panVX, (int) panVY, 
+					0, getWidth (), -1000, +1000 
+					); 
+			if (!mFlingRunning) { 
+				mFlingRunning = true; 
+				post (mRunFling); 
+			} 
+		} 
 	} 
 	void cancelFlingAnimation () { 
 		synchronized (mFlingMutex) { 
 			if (mFlingRunning) 
 				mFlingCancel = true; 
+			mFlingScroller.forceFinished (true); 
 		} 
 	} 
 	final Object mFlingMutex = new Object (); 
 	boolean mFlingRunning = false; 
 	boolean mFlingCancel = false; 
-	float mFlingDieout = 0.9f; 
+	float mFlingPrevX = 0; 
+	float mFlingPrevY = 0; 
 	long mFlingPrevT = 0; 
+	final Scroller mFlingScroller; 
 	Runnable mRunFling = new Runnable () { 
 		@Override public void run () { 
 			synchronized (mFlingMutex) { 
@@ -325,13 +362,14 @@ public class ScaleDetectorContainer extends FrameLayout {
 					mFlingRunning = false; 
 					return; 
 				} 
-				long now = System.currentTimeMillis (); 
-				float dt = (float) (now - mFlingPrevT) * 1e-3f; 
-				scrollByFloat (panVX * dt, panVY * dt); 
-				panVX *= (1 - dt + mFlingDieout * dt); 
-				panVY *= (1 - dt + mFlingDieout * dt); 
-				Log.i (TAG, "Next pan: (" + panVX + ", " + panVY + ")"); 
-				if (panVX > 1 || panVY > 1) { 
+				if (mFlingScroller.computeScrollOffset ()) { 
+					float nowX = mFlingScroller.getCurrX (); 
+					float nowY = mFlingScroller.getCurrY (); 
+					scrollByFloat (nowX - mFlingPrevX, nowY - mFlingPrevY); 
+					mFlingPrevX = nowX; 
+					mFlingPrevY = nowY; 
+				} 
+				if (!mFlingScroller.isFinished ()) { 
 					postDelayed (this, 25); 
 				} else mFlingRunning = false; 
 			} 

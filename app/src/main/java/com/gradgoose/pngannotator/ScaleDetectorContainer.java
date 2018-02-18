@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
  */
 
 public class ScaleDetectorContainer extends FrameLayout { 
+	static final String TAG = "ScaleDetectorContainer"; 
 	ScaleGestureDetector mScaleGestureDetector = null; 
 	boolean isScaleEvent = false; 
 	boolean allowZoomOut = false; 
@@ -187,6 +188,15 @@ public class ScaleDetectorContainer extends FrameLayout {
 			click (); 
 		} 
 	} 
+	void resetTouchVariables (float x, float y, MotionEvent event) {
+		orgCenterX = x; 
+		orgCenterY = y; 
+		prevCenterX = x; 
+		prevCenterY = y; 
+		orgPointerId = event.getPointerId (0); 
+		orgPointerT = System.currentTimeMillis (); 
+		calculateInitialFigures (event); 
+	} 
 	void handlePan (MotionEvent event) { 
 //		float centerX = 0; 
 //		float centerY = 0; 
@@ -210,11 +220,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 		} 
 		if (event.getAction () == MotionEvent.ACTION_DOWN || pointerId != orgPointerId) { 
-			orgCenterX = x; 
-			orgCenterY = y; 
-			orgPointerId = event.getPointerId (0); 
-			orgPointerT = System.currentTimeMillis (); 
-			calculateInitialFigures (event); 
+			resetTouchVariables (x, y, event); 
 		} else { 
 			float deltaXP = x - orgCenterX; 
 			float deltaYP = y - orgCenterY; 
@@ -224,18 +230,35 @@ public class ScaleDetectorContainer extends FrameLayout {
 			panVX = (needPivotX - nowPivotX) / (now - orgPointerT); 
 			panVY = (needPivotY - nowPivotY) / (now - orgPointerT); 
 			verticalPanChanged = needPivotY != nowPivotY; 
-			isPanEvent |= (Math.abs (deltaXP) > Math.abs (deltaYP)) && Math.abs (deltaXP) > mTouchSlop; // verticalPanChanged || 
-			setPivot (needPivotX, needPivotY); 
-//			if (!verticalPanChanged && getChildCount () > 0) { 
-//				for (int i = 0; i < getChildCount (); i++) { 
-//					View view = getChildAt (i); 
-////					if (view instanceof RecyclerView) { 
-////						RecyclerView rv = (RecyclerView) view;
-////						rv.smoothScrollBy (0, -(int) deltaYP); 
-////					} else getChildAt (i).scrollBy (0, (int) deltaYP); 
-//					view.dispatchTouchEvent (event); 
-//				} 
-//			} 
+			isPanEvent |= Math.abs (deltaYP) > mTouchSlop || Math.abs (deltaXP) > mTouchSlop; // verticalPanChanged || 
+			if (event.getAction () != MotionEvent.ACTION_UP && 
+						event.getAction () != MotionEvent.ACTION_CANCEL && 
+						event.getAction () != MotionEvent.ACTION_POINTER_UP && 
+						y != prevCenterY && 
+						!verticalPanChanged && getChildCount () > 0) { 
+				int direction = y > orgCenterY ? -1 : +1; 
+				boolean canScroll = true; 
+				for (int i = 0; i < getChildCount (); i++) 
+					canScroll &= getChildAt (i).canScrollVertically (direction); 
+				if (canScroll) { 
+					int h = (int) mTouchSlop; // Just use some small amount. 
+//					int sY = (int) ((currentScale - 1) / currentScale * h) * (y > orgCenterY ? -1 : +1); 
+					int sY = h * (y > orgCenterY ? -1 : +1); 
+					float syp = (float) sY * currentScale; 
+					float oldPivotY = needPivotY; 
+					needPivotY = clamp ((yp0 + deltaYP + syp - y1 * currentScale) / (1 - currentScale), 0, getHeight ()); 
+					Log.i (TAG, "End of pivot space reached; scrolling child views by " + sY + "; old pivot Y: " + oldPivotY + "; now pivot Y: " + needPivotY); 
+					for (int i = 0; i < getChildCount (); i++) { 
+						View view = getChildAt (i); 
+						view.scrollBy (0, sY); 
+					} 
+					setPivot (needPivotX, needPivotY); 
+					resetTouchVariables (x, y, event); 
+				} else { 
+					// TODO: Show feedback shadow thing that the user can't scroll anymore. 
+					setPivot (needPivotX, needPivotY); 
+				} 
+			} else setPivot (needPivotX, needPivotY); 
 		} 
 		prevCenterX = x; 
 		prevCenterY = y; 

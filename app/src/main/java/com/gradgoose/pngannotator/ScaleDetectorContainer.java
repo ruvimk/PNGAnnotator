@@ -36,6 +36,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float yp0 = 0; 
 	float x1 = 0; 
 	float y1 = 0; 
+	float dx1 = 0; 
+	float dy1 = 0; 
 	final float mTouchSlop; 
 	public ScaleDetectorContainer (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
@@ -48,8 +50,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 				if (scale > 1 && !allowZoomIn) scale = 1; 
 				if (scale < 1 && !allowZoomOut) scale = 1; // If zoom-out not allowed, don't allow scale below 1. 
 				if (orgScale > 1 && scale < 1) scale = 1; // If we're zooming out from a zoomed in position, don't allow overshooting. 
-				setScale (scale, scale, (xp0 - x1 * scale) / (1 - scale), 
-						(yp0 - y1 * scale) / (1 - scale)); 
+				setScale (scale, scale, (xp0 - x1 * scale + dx1) / (1 - scale), 
+						(yp0 - y1 * scale + dy1) / (1 - scale)); 
 				prevScale = scale; 
 				isScaleEvent = true; 
 				return true; 
@@ -199,6 +201,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 		prevCenterY = y; 
 		orgPointerT = System.currentTimeMillis (); 
 		prevPointerT = orgPointerT; 
+		dx1 = 0; 
+		dy1 = 0; 
 		calculateInitialFigures (x, y); 
 	} 
 	public void scrollByFloat (float offsetX, float offsetY) { 
@@ -279,6 +283,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 		} else { 
 			float deltaXP = x - orgCenterX; 
 			float deltaYP = y - orgCenterY; 
+			dx1 = deltaXP; 
+			dy1 = deltaYP; 
 			isPanEvent |= Math.abs (deltaYP) > mTouchSlop || Math.abs (deltaXP) > mTouchSlop; 
 			scrollByFloat (prevCenterX - x, prevCenterY - y); 
 			if (dt > 0 && (prevCenterX != x || prevCenterY != y)) { 

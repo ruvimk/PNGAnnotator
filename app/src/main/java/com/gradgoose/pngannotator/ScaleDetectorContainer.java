@@ -1,6 +1,10 @@
 package com.gradgoose.pngannotator;
 
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -8,6 +12,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.widget.EdgeEffect;
 import android.widget.FrameLayout;
 import android.widget.Scroller;
 
@@ -19,7 +24,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 	static final String TAG = "ScaleDetectorContainer"; 
 	ScaleGestureDetector mScaleGestureDetector = null; 
 	GestureDetector mGeneralGestureDetector = null; 
+	EdgeEffect mOverscrollEdgeEffect1 = null; 
+	EdgeEffect mOverscrollEdgeEffect2 = null; 
 	int VERTICAL_PAN_CAP = 2000; 
+	int HORIZONTAL_PAN_PADDING = 1000; 
 	boolean isScaleEvent = false; 
 	boolean allowZoomOut = false; 
 	boolean allowZoomIn = true; 
@@ -47,6 +55,13 @@ public class ScaleDetectorContainer extends FrameLayout {
 		super (context, attributeSet); 
 		mTouchSlop = ViewConfiguration.get (context).getScaledTouchSlop (); 
 		mFlingScroller = new Scroller (context); 
+		mOverscrollEdgeEffect1 = new EdgeEffect (context); 
+		mOverscrollEdgeEffect2 = new EdgeEffect (context); 
+		if (Build.VERSION.SDK_INT >= 21) { 
+			mOverscrollEdgeEffect1.setColor (Color.BLACK); 
+			mOverscrollEdgeEffect2.setColor (Color.BLACK); 
+		} 
+		setWillNotDraw (false); // Make invalidate () call onDraw (). 
 		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
 			float prevScale = 1; 
 			float orgScale = 1; 
@@ -130,6 +145,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 			checkClick (); 
 			disallowScale = false; 
 			getParent ().requestDisallowInterceptTouchEvent (false); 
+			mOverscrollEdgeEffect1.onRelease (); 
+			mOverscrollEdgeEffect2.onRelease (); 
 		} 
 		return result; 
 	} 
@@ -140,6 +157,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 			isPanEvent = false; 
 			touchDownTime = System.currentTimeMillis (); 
 			panVX = panVY = 0; 
+			nowPivotX = clamp (nowPivotX, 0, getWidth ()); 
+			nowPivotY = clamp (nowPivotY, 0, getHeight ()); 
 			orgPointerId = -1; // Set this like that so we don't confuse the pointers; we want to prevent unnecessary jumpiness ... 
 			calculateInitialFigures (event); 
 			handlePan (event); 
@@ -244,10 +263,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 			return; 
 		} 
-		float needPivotX = clamp (nowPivotX + offsetX / (currentScale - 1), 0, getWidth ()); 
+		float needPivotX = nowPivotX + offsetX / (currentScale - 1); 
 		float needPivotY = nowPivotY + offsetY / (currentScale - 1); 
 		verticalPanChanged = needPivotY != nowPivotY; 
-		setPivot (needPivotX, clamp (needPivotY, 0, getHeight ())); 
+		setPivot (needPivotX, needPivotY); 
 		if ((needPivotY > getHeight () || needPivotY < 0) && getChildCount () > 0) { 
 			int direction = offsetY < 0 ? -1 : +1; 
 			boolean canScroll = _childrenCanScrollVertically (direction); 
@@ -267,9 +286,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 				resetTouchVariables (prevCenterX, prevCenterY); 
 			} else { 
 				// TODO: Show feedback shadow thing that the user can't scroll anymore. 
-				setPivot (needPivotX, clamp (needPivotY, 0, getHeight ())); 
 			} 
-		} else setPivot (needPivotX, clamp (needPivotY, 0, getHeight ())); 
+		} 
 	} 
 	@Override public void scrollBy (int offsetX, int offsetY) { 
 		scrollByFloat (offsetX, offsetY); 
@@ -317,6 +335,24 @@ public class ScaleDetectorContainer extends FrameLayout {
 			dy1 = deltaYP; 
 			isPanEvent |= Math.abs (deltaYP) > mTouchSlop || Math.abs (deltaXP) > mTouchSlop; 
 			scrollByFloat (prevCenterX - x, prevCenterY - y); 
+			if (nowPivotX <= 0) { 
+				mOverscrollEdgeEffect1.onPull (-nowPivotX); 
+				mOverscrollDirection1 = 1; 
+				invalidate (); 
+			} else if (nowPivotX >= getWidth ()) { 
+				mOverscrollEdgeEffect1.onPull (nowPivotX - getWidth ()); 
+				mOverscrollDirection1 = 3; 
+				invalidate (); 
+			} 
+			if (nowPivotY <= 0) { 
+				mOverscrollEdgeEffect2.onPull (-nowPivotY); 
+				mOverscrollDirection2 = 0; 
+				invalidate (); 
+			} else if (nowPivotY >= getHeight ()) { 
+				mOverscrollEdgeEffect2.onPull (nowPivotY - getHeight ()); 
+				mOverscrollDirection2 = 2; 
+				invalidate (); 
+			} 
 		} 
 		prevCenterX = x; 
 		prevCenterY = y; 
@@ -331,7 +367,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			mFlingPrevX = nowPivotX; 
 			mFlingPrevY = 0; 
 			mFlingScroller.fling ((int) nowPivotX, 0, (int) panVX, (int) panVY, 
-					0, getWidth (), -VERTICAL_PAN_CAP, +VERTICAL_PAN_CAP 
+					-HORIZONTAL_PAN_PADDING, getWidth () + HORIZONTAL_PAN_PADDING, -VERTICAL_PAN_CAP, +VERTICAL_PAN_CAP 
 					); 
 			if (!mFlingRunning) { 
 				mFlingRunning = true; 
@@ -364,6 +400,24 @@ public class ScaleDetectorContainer extends FrameLayout {
 					float nowX = mFlingScroller.getCurrX (); 
 					float nowY = mFlingScroller.getCurrY (); 
 					scrollByFloat (nowX - mFlingPrevX, nowY - mFlingPrevY); 
+					if (nowPivotX <= 0) { 
+						mOverscrollEdgeEffect1.onAbsorb ((int) mFlingScroller.getCurrVelocity ());  
+						mOverscrollDirection1 = 1; 
+						invalidate (); 
+					} else if (nowPivotX >= getWidth ()) { 
+						mOverscrollEdgeEffect1.onAbsorb ((int) mFlingScroller.getCurrVelocity ()); 
+						mOverscrollDirection1 = 3; 
+						invalidate (); 
+					} 
+					if (nowPivotY <= 0) { 
+						mOverscrollEdgeEffect2.onAbsorb ((int) mFlingScroller.getCurrVelocity ());  
+						mOverscrollDirection2 = 0; 
+						invalidate (); 
+					} else if (nowPivotY >= getHeight ()) { 
+						mOverscrollEdgeEffect2.onAbsorb ((int) mFlingScroller.getCurrVelocity ()); 
+						mOverscrollDirection2 = 2; 
+						invalidate (); 
+					} 
 					mFlingPrevX = nowX; 
 					mFlingPrevY = nowY; 
 				} 
@@ -451,8 +505,8 @@ public class ScaleDetectorContainer extends FrameLayout {
 			View child = getChildAt (childIndex); 
 			child.setScaleX (scaleX); 
 			child.setScaleY (scaleY); 
-			child.setPivotX (pivotX); 
-			child.setPivotY (pivotY); 
+			child.setPivotX (clamp (pivotX, 0, getWidth ())); 
+			child.setPivotY (clamp (pivotY, 0, getHeight ())); 
 		} 
 		nowPivotX = pivotX; 
 		nowPivotY = pivotY; 
@@ -460,5 +514,31 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	void setPivot (float pivotX, float pivotY) { 
 		setScale (currentScale, currentScale, pivotX, pivotY); 
+	} 
+	Runnable mSimpleRequestRedraw = new Runnable () { 
+		@Override public void run () { 
+			invalidate (); 
+		} 
+	}; 
+	Runnable mRequestRedrawOnUiThread = new Runnable () { 
+		@Override public void run () { 
+			if (getContext () instanceof Activity) 
+				((Activity) getContext ()).runOnUiThread (mSimpleRequestRedraw); 
+		} 
+	}; 
+	int mOverscrollDirection1 = 0; // 0 = up, 1 = left, 2 = down, 3 = right; 
+	int mOverscrollDirection2 = 0; 
+	@Override public void onDraw (Canvas canvas) { 
+		super.onDraw (canvas); 
+		canvas.save (); 
+		canvas.rotate (mOverscrollDirection1 * 90); 
+		mOverscrollEdgeEffect1.draw (canvas); 
+		canvas.restore (); 
+		canvas.save (); 
+		canvas.rotate (mOverscrollDirection2 * 90); 
+		mOverscrollEdgeEffect2.draw (canvas); 
+		canvas.restore (); 
+		if (!mOverscrollEdgeEffect1.isFinished () || !mOverscrollEdgeEffect2.isFinished ()) 
+			postDelayed (mRequestRedrawOnUiThread, 20); 
 	} 
 } 

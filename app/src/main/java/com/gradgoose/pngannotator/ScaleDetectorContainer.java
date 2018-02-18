@@ -19,9 +19,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	static final String TAG = "ScaleDetectorContainer"; 
 	ScaleGestureDetector mScaleGestureDetector = null; 
 	GestureDetector mGeneralGestureDetector = null; 
-	float PREV_VEL_FACTOR = 0.5f; 
-	float INST_VEL_FACTOR = 0.5f; 
-	float VEL_CAP = 500f; 
+	int VERTICAL_PAN_CAP = 2000; 
 	boolean isScaleEvent = false; 
 	boolean allowZoomOut = false; 
 	boolean allowZoomIn = true; 
@@ -333,7 +331,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			mFlingPrevX = nowPivotX; 
 			mFlingPrevY = 0; 
 			mFlingScroller.fling ((int) nowPivotX, 0, (int) panVX, (int) panVY, 
-					0, getWidth (), -1000, +1000 
+					0, getWidth (), -VERTICAL_PAN_CAP, +VERTICAL_PAN_CAP 
 					); 
 			if (!mFlingRunning) { 
 				mFlingRunning = true; 

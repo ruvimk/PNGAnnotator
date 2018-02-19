@@ -11,7 +11,10 @@ import java.nio.ByteBuffer;
 
 public class TimeLog { 
 	static void logTime (File inFolder, long timestampFrom, long timestampTo) throws IOException { 
-		File logFile = new File (inFolder, "time-spent.log");
+//		if (BuildConfig.DEBUG) { 
+//			new File (inFolder, "time-spent.log").renameTo (new File (inFolder, "time-spent.log.bin")); 
+//		} 
+		File logFile = new File (inFolder, "time-spent.log.bin"); 
 		FileOutputStream fos = new FileOutputStream (logFile, true);
 		ByteBuffer buffer = ByteBuffer.allocate (16); 
 		long arr [] = new long [2]; 

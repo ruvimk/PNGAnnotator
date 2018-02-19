@@ -47,6 +47,9 @@ public class NoteActivity extends Activity {
 	File mSdDCIM = null; 
 	File mSdPictures = null; 
 	
+	File mDownloads = null; 
+	File mDocuments = null; 
+	
 	boolean mPaused = false; 
 	
 	Vector<File> mBrowsingFolders = null; 
@@ -130,7 +133,11 @@ public class NoteActivity extends Activity {
 		mPictures = Environment.getExternalStoragePublicDirectory (
 				Environment.DIRECTORY_PICTURES 
 		); 
-		// Get some folders: 
+		// Get folders where PDF files may be stored: 
+		mDownloads = Environment.getExternalStoragePublicDirectory (Environment.DIRECTORY_DOWNLOADS); 
+		if (Build.VERSION.SDK_INT >= 19) 
+			mDocuments = Environment.getExternalStoragePublicDirectory (Environment.DIRECTORY_DOCUMENTS); 
+		// Get some external folders: 
 		String inCard = mDCIM.getParent (); 
 		String sdCard = System.getenv("SECONDARY_STORAGE"); 
 		mSdDCIM = new File (sdCard + mDCIM.getAbsolutePath ().substring (inCard.length ())); 
@@ -184,6 +191,12 @@ public class NoteActivity extends Activity {
 				} 
 			} 
 		} 
+		// If we're in the root folder, then we should show links to the documents and downloads folders: 
+		if (isBrowsingRootFolder ()) { 
+			if (mDocuments == null) 
+				SubfoldersAdapter.ADDITIONAL_DIRS_TO_SHOW = new File [] { mDownloads }; 
+			else SubfoldersAdapter.ADDITIONAL_DIRS_TO_SHOW = new File [] { mDocuments, mDownloads }; 
+		} else SubfoldersAdapter.ADDITIONAL_DIRS_TO_SHOW = new File [0]; 
 		// Check to see if we have a record of what scroll position we were at last time: 
 		if (initialScrollItemPosition == 0) // (only if we don't have one loaded from onRestore...) 
 			initialScrollItemPosition = leftOff.getInt ("Scroll:" + mBrowsingFolders.get (0).getPath (), 0); 

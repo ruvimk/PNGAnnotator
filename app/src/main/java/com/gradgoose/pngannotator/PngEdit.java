@@ -811,13 +811,15 @@ public class PngEdit {
 		return editsDir; 
 	} 
 	
-	public static String getFullFileName (Context context, File pngFile) throws IOException { 
-		return getFullFileName (context, pngFile, ".dat"); 
+	public static String getFullFileName (Context context, File pngFile, int pageIndex) throws IOException { 
+		return getFullFileName (context, pngFile, ".dat", pageIndex); 
 	} 
-	public static String getFullFileName (Context context, File pngFile, String ext) throws IOException { 
+	public static String getFullFileName (Context context, File pngFile, String ext, int pageIndex) throws IOException { 
 		String md5sum = sparseCalculateMD5 (pngFile); 
 		// Create a filename that is based on this version of the file: 
-		return md5sum + "-" + Long.toString (pngFile.lastModified (), 16) + ext; 
+		String page = String.valueOf (pageIndex); 
+		while (page.length () < 4) page = "0" + page; 
+		return md5sum + "-" + Long.toString (pngFile.lastModified (), 16) + "_" + page + ext; 
 		// The edits' filename takes into account that the user may have created a second copy 
 		// of a picture file, hoping to mark up the second copy with different edits. 
 		// For example, it may be a picture of some graph paper, and the user wants to 
@@ -827,19 +829,19 @@ public class PngEdit {
 		// If the picture file is modified, then BOTH the MD5 and the lastModified () 
 		// will change, so our edits are locked onto just this version of the file. 
 	} 
-	public static File getEditsFile (Context context, File pngFile) throws IOException { 
+	public static File getEditsFile (Context context, File pngFile, int pageIndex) throws IOException { 
 		if (pngFile.getName ().toLowerCase ().endsWith (".apg")) return pngFile; 
 		
 		// Get file name: 
-		String fullFilename = getFullFileName (context, pngFile); 
+		String fullFilename = getFullFileName (context, pngFile, pageIndex); 
 		
 		// Get the file for the full filename: 
 		File ourDir = getEditsDir (context); 
 		return new File (ourDir, fullFilename); 
 	} 
-	public static PngEdit forFile (Context context, File pngFile) throws IOException {
+	public static PngEdit forFile (Context context, File pngFile, int pageIndex) throws IOException {
 		PngEdit edit = new PngEdit (context, pngFile); 
-		edit.mVectorEdits = getEditsFile (context, pngFile); 
+		edit.mVectorEdits = getEditsFile (context, pngFile, pageIndex); 
 		try { 
 			edit.loadEdits (); 
 		} catch (IOException err) { 

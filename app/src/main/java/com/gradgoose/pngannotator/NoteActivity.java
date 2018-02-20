@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -270,7 +269,7 @@ public class NoteActivity extends Activity {
 		mReloadOnNextResume = true; 
 		mPaused = true; 
 		if (mNotesAdapter != null) 
-			mNotesAdapter.recycleBitmaps (); 
+			mNotesAdapter.cleanUp (); 
 		saveTimeLog (); 
 		super.onPause (); 
 	} 
@@ -1348,12 +1347,12 @@ public class NoteActivity extends Activity {
 		return !isBrowsingRootFolder (); 
 	} 
 	boolean canEdit () { 
-		return hasImages (); 
+		return hasImages () || (mNotesAdapter != null && mNotesAdapter.mIsPDF); // If there are images, or if it's a PDF document. 
 	} 
 	
 	@Override public void finish () { 
 		if (mNotesAdapter != null) 
-			mNotesAdapter.recycleBitmaps (); 
+			mNotesAdapter.cleanUp (); 
 		super.finish (); 
 	} 
 	

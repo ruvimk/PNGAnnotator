@@ -54,7 +54,7 @@ public class ZipRenderer {
 		// Load our background bitmap and our handwritten edits: 
 		Bitmap bg = BitmapFactory.decodeFile (targetBackground.getPath ()); 
 		Bitmap bmp = Bitmap.createBitmap (bg.getWidth (), bg.getHeight (), Bitmap.Config.ARGB_8888); 
-		PngEdit edit = PngEdit.forFile (context, targetBackground); 
+		PngEdit edit = PngEdit.forFile (context, targetBackground, 1); 
 		edit.setWindowSize (bmp.getWidth (), bmp.getHeight ()); 
 		edit.setImageSize (bmp.getWidth (), bmp.getHeight ()); 
 		// Initialize our drawing tools: 

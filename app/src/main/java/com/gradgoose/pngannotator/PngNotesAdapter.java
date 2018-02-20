@@ -4,22 +4,28 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.ParcelFileDescriptor;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.shockwave.pdfium.PdfDocument;
+import com.shockwave.pdfium.PdfiumCore;
+
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -34,6 +40,8 @@ import java.util.Vector;
  */
 
 public class PngNotesAdapter extends RecyclerView.Adapter { 
+	static final String TAG = "PngNotesAdapter"; 
+	
 	final Context mContext; 
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
@@ -59,7 +67,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	View mHeaderItemViews [] = null; 
 	
 	FileListCache mCache = null; 
-	File mList [] = null; 
+	File mList [] = new File [0]; 
+	
+	boolean mIsPDF = false; 
+	
+	PdfiumCore pdfiumCore = null; 
+	PdfDocument pdfDocument = null; 
+	int mPdfPageCount = 0; 
 	
 	void setSampleMode (int sampleMode) { 
 		mSampleMode = sampleMode; 
@@ -96,7 +110,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		if (!thumbnailDir.exists () && !thumbnailDir.mkdirs ()) return null; 
 		String fullFileName; 
 		try { 
-			fullFileName = PngEdit.getFullFileName (context, targetFile, ".png"); 
+			fullFileName = PngEdit.getFullFileName (context, targetFile, ".png", 1); 
 		} catch (IOException err) { 
 			return null; 
 		} 
@@ -108,7 +122,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		if (!tileDir.exists () && !tileDir.mkdirs ()) return null; 
 		String fullFileName; 
 		try { 
-			fullFileName = PngEdit.getFullFileName (context, targetFile, ".png"); 
+			fullFileName = PngEdit.getFullFileName (context, targetFile, ".png", 1); 
 		} catch (IOException err) { 
 			return null; 
 		} 
@@ -260,9 +274,29 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				}); 
 		return mList = getFlattenedList (list); 
 	} 
+	public void preparePageList () { 
+		if (pdfDocument != null) { 
+			pdfiumCore.closeDocument (pdfDocument); 
+			pdfDocument = null; 
+		} 
+		ParcelFileDescriptor fd = null; 
+		try { 
+			fd = ParcelFileDescriptor.open (mBrowsingFolder.elementAt (0), ParcelFileDescriptor.MODE_READ_ONLY); 
+		} catch (FileNotFoundException err) { 
+			Log.e (TAG, "Error finding PDF document. " + err.toString ()); 
+		} 
+		if (fd != null) try { 
+			pdfDocument = pdfiumCore.newDocument (fd); 
+			mPdfPageCount = pdfiumCore.getPageCount (pdfDocument); 
+		} catch (IOException err) { 
+			Log.e (TAG, "Error opening PDF document. " + err.toString ()); 
+		} 
+	} 
 	
 	public void reloadList () { 
-		prepareFileList (); 
+		if (mIsPDF) 
+			preparePageList (); 
+		else prepareFileList (); 
 		notifyDataSetChanged (); 
 	} 
 	
@@ -270,8 +304,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		int headerCount = mHeaderItemViews != null ? mHeaderItemViews.length : 0; 
 		return position < headerCount ? 
 					   null : 
-				(position - headerCount < mList.length ? 
-						mList[position - headerCount] : null); 
+					   (mIsPDF ? mBrowsingFolder.elementAt (0) : (position - headerCount < mList.length ? 
+						mList[position - headerCount] : null)); 
 	} 
 	
 	private void loadIds (File list []) { 
@@ -323,8 +357,14 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 
 		mOnFilesChangedListener = onFilesChangedListener; 
-		mCache = new FileListCache (browsingDir, context.getFilesDir ()); 
-		prepareFileList (); 
+		mIsPDF = browsingDir.elementAt (0).getName ().toLowerCase ().endsWith (".pdf"); 
+		if (mIsPDF) { 
+			pdfiumCore = new PdfiumCore (context); 
+			preparePageList (); 
+		} else { 
+			mCache = new FileListCache (browsingDir, context.getFilesDir ()); 
+			prepareFileList (); 
+		} 
 		mStableIds = new HashMap<> (mList.length); 
 		loadIds (mList); 
 		notifyDataSetChanged (); 
@@ -366,6 +406,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			mAllPageViews.add (pageView); 
 		} 
 		public void bind (File itemFile, int positionInList) { 
+			int pageIndex = mIsPDF ? positionInList - countHeaderViews () : 1; 
 			titleView.setText (itemFile.getName ()); 
 			mItemFile = itemFile; 
 			mListPosition = positionInList; 
@@ -379,12 +420,35 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.sampleMode = mSampleMode; 
 			pageView.loadMode = mLoadMode; 
 			pageView.previewMode = mPreviewMode; 
-			pageView.setItemFile (itemFile); 
+			pageView.setItemFile (itemFile, pageIndex); 
 			pageView.setPenMode (mPenMode); 
 			pageView.setToolMode (mToolMode); 
 			pageView.mTool = mTool; 
 			pageView.mColor = mColor; 
 			pageView.mBrush = mBrush; 
+			if (mIsPDF && pdfDocument != null) { 
+				pdfiumCore.openPage (pdfDocument, pageIndex); 
+				int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
+				int srcHeight = pdfiumCore.getPageHeight (pdfDocument, pageIndex); 
+				int targetWidth = pageView.getWidth (); 
+				int targetHeight = targetWidth * srcHeight / srcWidth; 
+				int loadWidth = targetWidth != 0 ? Math.min (srcWidth, targetWidth) : srcWidth; 
+				int loadHeight = targetHeight != 0 ? Math.min (srcHeight, targetHeight) : srcHeight; 
+				Bitmap bmp = null; 
+				if (pageView.mBackgroundBitmap != null) { 
+					if (pageView.mBackgroundBitmap.getWidth () == loadWidth && pageView.mBackgroundBitmap.getHeight () == loadHeight) { 
+						bmp = pageView.mBackgroundBitmap; 
+						new Canvas (bmp).drawColor (Color.TRANSPARENT); 
+					} else pageView.mBackgroundBitmap.recycle (); 
+				} 
+				if (bmp == null) { 
+					bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
+				} 
+				pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, 0, 0, loadWidth, loadHeight); 
+				pageView.mBackgroundBitmap = bmp; 
+			} 
+			pageView.requestLayout (); // Just in case. 
+			pageView.invalidate (); // Just in case. 
 		} 
 	} 
 	
@@ -392,10 +456,19 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		mUsePictureFrameBackground = whetherUsePictureFrame; 
 	} 
 	
-	void recycleBitmaps () { 
+	void cleanUp () { 
 //		for (PageView pageView : mAllPageViews) 
 //			pageView.setImageBitmap (null); // This will recycle the previous bitmap. 
+		if (pdfDocument != null) { 
+			pdfiumCore.closeDocument (pdfDocument); 
+			pdfDocument = null; 
+		} 
+		for (Holder h : mHolders) { 
+			h.pageView.cleanUp (); 
+		} 
 	} 
+	
+	Vector<Holder> mHolders = new Vector<> (); 
 	
 	@Override public RecyclerView.ViewHolder onCreateViewHolder (ViewGroup parent, int viewType) { 
 		// If it's of a header view type, just return a plain holder with the header view: 
@@ -403,7 +476,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			return new Plain (mHeaderItemViews[viewType - 100]); 
 		// Otherwise, it's just a list item type; return a regular list holder of ours: 
 		View itemView = LayoutInflater.from (mContext).inflate (R.layout.big_page, parent, false); 
-		return new Holder (itemView); 
+		Holder h = new Holder (itemView); 
+		mHolders.add (h); 
+		return h; 
 	}
 	
 	@Override public void onBindViewHolder (RecyclerView.ViewHolder holder, int position) {
@@ -431,7 +506,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	@Override
 	public int getItemCount () { 
-		return (mList != null ? mList.length : 0) + 
+		return (mIsPDF ? mPdfPageCount : (mList != null ? mList.length : 0)) + 
 					   (mHeaderItemViews != null ? mHeaderItemViews.length : 0); 
 	} 
 	

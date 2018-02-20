@@ -58,6 +58,7 @@ public class PageView extends ImageView {
 	int previewMode = PREVIEW_THUMBNAIL; 
 	
 	File itemFile = null; 
+	int itemPage = 0; 
 	
 	final EditHolder edit = new EditHolder (); 
 	final PngEdit.Cache strokeCache = new PngEdit.Cache (); 
@@ -442,6 +443,7 @@ public class PageView extends ImageView {
 	int mBitmapNaturalHeight = 1; 
 //	int knownSmallVersion = 0; 
 	boolean isAnnotatedPage = false; 
+	boolean isPDF = false; 
 //	private void checkIfMd5Known (String md5) { 
 //		Resources res = getResources (); 
 //		int width = getWidth (); 
@@ -465,6 +467,8 @@ public class PageView extends ImageView {
 	class Step2Thread extends Thread { 
 		boolean cancel = false; 
 	} 
+	
+	Bitmap mBackgroundBitmap = null; // For PDF rendering, as of right now (02/19/2018). 
 	
 	Bitmap mPreviousBigBitmap = null; 
 	Bitmap mPreviousSetBitmap = null; 
@@ -491,6 +495,13 @@ public class PageView extends ImageView {
 		super.onDetachedFromWindow (); 
 		mAttachedToWindow = false; 
 //		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 
+	} 
+	
+	void cleanUp () { 
+		if (mBackgroundBitmap != null) { 
+			mBackgroundBitmap.recycle (); 
+			mBackgroundBitmap = null; 
+		} 
 	} 
 	
 	String mNowLoadingPath = ""; 
@@ -636,16 +647,24 @@ public class PageView extends ImageView {
 //		return null; 
 //	} 
 	public void setItemFile (File file) { 
+		setItemFile (file, 0); 
+	} 
+	public void setItemFile (File file, int page) { 
 		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
 //		Log.d (TAG, "Setting item file; before: " + (oldFile != null ? oldFile.getName () : "") + "; now: " + 
 //							(file != null ? file.getName () : "") + ";"); 
 		itemFile = file; 
+		itemPage = page; 
 		// If this is one of our known files, grab a small version to load just for display: 
 //		knownSmallVersion = 0; 
 //		String md5; 
-		if (file != null && file.getName ().toLowerCase ().endsWith (".apg")) { 
-//			md5 = ""; 
-			isAnnotatedPage = true; 
+		if (file != null) {
+			String fileLowerName = file.getName ().toLowerCase ();
+			if (fileLowerName.endsWith (".apg")){ 
+	//			md5 = ""; 
+					isAnnotatedPage = true; 
+			} else if (fileLowerName.endsWith (".pdf")) 
+				isPDF = true; 
 		} else {
 //			try {
 //				md5 = file != null ? PngEdit.sparseCalculateMD5 (file) : ""; 
@@ -690,7 +709,7 @@ public class PageView extends ImageView {
 //				} 
 //			} 
 //		} 
-		if (!isAnnotatedPage) { 
+		if (!isAnnotatedPage && !isPDF) { 
 			// Load just the image dimensions first: 
 			final BitmapFactory.Options options = new BitmapFactory.Options (); 
 			options.inJustDecodeBounds = true; 
@@ -701,7 +720,7 @@ public class PageView extends ImageView {
 			// We set natural width and height for the annotated page case after we load the edits. 
 		} 
 //		final Step2Thread step2 = step2setItemFile (file); 
-		if (/*knownSmallVersion == 0 && */!isAnnotatedPage) 
+		if (/*knownSmallVersion == 0 && */!isAnnotatedPage && !isPDF) 
 			Glide.with (this) 
 					.load (file) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
@@ -716,7 +735,7 @@ public class PageView extends ImageView {
 				@Override public void run () { 
 					try { 
 						synchronized (edit) { 
-							edit.value = PngEdit.forFile (getContext (), targetFile); 
+							edit.value = PngEdit.forFile (getContext (), targetFile, itemPage); 
 							if (isAnnotatedPage) { 
 								mBitmapNaturalWidth = edit.value.srcPageWidth; 
 								mBitmapNaturalHeight = edit.value.srcPageHeight; 
@@ -762,6 +781,10 @@ public class PageView extends ImageView {
 	} 
 	
 	@Override public void onMeasure (int widthMeasureSpec, int heightMeasureSpec) { 
+		if (mBackgroundBitmap != null) { 
+			mBitmapNaturalWidth = mBackgroundBitmap.getWidth (); 
+			mBitmapNaturalHeight = mBackgroundBitmap.getHeight (); 
+		} 
 		if (mBitmapNaturalWidth > 0 && mBitmapNaturalHeight > 0) { 
 			int wMode = MeasureSpec.getMode (widthMeasureSpec); 
 			int hMode = MeasureSpec.getMode (heightMeasureSpec); 
@@ -884,6 +907,12 @@ public class PageView extends ImageView {
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
+		if (mBackgroundBitmap != null) { 
+			canvas.save (); 
+			canvas.scale ((float) getWidth () / mBitmapNaturalWidth, (float) getWidth () / mBitmapNaturalWidth); 
+			canvas.drawBitmap (mBackgroundBitmap, 0, 0, null); 
+			canvas.restore (); 
+		} 
 //		if (testPolygons == null) 
 //			testPolygons = PngEdit.convertPathToPolygons (testPath, 15); 
 		

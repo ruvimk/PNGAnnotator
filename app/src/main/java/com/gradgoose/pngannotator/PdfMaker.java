@@ -95,7 +95,7 @@ public class PdfMaker {
 		to.flush (); 
 	} 
 	private void renderPage (@NonNull File from, @NonNull Writer to, int offsetIndex, @Nullable FileChannel channel, @Nullable long outOffsets []) throws IOException { 
-		PngEdit edit = PngEdit.forFile (mContext, from); 
+		PngEdit edit = PngEdit.forFile (mContext, from, 1); 
 		String contents; 
 		if (edit.srcPageBackground == 1) { 
 			edit.setWindowSize (612, 792); // Letter size. 

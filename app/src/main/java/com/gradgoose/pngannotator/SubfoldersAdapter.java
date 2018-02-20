@@ -399,7 +399,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 		public void bind (File itemFile) { 
 			File additionalFile = getAdditionalDirToShow (itemFile); 
-			iconView.setImageResource (itemFile.isDirectory () ? R.drawable.ic_folder_peach_24dp : R.drawable.ic_book_orange_24dp); 
+			iconView.setImageResource (itemFile.isDirectory () ? R.drawable.ic_folder_peach_120dp : R.drawable.ic_book_orange_120dp); 
 			itemView.setTag (R.id.item_file, itemFile); 
 			boolean showNameView = additionalFile == null && mActionModeActive; 
 			nameView.setVisibility (showNameView ? View.GONE : View.VISIBLE); 

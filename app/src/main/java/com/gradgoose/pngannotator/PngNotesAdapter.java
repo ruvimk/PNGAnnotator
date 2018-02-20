@@ -414,7 +414,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			mAllPageViews.add (pageView); 
 		} 
 		public void bind (File itemFile, int positionInList) { 
-			int pageIndex = mIsPDF ? positionInList - countHeaderViews () : 1; 
+			final int pageIndex = mIsPDF ? positionInList - countHeaderViews () : 1; 
 			titleView.setText (itemFile.getName ()); 
 			mItemFile = itemFile; 
 			mListPosition = positionInList; 
@@ -434,14 +434,23 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.mTool = mTool; 
 			pageView.mColor = mColor; 
 			pageView.mBrush = mBrush; 
-			if (mIsPDF && pdfDocument != null) { 
+			renderPage (pageIndex); 
+			if (mIsPDF) pageView.mSizeChangeCallback = new PageView.SizeChanged () { 
+				@Override public void onSizeChanged () { 
+					renderPage (pageIndex); 
+				} 
+			}; 
+			else pageView.mSizeChangeCallback = null; 
+		} 
+		void renderPage (int pageIndex) { 
+			if (mIsPDF && pdfDocument != null && pageView.getWidth () != 0) { 
 				pdfiumCore.openPage (pdfDocument, pageIndex); 
 				int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
 				int srcHeight = pdfiumCore.getPageHeight (pdfDocument, pageIndex); 
 				int targetWidth = pageView.getWidth (); 
 				int targetHeight = targetWidth * srcHeight / srcWidth; 
-				int loadWidth = targetWidth != 0 ? Math.min (srcWidth, targetWidth) : srcWidth; 
-				int loadHeight = targetHeight != 0 ? Math.min (srcHeight, targetHeight) : srcHeight; 
+				int loadWidth = Math.min (srcWidth, targetWidth); 
+				int loadHeight = Math.min (srcHeight, targetHeight); 
 				Bitmap bmp = null; 
 				if (pageView.mBackgroundBitmap != null) { 
 					if (pageView.mBackgroundBitmap.getWidth () == loadWidth && pageView.mBackgroundBitmap.getHeight () == loadHeight) { 
@@ -460,10 +469,18 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				if (bmp != null) { 
 					pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, 0, 0, loadWidth, loadHeight); 
 					pageView.mBackgroundBitmap = bmp; 
+					pageView.mBitmapNaturalWidth = loadWidth; 
+					pageView.mBitmapNaturalHeight = loadHeight; 
+				} 
+			} else { 
+				if (pageView.mBackgroundBitmap != null) { 
+					pageView.mBackgroundBitmap.recycle (); 
+					pageView.mBackgroundBitmap = null; 
 				} 
 			} 
-			pageView.requestLayout (); // Just in case. 
-			pageView.invalidate (); // Just in case. 
+			if (pageView.getWidth () * 100 / pageView.getHeight () != pageView.mBitmapNaturalWidth * 100 / pageView.mBitmapNaturalHeight) 
+				pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the bitmap's. 
+			pageView.invalidate (); 
 		} 
 	} 
 	

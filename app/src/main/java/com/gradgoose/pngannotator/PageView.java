@@ -74,7 +74,13 @@ public class PageView extends ImageView {
 		void onBitmapLoadError (); 
 	} 
 	
+	public interface SizeChanged { 
+		void onSizeChanged (); 
+	} 
+	
 	ErrorCallback mErrorCallback = null; 
+	
+	SizeChanged mSizeChangeCallback = null; 
 	
 	boolean mToolMode = false; 
 	WriteDetector mWriteDetector; 
@@ -794,10 +800,6 @@ public class PageView extends ImageView {
 	} 
 	
 	@Override public void onMeasure (int widthMeasureSpec, int heightMeasureSpec) { 
-		if (mBackgroundBitmap != null) { 
-			mBitmapNaturalWidth = mBackgroundBitmap.getWidth (); 
-			mBitmapNaturalHeight = mBackgroundBitmap.getHeight (); 
-		} 
 		if (mBitmapNaturalWidth > 0 && mBitmapNaturalHeight > 0) { 
 			int wMode = MeasureSpec.getMode (widthMeasureSpec); 
 			int hMode = MeasureSpec.getMode (heightMeasureSpec); 
@@ -823,11 +825,15 @@ public class PageView extends ImageView {
 		// Load blank into this view: 
 		Glide.with (this) 
 				.clear (this); 
+		// Load image: 
 		if (!isAnnotatedPage) 
 			Glide.with (PageView.this) 
 					.load (itemFile) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
 					.into (PageView.this); 
+		// Notify adapter's listener, etc. (for example, to re-render the PDF page): 
+		if (mSizeChangeCallback != null) 
+			mSizeChangeCallback.onSizeChanged (); 
 		// Update paper lines, if any: 
 		if (paperPoints != null) { 
 			int fromW = oldW != 0 ? oldW : 1; 

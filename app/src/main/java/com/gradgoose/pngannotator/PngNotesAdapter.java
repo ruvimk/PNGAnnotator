@@ -298,6 +298,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		if (mIsPDF) 
 			preparePageList (); 
 		else prepareFileList (); 
+		loadIds (); 
 		notifyDataSetChanged (); 
 	} 
 	

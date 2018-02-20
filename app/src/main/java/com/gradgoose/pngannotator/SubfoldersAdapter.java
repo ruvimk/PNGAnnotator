@@ -82,6 +82,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	
 	public void reloadList () { 
 		prepareFileList (); 
+		loadIds (); 
 		notifyDataSetChanged (); 
 	} 
 	

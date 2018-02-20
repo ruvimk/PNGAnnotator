@@ -1258,7 +1258,7 @@ public class NoteActivity extends Activity {
 		mStillWaitingToScroll = true; 
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
 		// Set the flag whether to allow zooming or not: 
-		boolean allowZoom = hasImages () && !useGrid; 
+		boolean allowZoom = (hasImages () || mNotesAdapter.mIsPDF) && !useGrid; 
 		mScalePageContainer.allowZoomOut = allowZoom; 
 		mScalePageContainer.allowZoomIn = allowZoom; 
 	} 

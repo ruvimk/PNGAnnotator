@@ -401,8 +401,9 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			File additionalFile = getAdditionalDirToShow (itemFile); 
 			iconView.setImageResource (itemFile.isDirectory () ? R.drawable.ic_folder_peach_24dp : R.drawable.ic_book_orange_24dp); 
 			itemView.setTag (R.id.item_file, itemFile); 
-			nameView.setVisibility (additionalFile != null && mActionModeActive ? View.GONE : View.VISIBLE); 
-			checkboxView.setVisibility (additionalFile == null && mActionModeActive ? View.VISIBLE : View.GONE); 
+			boolean showNameView = additionalFile == null && mActionModeActive; 
+			nameView.setVisibility (showNameView ? View.GONE : View.VISIBLE); 
+			checkboxView.setVisibility (showNameView ? View.VISIBLE : View.GONE); 
 			cutIcon.setVisibility (additionalFile == null && PRIVATE_CLIPBOARD.contains (itemFile.getPath ()) ? View.VISIBLE : View.GONE); 
 			nameView.setText (itemFile.getName ()); 
 			checkboxView.setText (itemFile.getName ()); 

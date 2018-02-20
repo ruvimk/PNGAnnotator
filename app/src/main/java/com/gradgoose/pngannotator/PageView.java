@@ -830,7 +830,7 @@ public class PageView extends ImageView {
 		Glide.with (this) 
 				.clear (this); 
 		// Load image: 
-		if (!isAnnotatedPage) 
+		if (!isAnnotatedPage && !isPDF) 
 			Glide.with (PageView.this) 
 					.load (itemFile) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 

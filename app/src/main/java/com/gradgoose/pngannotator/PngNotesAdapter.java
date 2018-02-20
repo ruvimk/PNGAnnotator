@@ -478,7 +478,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					pageView.mBackgroundBitmap = null; 
 				} 
 			} 
-			if (pageView.getWidth () * 100 / pageView.getHeight () != pageView.mBitmapNaturalWidth * 100 / pageView.mBitmapNaturalHeight) 
+			if (pageView.getHeight () != 0 && pageView.mBitmapNaturalHeight != 0 && 
+						pageView.getWidth () * 100 / pageView.getHeight () != pageView.mBitmapNaturalWidth * 100 / pageView.mBitmapNaturalHeight) 
 				pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the bitmap's. 
 			pageView.invalidate (); 
 		} 

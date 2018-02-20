@@ -58,10 +58,10 @@ public class PngEdit {
 					edit.points[2 * i + 1] *= height / windowHeight; 
 				} 
 			} 
+			// Change the window size: 
+			windowWidth = width; 
+			windowHeight = height; 
 		} 
-		// Change the window size: 
-		windowWidth = width; 
-		windowHeight = height; 
 	} 
 	float imageWidth = 1; 
 	float imageHeight = 1; 
@@ -75,10 +75,10 @@ public class PngEdit {
 				// Scale the brush width: 
 				edit.brushWidth *= width / imageWidth; 
 			} 
+			// Change the window size: 
+			imageWidth = width; 
+			imageHeight = height; 
 		} 
-		// Change the window size: 
-		imageWidth = width; 
-		imageHeight = height; 
 	} 
 	
 	public void addEdit (LittleEdit e) { 

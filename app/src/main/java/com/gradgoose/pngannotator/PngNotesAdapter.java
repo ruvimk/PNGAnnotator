@@ -446,7 +446,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			}; 
 			else pageView.mSizeChangeCallback = null; 
 		} 
-		void renderPage (int pageIndex) { 
+		synchronized void renderPage (int pageIndex) { 
 			if (mIsPDF && pdfDocument != null && pageView.getWidth () != 0) { 
 				pdfiumCore.openPage (pdfDocument, pageIndex); 
 				int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
@@ -456,11 +456,17 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				int loadWidth = Math.min (srcWidth, targetWidth); 
 				int loadHeight = Math.min (srcHeight, targetHeight); 
 				Bitmap bmp = null; 
-				if (pageView.mBackgroundBitmap != null) { 
-					if (pageView.mBackgroundBitmap.getWidth () == loadWidth && pageView.mBackgroundBitmap.getHeight () == loadHeight) { 
-						bmp = pageView.mBackgroundBitmap; 
-						new Canvas (bmp).drawColor (Color.TRANSPARENT); 
-					} else pageView.mBackgroundBitmap.recycle (); 
+				synchronized (pageView.mBackgroundBmpMutex) { 
+					if (pageView.mBackgroundBitmap != null) { 
+						if (pageView.mBackgroundBitmap.getWidth () == loadWidth && pageView.mBackgroundBitmap.getHeight () == loadHeight) { 
+							bmp = pageView.mBackgroundBitmap; 
+							pageView.mBackgroundBitmap = null; // So that it's not drawn while we modify it. 
+							new Canvas (bmp).drawColor (Color.TRANSPARENT); 
+						} else { 
+							pageView.mBackgroundBitmap.recycle (); 
+							pageView.mBackgroundBitmap = null; 
+						} 
+					} 
 				} 
 				if (bmp == null) { 
 					try { 

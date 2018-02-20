@@ -475,6 +475,7 @@ public class PageView extends ImageView {
 		boolean cancel = false; 
 	} 
 	
+	final Object mBackgroundBmpMutex = new Object (); 
 	Bitmap mBackgroundBitmap = null; // For PDF rendering, as of right now (02/19/2018). 
 	
 	Bitmap mPreviousBigBitmap = null; 
@@ -505,9 +506,11 @@ public class PageView extends ImageView {
 	} 
 	
 	void cleanUp () { 
-		if (mBackgroundBitmap != null) { 
-			mBackgroundBitmap.recycle (); 
-			mBackgroundBitmap = null; 
+		synchronized (mBackgroundBmpMutex) { 
+			if (mBackgroundBitmap != null) { 
+				mBackgroundBitmap.recycle (); 
+				mBackgroundBitmap = null; 
+			} 
 		} 
 		Glide.with (this).clear (this); 
 	} 
@@ -927,11 +930,13 @@ public class PageView extends ImageView {
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
-		if (mBackgroundBitmap != null) { 
-			canvas.save (); 
-			canvas.scale ((float) getWidth () / mBitmapNaturalWidth, (float) getWidth () / mBitmapNaturalWidth); 
-			canvas.drawBitmap (mBackgroundBitmap, 0, 0, null); 
-			canvas.restore (); 
+		synchronized (mBackgroundBmpMutex) { 
+			if (mBackgroundBitmap != null) { 
+				canvas.save (); 
+				canvas.scale ((float) getWidth () / mBitmapNaturalWidth, (float) getWidth () / mBitmapNaturalWidth); 
+				canvas.drawBitmap (mBackgroundBitmap, 0, 0, null); 
+				canvas.restore (); 
+			} 
 		} 
 //		if (testPolygons == null) 
 //			testPolygons = PngEdit.convertPathToPolygons (testPath, 15); 

@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Vector;
 
 /**
@@ -389,6 +390,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	public class Holder extends RecyclerView.ViewHolder { 
 		final PageView pageView; 
 		final TextView titleView; 
+		final TextView topRightView; 
 		final View tileContainer; 
 		final View horizontalRule; 
 		final View verticalRule; 
@@ -408,6 +410,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			super (root); 
 			pageView = root.findViewById (R.id.pvBigPage); 
 			titleView = root.findViewById (R.id.tvPageTitle); 
+			topRightView = root.findViewById (R.id.tvTopRightCornerText); 
 			tileContainer = root.findViewById (R.id.flPageTile); 
 			horizontalRule = root.findViewById (R.id.vHorizontalRule); 
 			verticalRule = root.findViewById (R.id.vVerticalRule); 
@@ -416,6 +419,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		public void bind (File itemFile, int positionInList) { 
 			final int pageIndex = mIsPDF ? positionInList - countHeaderViews () : 1; 
 			titleView.setText (itemFile.getName ()); 
+			topRightView.setText (mIsPDF ? String.format (Locale.US, mContext.getString (R.string.label_pg_of), pageIndex + 1, mPdfPageCount) : ""); 
 			mItemFile = itemFile; 
 			mListPosition = positionInList; 
 			pageView.setOnClickListener (onClickListener); 

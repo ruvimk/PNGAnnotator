@@ -205,7 +205,7 @@ public class NoteActivity extends Activity {
 		initUserInterface (); // Views. 
 		initActionBar (); // Title, Icon. 
 		// Add this thing to the recent folders list: 
-		if (!isBrowsingRootFolder () && mNotesAdapter.hasImages ()) { 
+		if (!isBrowsingRootFolder () && (mNotesAdapter.hasImages () || isPDF ())) { 
 			String nowBrowsing = ""; 
 			for (File f : mBrowsingFolders) { 
 				if (!nowBrowsing.isEmpty ()) nowBrowsing += "\t"; 
@@ -314,15 +314,19 @@ public class NoteActivity extends Activity {
 									mNotesAdapter.hasImages () : 
 									PngNotesAdapter.hasImages (mBrowsingFolders); 
 	} 
+	protected boolean isPDF () { 
+		return mNotesAdapter != null ? mNotesAdapter.mIsPDF : mBrowsingFolders.elementAt (0).getName ().toLowerCase ().endsWith (".pdf"); 
+	} 
 	protected boolean canShowAsGrid () { 
-		return hasImages (); 
+		return hasImages () || mNotesAdapter.mIsPDF; 
 	} 
 	void updateMenuItems () { 
 		if (mMenuGoToPage == null) return; // Return if these have not yet been initialized. 
 		boolean hasImages = hasImages (); 
-		mMenuGoToPage.setVisible (hasImages); 
+		boolean isPDF = isPDF (); 
+		mMenuGoToPage.setVisible (hasImages || isPDF); 
 		mMenuToggleOverview.setVisible (canShowAsGrid ()); 
-		mMenuShowPageNav.setVisible (hasImages ()); 
+		mMenuShowPageNav.setVisible (hasImages || isPDF); 
 		mMenuPaste.setVisible (SubfoldersAdapter.hasClipboardItems ()); 
 //		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
@@ -944,7 +948,7 @@ public class NoteActivity extends Activity {
 		return false; 
 	} 
 	boolean wantDisplaySubfoldersAsBig () { 
-		return !mNotesAdapter.hasImages () || 
+		return (!hasImages () && !isPDF ()) || 
 					   isBrowsingRootFolder (); 
 	} 
 	
@@ -1258,7 +1262,7 @@ public class NoteActivity extends Activity {
 		mStillWaitingToScroll = true; 
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
 		// Set the flag whether to allow zooming or not: 
-		boolean allowZoom = (hasImages () || mNotesAdapter.mIsPDF) && !useGrid; 
+		boolean allowZoom = (hasImages () || isPDF ()) && !useGrid; 
 		mScalePageContainer.allowZoomOut = allowZoom; 
 		mScalePageContainer.allowZoomIn = allowZoom; 
 	} 
@@ -1338,7 +1342,7 @@ public class NoteActivity extends Activity {
 		return prefs.getBoolean ("page-nav", false); 
 	} 
 	void updateViewsForPageNav () { 
-		boolean pageNavVisible = isPageNavShowing () && hasImages (); 
+		boolean pageNavVisible = isPageNavShowing () && (hasImages () || isPDF ()); 
 		ivPageUp.setVisibility (pageNavVisible ? View.VISIBLE : View.GONE); 
 		ivPageDown.setVisibility (pageNavVisible ? View.VISIBLE : View.GONE); 
 	} 
@@ -1347,7 +1351,7 @@ public class NoteActivity extends Activity {
 		return !isBrowsingRootFolder (); 
 	} 
 	boolean canEdit () { 
-		return hasImages () || (mNotesAdapter != null && mNotesAdapter.mIsPDF); // If there are images, or if it's a PDF document. 
+		return hasImages () || isPDF (); // If there are images, or if it's a PDF document. 
 	} 
 	
 	@Override public void finish () { 

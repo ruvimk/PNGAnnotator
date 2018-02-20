@@ -653,6 +653,7 @@ public class PageView extends ImageView {
 	} 
 	public void setItemFile (File file, int page) { 
 		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
+		int oldPage = itemPage; 
 //		Log.d (TAG, "Setting item file; before: " + (oldFile != null ? oldFile.getName () : "") + "; now: " + 
 //							(file != null ? file.getName () : "") + ";"); 
 		itemFile = file; 
@@ -740,7 +741,7 @@ public class PageView extends ImageView {
 		else Glide.with (this) 
 					.clear (this); 
 		// Now load our edits for this picture: 
-		if (oldFile == null || !oldFile.equals (itemFile)) {
+		if (oldFile == null || !oldFile.equals (itemFile) || oldPage != itemPage) { 
 			final File targetFile = file; 
 			// Note: This may be a pre-fetch operation, so let's do the loading in a separate thread to keep the UI responsive. 
 			(new Thread () { 

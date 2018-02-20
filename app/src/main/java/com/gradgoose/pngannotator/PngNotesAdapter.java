@@ -313,6 +313,14 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		for (Long l : mStableIds.values ()) 
 			if (l > maximum) 
 				maximum = l; 
+		if (mIsPDF) { 
+			String pdfPath = mBrowsingFolder.elementAt (0).getAbsolutePath (); 
+			for (int position = 0; position < mPdfPageCount; position++) { 
+				int pageNumber = mIsPDF ? position - countHeaderViews () + 1 : 1; 
+				String path = pdfPath + ":" + pageNumber; 
+				mStableIds.put (path, ++maximum); 
+			} 
+		} else 
 		for (File file : list) 
 			if (!mStableIds.containsKey (file.getAbsolutePath ())) 
 				mStableIds.put (file.getAbsolutePath (), ++maximum); 
@@ -504,7 +512,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	public long getItemId (int position) { 
 		File itemFile = getItemFile (position); 
 		if (itemFile != null) { 
-			String path = itemFile.getAbsolutePath (); 
+			String path; 
+			if (mIsPDF) { 
+				int pageNumber = position - countHeaderViews () + 1; 
+				path = itemFile.getAbsolutePath () + ":" + pageNumber; 
+			} else path = itemFile.getAbsolutePath (); 
 			if (mStableIds.containsKey (path)) 
 				return mStableIds.get (path); 
 		} 

@@ -947,6 +947,20 @@ public class NoteActivity extends Activity {
 		return !mNotesAdapter.hasImages () || 
 					   isBrowsingRootFolder (); 
 	} 
+	
+	Runnable mReloadAll = new Runnable () { 
+		@Override public void run () { 
+			mAlreadyHandling_OutOfMem = false; 
+			mNotesAdapter.cleanUp (); // Delete all bitmaps we made. 
+			mNotesAdapter.notifyDataSetChanged (); // Just refresh, so the ones we need now are re-created. 
+		} 
+	}; 
+	Runnable mRunUiThreadReloadAll = new Runnable () { 
+		@Override public void run () { 
+			runOnUiThread (mReloadAll); 
+		} 
+	}; 
+	
 	boolean mAlreadyHandling_OutOfMem = false; 
 	void updateUserInterface () { 
 		updateUserInterface (false); 
@@ -1047,8 +1061,10 @@ public class NoteActivity extends Activity {
 		mNotesAdapter.mErrorCallback = new PageView.ErrorCallback () { 
 			@Override public void onBitmapOutOfMemory () { 
 				Toast.makeText (NoteActivity.this, R.string.title_out_of_mem, Toast.LENGTH_SHORT).show (); 
-				mNotesAdapter.cleanUp (); // Delete all bitmaps we made. 
-				mNotesAdapter.notifyDataSetChanged (); // Just refresh, so the ones we need now are re-created. 
+//				if (!mAlreadyHandling_OutOfMem) { 
+//					mHandler.postDelayed (mRunUiThreadReloadAll, 500); 
+//					mAlreadyHandling_OutOfMem = true; 
+//				} 
 			} 
 			@Override public void onBitmapLoadError () {
 				Toast.makeText (NoteActivity.this, R.string.msg_load_error, Toast.LENGTH_SHORT).show (); 

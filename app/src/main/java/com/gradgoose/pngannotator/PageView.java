@@ -660,6 +660,7 @@ public class PageView extends ImageView {
 	public void setItemFile (File file) { 
 		setItemFile (file, 0); 
 	} 
+	boolean hasGlideImage = false; 
 	public void setItemFile (File file, int page) { 
 		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
 		int oldPage = itemPage; 
@@ -732,7 +733,7 @@ public class PageView extends ImageView {
 			// We set natural width and height for the annotated page case after we load the edits. 
 		} 
 //		final Step2Thread step2 = step2setItemFile (file); 
-		if (/*knownSmallVersion == 0 && */!isAnnotatedPage && !isPDF) 
+		if (/*knownSmallVersion == 0 && */!isAnnotatedPage && !isPDF) { 
 			Glide.with (this) 
 					.load (file) 
 					.listener (new RequestListener<Drawable> () { 
@@ -747,8 +748,13 @@ public class PageView extends ImageView {
 					}) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
 					.into (this); 
-		else Glide.with (this) 
+			hasGlideImage = true; 
+		} 
+		else if (hasGlideImage) { 
+			Glide.with (this) 
 					.clear (this); 
+			hasGlideImage = false; 
+		} 
 		// Now load our edits for this picture: 
 		if (oldFile == null || !oldFile.equals (itemFile) || oldPage != itemPage) { 
 			final File targetFile = file; 
@@ -827,9 +833,10 @@ public class PageView extends ImageView {
 		super.onSizeChanged (w, h, oldW, oldH); 
 //		Log.d (TAG, "onSizeChanged (): Reloading bitmaps, scaling vectors ..."); 
 		// Load blank into this view: 
-		Glide.with (this) 
+		if (hasGlideImage) 
+			Glide.with (this) 
 				.clear (this); 
-		// Load image: 
+		// Reload image: 
 		if (!isAnnotatedPage && !isPDF) 
 			Glide.with (PageView.this) 
 					.load (itemFile) 

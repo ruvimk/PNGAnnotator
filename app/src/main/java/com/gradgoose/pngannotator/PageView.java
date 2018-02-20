@@ -849,6 +849,7 @@ public class PageView extends ImageView {
 			@Override public void run () { 
 				synchronized (edit) { 
 					edit.value.setWindowSize (w, h); 
+					edit.value.setImageSize (w, h); 
 					strokeCache.update (edit.value); 
 					// Now update the background pattern, since it sort of depends on the view size: 
 					int background = 0; 

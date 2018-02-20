@@ -8,3 +8,5 @@
 /captures
 .externalNativeBuild
 *Thumbs.db
+*.apk
+app/release

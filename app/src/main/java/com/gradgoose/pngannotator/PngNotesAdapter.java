@@ -432,13 +432,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.sampleMode = mSampleMode; 
 			pageView.loadMode = mLoadMode; 
 			pageView.previewMode = mPreviewMode; 
+			renderPage (pageIndex); 
 			pageView.setItemFile (itemFile, pageIndex); 
 			pageView.setPenMode (mPenMode); 
 			pageView.setToolMode (mToolMode); 
 			pageView.mTool = mTool; 
 			pageView.mColor = mColor; 
 			pageView.mBrush = mBrush; 
-			renderPage (pageIndex); 
 			if (mIsPDF) pageView.mSizeChangeCallback = new PageView.SizeChanged () { 
 				@Override public void onSizeChanged () { 
 					renderPage (pageIndex); 
@@ -447,40 +447,44 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			else pageView.mSizeChangeCallback = null; 
 		} 
 		synchronized void renderPage (int pageIndex) { 
-			if (mIsPDF && pdfDocument != null && pageView.getWidth () != 0) { 
+			if (mIsPDF && pdfDocument != null) { 
 				pdfiumCore.openPage (pdfDocument, pageIndex); 
 				int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
 				int srcHeight = pdfiumCore.getPageHeight (pdfDocument, pageIndex); 
 				int targetWidth = pageView.getWidth (); 
 				int targetHeight = targetWidth * srcHeight / srcWidth; 
-				int loadWidth = Math.min (srcWidth, targetWidth); 
-				int loadHeight = Math.min (srcHeight, targetHeight); 
-				Bitmap bmp = null; 
-				synchronized (pageView.mBackgroundBmpMutex) { 
-					if (pageView.mBackgroundBitmap != null) { 
-						if (pageView.mBackgroundBitmap.getWidth () == loadWidth && pageView.mBackgroundBitmap.getHeight () == loadHeight) { 
-							bmp = pageView.mBackgroundBitmap; 
-							pageView.mBackgroundBitmap = null; // So that it's not drawn while we modify it. 
-							new Canvas (bmp).drawColor (Color.TRANSPARENT); 
-						} else { 
-							pageView.mBackgroundBitmap.recycle (); 
-							pageView.mBackgroundBitmap = null; 
+				int loadWidth = targetWidth == 0 ? srcWidth : Math.min (srcWidth, targetWidth); 
+				int loadHeight = targetHeight == 0 ? srcHeight : Math.min (srcHeight, targetHeight); 
+				pageView.mBitmapNaturalWidth = loadWidth; 
+				pageView.mBitmapNaturalHeight = loadHeight; 
+				if (targetWidth != 0) { 
+					Bitmap bmp = null; 
+					synchronized (pageView.mBackgroundBmpMutex) { 
+						if (pageView.mBackgroundBitmap != null) { 
+							if (pageView.mBackgroundBitmap.getWidth () == loadWidth && pageView.mBackgroundBitmap.getHeight () == loadHeight) { 
+								bmp = pageView.mBackgroundBitmap; 
+								pageView.mBackgroundBitmap = null; // So that it's not drawn while we modify it. 
+								new Canvas (bmp).drawColor (Color.TRANSPARENT); 
+							} else { 
+								pageView.mBackgroundBitmap.recycle (); 
+								pageView.mBackgroundBitmap = null; 
+							} 
 						} 
 					} 
-				} 
-				if (bmp == null) { 
-					try { 
-						bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
-					} catch (OutOfMemoryError err) { 
-						if (mErrorCallback != null) 
-							mErrorCallback.onBitmapOutOfMemory (); 
+					if (bmp == null) { 
+						try { 
+							bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
+						} catch (OutOfMemoryError err) { 
+							if (mErrorCallback != null) 
+								mErrorCallback.onBitmapOutOfMemory (); 
+						} 
 					} 
-				} 
-				if (bmp != null) { 
-					pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, 0, 0, loadWidth, loadHeight); 
-					pageView.mBackgroundBitmap = bmp; 
-					pageView.mBitmapNaturalWidth = loadWidth; 
-					pageView.mBitmapNaturalHeight = loadHeight; 
+					if (bmp != null) { 
+						pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, 0, 0, loadWidth, loadHeight); 
+						pageView.mBackgroundBitmap = bmp; 
+						pageView.mBitmapNaturalWidth = loadWidth; 
+						pageView.mBitmapNaturalHeight = loadHeight; 
+					} 
 				} 
 			} else { 
 				if (pageView.mBackgroundBitmap != null) { 

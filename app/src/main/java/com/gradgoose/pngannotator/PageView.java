@@ -777,7 +777,7 @@ public class PageView extends ImageView {
 					try { 
 						synchronized (edit) { 
 							edit.value = PngEdit.forFile (getContext (), targetFile, targetPage); 
-							if (isAnnotatedPage || (isPDF && edit.value.mVectorEdits.exists ())) { 
+							if (isAnnotatedPage) { 
 								mBitmapNaturalWidth = edit.value.srcPageWidth; 
 								mBitmapNaturalHeight = edit.value.srcPageHeight; 
 							} else { 

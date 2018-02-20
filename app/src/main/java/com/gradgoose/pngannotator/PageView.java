@@ -181,7 +181,19 @@ public class PageView extends ImageView {
 								// just appending the last edits. 
 								// SAME applies to UNDO operations, etc., 
 								// whenever we're NOT simply appending. 
-								if (isEraser) 
+								boolean needResize = (int) (edit.value.windowWidth * 100 / edit.value.windowHeight) != 
+															 getWidth () * 100 / getHeight () || 
+															 (edit.value.srcPageWidth * 100 / edit.value.srcPageHeight) != 
+																	 getWidth () * 100 / getHeight (); 
+								if (needResize) { 
+									float w = edit.value.windowWidth; 
+									float h = w * getHeight () / getWidth (); 
+									edit.value.setWindowSize (w, h); 
+									edit.value.setImageSize (w, h); 
+									edit.value.srcPageWidth = (int) w; 
+									edit.value.srcPageHeight = (int) h; 
+								} 
+								if (isEraser || needResize) 
 									edit.value.useDifferentialSave = false; // TODO: Take this into a separate thread, as non-differential save *is* slow. 
 								edit.value.saveEdits (); // Save. 
 								executingPushes--; // Make the counter 0, so strokes can be edited again. 
@@ -765,14 +777,14 @@ public class PageView extends ImageView {
 					try { 
 						synchronized (edit) { 
 							edit.value = PngEdit.forFile (getContext (), targetFile, targetPage); 
-							if (isAnnotatedPage) { 
+							if (isAnnotatedPage || (isPDF && edit.value.mVectorEdits.exists ())) { 
 								mBitmapNaturalWidth = edit.value.srcPageWidth; 
 								mBitmapNaturalHeight = edit.value.srcPageHeight; 
 							} else { 
 								edit.value.srcPageWidth = mBitmapNaturalWidth; 
 								edit.value.srcPageHeight = mBitmapNaturalHeight; 
 							} 
-							edit.value.setWindowSize (getWidth (), getHeight ()); 
+							edit.value.setWindowSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
 							edit.value.setImageSize (mBitmapNaturalWidth, mBitmapNaturalHeight); 
 							strokeCache.update (edit.value); 
 							// Make the background: 

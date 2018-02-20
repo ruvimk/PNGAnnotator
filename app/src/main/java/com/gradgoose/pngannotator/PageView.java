@@ -71,6 +71,7 @@ public class PageView extends ImageView {
 	
 	public interface ErrorCallback { 
 		void onBitmapOutOfMemory (); 
+		void onBitmapLoadError (); 
 	} 
 	
 	ErrorCallback mErrorCallback = null; 
@@ -502,6 +503,7 @@ public class PageView extends ImageView {
 			mBackgroundBitmap.recycle (); 
 			mBackgroundBitmap = null; 
 		} 
+		Glide.with (this).clear (this); 
 	} 
 	
 	String mNowLoadingPath = ""; 
@@ -723,6 +725,16 @@ public class PageView extends ImageView {
 		if (/*knownSmallVersion == 0 && */!isAnnotatedPage && !isPDF) 
 			Glide.with (this) 
 					.load (file) 
+					.listener (new RequestListener<Drawable> () { 
+						@Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
+							if (mErrorCallback != null) 
+								mErrorCallback.onBitmapLoadError (); 
+							return false; 
+						} 
+						@Override public boolean onResourceReady (Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) { 
+							return false; 
+						} 
+					}) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
 					.into (this); 
 		else Glide.with (this) 

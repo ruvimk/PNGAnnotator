@@ -442,10 +442,17 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					} else pageView.mBackgroundBitmap.recycle (); 
 				} 
 				if (bmp == null) { 
-					bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
+					try { 
+						bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
+					} catch (OutOfMemoryError err) { 
+						if (mErrorCallback != null) 
+							mErrorCallback.onBitmapOutOfMemory (); 
+					} 
 				} 
-				pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, 0, 0, loadWidth, loadHeight); 
-				pageView.mBackgroundBitmap = bmp; 
+				if (bmp != null) { 
+					pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, 0, 0, loadWidth, loadHeight); 
+					pageView.mBackgroundBitmap = bmp; 
+				} 
 			} 
 			pageView.requestLayout (); // Just in case. 
 			pageView.invalidate (); // Just in case. 

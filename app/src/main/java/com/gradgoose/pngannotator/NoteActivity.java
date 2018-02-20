@@ -1046,29 +1046,13 @@ public class NoteActivity extends Activity {
 		}); 
 		mNotesAdapter.mErrorCallback = new PageView.ErrorCallback () { 
 			@Override public void onBitmapOutOfMemory () { 
-				if (mAlreadyHandling_OutOfMem) return; 
-				mAlreadyHandling_OutOfMem = true; 
-				Bundle extras = getIntent ().getExtras (); 
-				boolean alreadyRestartedByError = extras != null && extras.getBoolean ("memory-error", false); 
-				if (alreadyRestartedByError) { 
-					new AlertDialog.Builder (NoteActivity.this) 
-							.setTitle (R.string.title_out_of_mem) 
-							.setMessage (R.string.msg_out_of_mem) 
-							.create ().show (); 
-				} else { 
-					String current [] = new String [mBrowsingFolders.size ()]; 
-					String parent [] = new String [mParentFolder.size ()]; 
-					for (int i = 0; i < current.length; i++) 
-						current[i] = mBrowsingFolders.elementAt (i).getAbsolutePath (); 
-					for (int i = 0; i < parent.length; i++) 
-						parent[i] = mParentFolder.elementAt (i).getAbsolutePath (); 
-					Intent intent = new Intent (NoteActivity.this, NoteActivity.class); 
-					intent.putExtra (STATE_BROWSING_PATH, current); 
-					intent.putExtra (STATE_PARENT_BROWSE, parent); 
-					intent.putExtra ("memory-error", true); 
-					startActivity (intent); 
-					finish (); 
-				} 
+				Toast.makeText (NoteActivity.this, R.string.title_out_of_mem, Toast.LENGTH_SHORT).show (); 
+				mNotesAdapter.cleanUp (); // Delete all bitmaps we made. 
+				mNotesAdapter.notifyDataSetChanged (); // Just refresh, so the ones we need now are re-created. 
+			} 
+			@Override public void onBitmapLoadError () {
+				Toast.makeText (NoteActivity.this, R.string.msg_load_error, Toast.LENGTH_SHORT).show (); 
+				Log.e (TAG, "Error loading bitmap. "); 
 			} 
 		}; 
 		mScalePageContainer.setOnScaleDoneListener (new ScaleDetectorContainer.OnScaleDone () { 

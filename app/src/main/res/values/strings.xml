@@ -41,6 +41,7 @@
 	<string name="label_page_up">Page Up</string> 
 	<string name="label_page_down">Page Down</string> 
 	
+	<string name="msg_load_error">Error loading picture</string> 
 	<string name="msg_goto_page">You are at page [current] of [total]. </string> 
 	<string name="msg_brush_width">Enter a brush width in millimeters (mm): </string> 
 	<string name="msg_could_not_new_folder">Could not create folder. Try again? </string> 

@@ -1,7 +1,7 @@
 <resources>
 	<string name="app_name">PNG Annotator</string>
 	
-	<string name="title_format">Annotate - [folder]</string> 
+	<string name="title_format">[folder]</string> 
 	<string name="title_goto_page">Go to page:</string> 
 	<string name="title_root_dir">My Folders</string> 
 	<string name="title_brush_width">Brush Width</string> 

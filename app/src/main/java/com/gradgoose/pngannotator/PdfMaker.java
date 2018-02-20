@@ -2,8 +2,12 @@ package com.gradgoose.pngannotator;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.shockwave.pdfium.PdfDocument;
+import com.shockwave.pdfium.PdfiumCore;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,23 +29,36 @@ public class PdfMaker {
 		FileOutputStream fos = new FileOutputStream (destinationPDF); 
 		FileChannel channel = fos.getChannel ();
 		OutputStreamWriter writer = new OutputStreamWriter (fos, "UTF-8"); 
-		long offsets [] = new long [4 + 2 * sourcePages.length]; // Two (page, strokes) for each page, plus three: catalog, pages, and background strokes (e.g., graph paper). 
+		int pageCount = sourcePages.length; 
+		PdfiumCore pdfiumCore = null; 
+		PdfDocument pdfDocument = null; 
+		if (sourcePages[0].getName ().toLowerCase ().endsWith (".pdf")) { 
+			pdfiumCore = new PdfiumCore (mContext); 
+			ParcelFileDescriptor pfd = ParcelFileDescriptor.open (sourcePages[0], ParcelFileDescriptor.MODE_READ_ONLY); 
+			pdfDocument = pdfiumCore.newDocument (pfd); 
+			pageCount = pdfiumCore.getPageCount (pdfDocument); 
+		} 
+		long offsets [] = new long [4 + 2 * pageCount]; // Two (page, strokes) for each page, plus three: catalog, pages, and background strokes (e.g., graph paper). 
 		writer.write ("%PDF-1.7\r\n\r\n"); writer.flush (); 
 		offsets[0] = channel.position (); 
 		writer.write ("1 0 obj\r\n<<\r\n\t/Type /Catalog\r\n\t/Pages 2 0 R\r\n>>\r\nendobj\r\n\r\n"); writer.flush (); 
 		offsets[1] = channel.position (); 
-		StringBuilder sbKids = new StringBuilder (7 * sourcePages.length); 
-		for (int i = 0; i < sourcePages.length; i++) { 
+		StringBuilder sbKids = new StringBuilder (7 * pageCount); 
+		for (int i = 0; i < pageCount; i++) { 
 			sbKids.append (2 * i + 4); 
 			sbKids.append (" 0 R "); 
 		} 
-		writer.write ("2 0 obj\r\n<<\r\n\t/Type /Pages\r\n\t/MediaBox [0 0 612 792]\r\n\t/Count " + sourcePages.length + "\r\n\t/Kids [ " + 
+		writer.write ("2 0 obj\r\n<<\r\n\t/Type /Pages\r\n\t/MediaBox [0 0 612 792]\r\n\t/Count " + pageCount + "\r\n\t/Kids [ " + 
 							  sbKids.toString () + "]\r\n>>\r\nendobj\r\n\r\n"); writer.flush (); 
 		offsets[2] = channel.position (); 
 		renderBackground (writer); 
 		offsets[3] = channel.position (); 
-		for (int i = 0; i < sourcePages.length; i++) { 
-			renderPage (sourcePages[i], writer, 2 * i + 4, channel, offsets); 
+		for (int i = 0; i < pageCount; i++) { 
+			if (pdfDocument != null) { 
+				pdfiumCore.openPage (pdfDocument, i); 
+				renderPage (sourcePages[0], writer, 2 * i + 4, channel, offsets, i); 
+			} else 
+				renderPage (sourcePages[i], writer, 2 * i + 4, channel, offsets, 1); 
 		} 
 		StringBuilder sbXref = new StringBuilder (20 * offsets.length); 
 		sbXref.append (encodeOffset (0, 10)); 
@@ -59,6 +76,8 @@ public class PdfMaker {
 		writer.flush (); 
 		writer.close (); 
 		fos.close (); 
+		if (pdfDocument != null) 
+			pdfiumCore.closeDocument (pdfDocument); 
 	} 
 	static String makePdfColor (int color) { 
 		float r = (float) Color.red (color) / 255f; 
@@ -94,8 +113,8 @@ public class PdfMaker {
 		to.write ("\r\nendstream\r\nendobj\r\n\r\n"); 
 		to.flush (); 
 	} 
-	private void renderPage (@NonNull File from, @NonNull Writer to, int offsetIndex, @Nullable FileChannel channel, @Nullable long outOffsets []) throws IOException { 
-		PngEdit edit = PngEdit.forFile (mContext, from, 1); 
+	private void renderPage (@NonNull File from, @NonNull Writer to, int offsetIndex, @Nullable FileChannel channel, @Nullable long outOffsets [], int pageIndex) throws IOException { 
+		PngEdit edit = PngEdit.forFile (mContext, from, pageIndex); 
 		String contents; 
 		if (edit.srcPageBackground == 1) { 
 			edit.setWindowSize (612, 792); // Letter size. 

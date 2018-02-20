@@ -57,7 +57,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		HashMap<String,Vector<File>> children = new HashMap<> (); 
 		for (File folder : mBrowsingFolder) { 
 			File list [] = folder.listFiles (mFilterJustFolders); 
-			for (File file : list) { 
+			if (list != null) for (File file : list) { 
 				// Skip certain folder names: 
 				if (file.getName ().equals (".thumbnails")) continue; 
 				// Add the folder to a list that has all folders of this exact name: 
@@ -107,7 +107,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		@Override public boolean accept (File file) { 
 			if (HIDDEN_FOLDERS != null && HIDDEN_FOLDERS.contains (file.getPath ())) 
 				return false; // Do not show folders that are on the "hidden" list. 
-			return file.isDirectory (); 
+			return file.isDirectory () || file.getName ().toLowerCase ().endsWith (".pdf"); 
 		} 
 	}; 
 	

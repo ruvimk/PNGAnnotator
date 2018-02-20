@@ -234,7 +234,7 @@ public class FileListCache {
 		HashMap<String,Vector<File>> children = new HashMap<> (); 
 		for (File folder : inFolder) { 
 			File list [] = folder.listFiles (filter);  
-			for (File file : list) 
+			if (list != null) for (File file : list) 
 				if (!children.containsKey (file.getName ())) { 
 					Vector<File> files = new Vector<> (); 
 					files.add (file); 

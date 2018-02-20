@@ -496,7 +496,7 @@ public class PageView extends ImageView {
 	@Override public void onAttachedToWindow () { 
 		super.onAttachedToWindow (); 
 		mAttachedToWindow = true; 
-		setItemFile (itemFile); // Reload bitmaps. 
+		setItemFile (itemFile, itemPage); // Reload bitmaps. 
 	} 
 	@Override public void onDetachedFromWindow () { 
 		super.onDetachedFromWindow (); 
@@ -749,12 +749,13 @@ public class PageView extends ImageView {
 		// Now load our edits for this picture: 
 		if (oldFile == null || !oldFile.equals (itemFile) || oldPage != itemPage) { 
 			final File targetFile = file; 
+			final int targetPage = page; 
 			// Note: This may be a pre-fetch operation, so let's do the loading in a separate thread to keep the UI responsive. 
 			(new Thread () { 
 				@Override public void run () { 
 					try { 
 						synchronized (edit) { 
-							edit.value = PngEdit.forFile (getContext (), targetFile, itemPage); 
+							edit.value = PngEdit.forFile (getContext (), targetFile, targetPage); 
 							if (isAnnotatedPage) { 
 								mBitmapNaturalWidth = edit.value.srcPageWidth; 
 								mBitmapNaturalHeight = edit.value.srcPageHeight; 

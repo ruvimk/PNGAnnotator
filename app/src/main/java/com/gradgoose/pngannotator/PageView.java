@@ -240,24 +240,6 @@ public class PageView extends ImageView {
 					} 
 				}; 
 				MyWork mGlobalPushStroke = new MyWork (); 
-	void pushStrokes (WriteDetector.Stroke ... params) { // mGlobalPushStroke
-		AsyncTask<WriteDetector.Stroke, Object, String> mPushStroke = 
-				new AsyncTask<WriteDetector.Stroke, Object, String> () { 
-					@Override protected String doInBackground (WriteDetector.Stroke... params) { 
-						return mGlobalPushStroke.updateStrokeEdits (params); 
-					} 
-					@Override protected void onPreExecute () { 
-						mGlobalPushStroke.onPreExecute (); 
-					} 
-					@Override protected void onPostExecute (String result) { 
-						mGlobalPushStroke.onPostExecute (result); 
-					} 
-					@Override protected void onProgressUpdate (Object... values) { 
-						mGlobalPushStroke.onProgressUpdate (values); 
-					} 
-				}; 
-		mPushStroke.execute (params); 
-	} 
 	void pushStrokesInThisThread (WriteDetector.Stroke ... params) { 
 		mGlobalPushStroke.onPreExecute (); 
 		String result = mGlobalPushStroke.updateStrokeEdits (params); 
@@ -457,53 +439,13 @@ public class PageView extends ImageView {
 		} 
 		return inSampleSize; 
 	} 
-	String lastLoadedPath = ""; 
 	int mBitmapNaturalWidth = 1; 
 	int mBitmapNaturalHeight = 1; 
-//	int knownSmallVersion = 0; 
 	boolean isAnnotatedPage = false; 
 	boolean isPDF = false; 
-//	private void checkIfMd5Known (String md5) { 
-//		Resources res = getResources (); 
-//		int width = getWidth (); 
-//		int height = getHeight (); 
-//		if (width == 0) width = 1; 
-//		if (height == 0) height = 1; 
-//		if (md5.equals (res.getString (R.string.md5_graph_paper))) { 
-//			knownSmallVersion = R.drawable.plain_graph_paper_4x4_small; 
-//			// Make an array of line segments for drawing graph paper: 
-//			paperPoints = paperGenerator.makeGraphPaperLines (width, height); 
-//		} 
-//		else { 
-//			int background = 0; 
-//			synchronized (edit) { 
-//				if (edit.value != null) background = edit.value.srcPageBackground; 
-//			} 
-//			if (background == 1) paperPoints = paperGenerator.makeGraphPaperLines (width, height); 
-//			else paperPoints = null; 
-//		} 
-//	} 
-	class Step2Thread extends Thread { 
-		boolean cancel = false; 
-	} 
 	
 	final Object mBackgroundBmpMutex = new Object (); 
 	Bitmap mBackgroundBitmap = null; // For PDF rendering, as of right now (02/19/2018). 
-	
-	Bitmap mPreviousBigBitmap = null; 
-	Bitmap mPreviousSetBitmap = null; 
-	@Override public void setImageBitmap (Bitmap bmp) { 
-//		Log.d (TAG, "setImageBitmap (" + (bmp != null ? "BITMAP" : "null") + ")"); 
-//		if (bmp == null) { 
-//			
-//		} 
-//		if (mPreviousSetBitmap != null) { 
-//			mPreviousSetBitmap.recycle (); 
-//		} 
-//		if (bmp == null) mPreviousBigBitmap = null; 
-//		mPreviousSetBitmap = bmp; 
-		super.setImageBitmap (bmp); 
-	} 
 	
 	boolean mAttachedToWindow = false; 
 	@Override public void onAttachedToWindow () { 
@@ -527,213 +469,21 @@ public class PageView extends ImageView {
 		Glide.with (this).clear (this); 
 	} 
 	
-	String mNowLoadingPath = ""; 
-	
-//	private @Nullable 
-//	Step2Thread step2setItemFile (final File file) { 
-////		return step2setItemFile (file, 1); 
-//		Glide.with (this) 
-//				.load (file) 
-//				.thumbnail (THUMBNAIL_MULTIPLIER) 
-//				.into (this); 
-//		return null; 
-//	} 
-//	private @Nullable 
-//	Step2Thread step2setItemFile (final @Nullable File file, final int attemptNumber) { 
-//		if (file == null) return null; 
-//		if (!mAttachedToWindow) return null; // Don't load bitmaps into views that are not visible. 
-//		// Load just the image dimensions first: 
-//		final BitmapFactory.Options options = new BitmapFactory.Options (); 
-//		if (knownSmallVersion == 0) { 
-//			// If this is a different filename from before, 
-//			if (!file.getPath ().equals (lastLoadedPath)) { 
-//				mPreviousBigBitmap = null; // No big bitmap. Just thumbnail for now. 
-//				// Load a REALLY small version for time time being, while it's loading 
-//				// (this is to avoid white blanks and confusing the user by showing 
-//				// them some random picture that they have just seen from a 
-//				// recycled view): 
-//				Bitmap littleBitmap = null; 
-//				File thumbnail = PngNotesAdapter.getThumbnailFile (getContext (), file); 
-//				try { 
-//					if ((previewMode == PREVIEW_THUMBNAIL || previewMode == PREVIEW_THUMBNAIL_IF_EXISTS) && 
-//																	thumbnail != null && thumbnail.exists ()) { 
-//						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath ()); 
-//					} else if (previewMode == PREVIEW_THUMBNAIL_IF_EXISTS) { 
-//						if (thumbnail == null || !thumbnail.exists ()) { 
-//							thumbnail = PngNotesAdapter.getTileFile (getContext (), file); 
-//							if (thumbnail == null || !thumbnail.exists ()) 
-//								thumbnail = file; 
-//						} else thumbnail = file; 
-//						options.inSampleSize = calculateInSampleSize (mBitmapNaturalWidth, 
-//								mBitmapNaturalHeight, 
-//								THUMBNAIL_SIZE, THUMBNAIL_SIZE); 
-//						littleBitmap = BitmapFactory.decodeFile (thumbnail.getPath (), options); 
-//					} 
-//					setImageBitmap (littleBitmap); 
-//				} catch (OutOfMemoryError err) { 
-//					Toast.makeText (getContext (), R.string.title_out_of_mem, Toast.LENGTH_SHORT) 
-//							.show (); 
-//					err.printStackTrace (); 
-//				} 
-//				// Update the last loaded path: 
-//				lastLoadedPath = file.getPath (); 
-//			} 
-//			// If the view size is not known yet, then don't load the big bitmap yet because we don't know how big it should be: 
-//			if (getWidth () == 0) {
-////				Log.d (TAG, "step2setItemFile (): View size not known yet. Skipping " + itemFile.getName () + " loading ..."); 
-//				return null; 
-//			} 
-//			if (file.getPath ().equals (lastLoadedPath) && mPreviousBigBitmap != null) { 
-//				return null; // Already have a big bitmap in memory of this file. 
-//			} 
-//			if (mNowLoadingPath.equals (file.getPath ())) return null; // Don't load if this exact path is already being loaded. 
-//			mNowLoadingPath = file.getPath (); 
-//			// Load the bitmap in a separate thread: 
-//			Step2Thread thread; 
-//			(thread = new Step2Thread () { 
-//				@Override public void run () {
-//					BitmapFactory.Options step2options = new BitmapFactory.Options (); // Let's use our own options object in this thread. Stay safe. 
-//					// Calculate the down-sample scale: 
-//					step2options.inSampleSize = 
-//							calculateInSampleSize (mBitmapNaturalWidth, 
-//									mBitmapNaturalHeight, 
-//									getWidth (), 
-//									0); 
-//					if (sampleMode == SAMPLE_SPARSE) { 
-//						step2options.inSampleSize = step2options.inSampleSize * 3 / 2; // 2x the sample span -> half the image size. 
-//					} 
-//					if (cancel || !mAttachedToWindow) 
-//						return; 
-//					String filePath = file.getPath (); 
-//					if (loadMode == LOAD_TILE) { 
-//						File tileFile = PngNotesAdapter.getTileFile (getContext (), file); 
-//						if (tileFile != null && tileFile.exists ()) { 
-//							// Don't down-sample tiles: 
-//							step2options.inSampleSize = 1; 
-//							// We'll be loading this smaller version: 
-//							filePath = tileFile.getPath (); 
-//						} 
-//					} 
-//					try { 
-//						Bitmap bigBitmap = BitmapFactory.decodeFile (filePath, step2options); 
-//						if (bigBitmap.getWidth () > getWidth () || bigBitmap.getHeight () > getHeight ()) { 
-//							Bitmap nowBitmap = Bitmap.createScaledBitmap (bigBitmap, getWidth (), getHeight (), true); 
-//							bigBitmap.recycle (); 
-//							bigBitmap = nowBitmap; 
-//						} 
-//						final Bitmap myBitmap = bigBitmap; 
-//						if (!cancel && mAttachedToWindow) 
-//							((Activity) getContext ()).runOnUiThread (new Runnable () {
-//								@Override
-//								public void run () {
-//									if (!cancel) { 
-////										Log.d (TAG, "step2setItemFile (): Setting bitmap " + itemFile.getName () + " ..."); 
-//										setImageBitmap (myBitmap); 
-//										mPreviousBigBitmap = myBitmap; 
-//										Log.d (TAG, "Loaded bitmap " + file.getName () + "; size: " 
-//															+ myBitmap.getWidth () + " x " + myBitmap.getHeight ()); 
-//										mNowLoadingPath = ""; // Not loading anymore. 
-//									} else myBitmap.recycle (); 
-//								}
-//							}); 
-//						else myBitmap.recycle (); 
-//					} catch (OutOfMemoryError err) { 
-//						// Print an error stack trace into the log: 
-//						err.printStackTrace (); 
-//						if (attemptNumber == 1) { 
-//							// Try again later ... 
-//							postDelayed (new Runnable () { 
-//								@Override 
-//								public void run () { 
-//									NoteActivity activity = (NoteActivity) getContext (); 
-//									if (activity.mPaused) 
-//										return; // No need to load to a paused activity. 
-//									step2setItemFile (file, attemptNumber + 1); // Try again. 
-//								} 
-//							}, 1000); 
-//						} else { 
-//							// Otherwise, get back to the activity ... 
-//							if (mErrorCallback != null) 
-//								mErrorCallback.onBitmapOutOfMemory (); 
-//						} 
-//					} 
-//				} 
-//			}).start (); 
-//			return thread; 
-//		} else { 
-//			// If this 'else' bracket was reached, it means that there is a known 
-//			// smaller version of the picture. Use IT! 
-//			// We'll actually be drawing the graph paper ourselves, so 
-//			// we won't use the blurry small version. 
-//			setImageBitmap (null); // Clear any previous bitmap. 
-//		} 
-//		return null; 
-//	} 
-	public void setItemFile (File file) { 
-		setItemFile (file, 0); 
-	} 
 	boolean hasGlideImage = false; 
 	public void setItemFile (File file, int page) { 
 		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
 		int oldPage = itemPage; 
-//		Log.d (TAG, "Setting item file; before: " + (oldFile != null ? oldFile.getName () : "") + "; now: " + 
-//							(file != null ? file.getName () : "") + ";"); 
 		itemFile = file; 
 		itemPage = page; 
-		// If this is one of our known files, grab a small version to load just for display: 
-//		knownSmallVersion = 0; 
-//		String md5; 
 		if (file != null) {
 			String fileLowerName = file.getName ().toLowerCase ();
 			if (fileLowerName.endsWith (".apg")){ 
-	//			md5 = ""; 
 					isAnnotatedPage = true; 
 			} else if (fileLowerName.endsWith (".pdf")) 
 				isPDF = true; 
-		} else {
-//			try {
-//				md5 = file != null ? PngEdit.sparseCalculateMD5 (file) : ""; 
-//			} catch (IOException err) {
-//				md5 = "";
-//			}
+		} else { 
 			isAnnotatedPage = false; 
 		} 
-//		if (!isAnnotatedPage && file != null) {
-//			checkIfMd5Known (md5); 
-//			if (knownSmallVersion != 0) { 
-//				// For saving Ruvim's notes, we did this. 
-//				try {
-//					PngEdit e = PngEdit.forFile (getContext (), file); 
-//					String fullPath = file.getAbsolutePath (); 
-//					// Find width/height: 
-//					int imgWidth = 170; 
-//					int imgHeight = 220; 
-//					{
-//						final BitmapFactory.Options options = new BitmapFactory.Options ();
-//						options.inJustDecodeBounds = true;
-//						BitmapFactory.decodeFile (file.getPath (), options);
-//						imgWidth = options.outWidth; 
-//						imgHeight = options.outHeight; 
-//					} 
-//					File now = new File (fullPath.substring (0, fullPath.lastIndexOf ('.')) + ".apg"); 
-//					if (file.renameTo (now)) { 
-//						file = now; 
-//						itemFile = now; 
-//						// Put width/height into edits: 
-//						e.srcPageWidth = imgWidth; 
-//						e.srcPageHeight = imgHeight; 
-//						// Put edits into the .apg file: 
-//						e.mTarget = now; // The new target file. 
-//						e.mVectorEdits = now; // The edits file *IS* the target file. 
-//						e.useDifferentialSave = false; // Force it to actually write out everything, not just the last changes. 
-//						e.saveEdits (); // Save data to the new place. 
-//						isAnnotatedPage = true; // Page upgraded. 
-//					} 
-//				} catch (IOException err) { 
-//					
-//				} 
-//			} 
-//		} 
 		if (!isAnnotatedPage && !isPDF) { 
 			// Load just the image dimensions first: 
 			final BitmapFactory.Options options = new BitmapFactory.Options (); 
@@ -744,8 +494,7 @@ public class PageView extends ImageView {
 			mBitmapNaturalHeight = options.outHeight; 
 			// We set natural width and height for the annotated page case after we load the edits. 
 		} 
-//		final Step2Thread step2 = step2setItemFile (file); 
-		if (/*knownSmallVersion == 0 && */!isAnnotatedPage && !isPDF) { 
+		if (!isAnnotatedPage && !isPDF) { 
 			Glide.with (this) 
 					.load (file) 
 					.listener (new RequestListener<Drawable> () { 
@@ -885,13 +634,6 @@ public class PageView extends ImageView {
 		}).start (); 
 		// Get display metrics (the object that allows us to convert CM to DP): 
 		metrics = Resources.getSystem ().getDisplayMetrics (); 
-		// Reload the item bitmaps: 
-//		if (knownSmallVersion == 0) 
-//			Glide.with (this) 
-//					.load (itemFile) 
-//					.thumbnail (THUMBNAIL_MULTIPLIER) 
-//					.into (this); 
-//		setItemFile (itemFile); // This will load the appropriately-sized bitmap into memory. 
 	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 
@@ -930,23 +672,6 @@ public class PageView extends ImageView {
 	
 	DisplayMetrics metrics = new DisplayMetrics (); 
 	
-//	float [] testPath = new float [] { 
-//											 100, 100, 
-//											 200, 100, 
-//											 300, 200, 
-//											 250, 200 
-//	}; 
-////	float [] [] testPolygons = PngEdit.convertPathToPolygons (testPath, 5); 
-//	float [] [] testPolygons = null; 
-	
-//	Paint testPaint = new Paint (); 
-//	void drawTestCircle (float x, float y, Canvas canvas) { 
-//		boolean isRed = PngEdit.isPointInPolygon (x, y, debug_polygons); 
-//		testPaint.setStyle (Paint.Style.STROKE); 
-//		testPaint.setColor (isRed ? Color.RED : Color.BLUE); 
-//		canvas.drawCircle (x, y, 4, testPaint); 
-//	} 
-	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
@@ -958,32 +683,11 @@ public class PageView extends ImageView {
 				canvas.restore (); 
 			} 
 		} 
-//		if (testPolygons == null) 
-//			testPolygons = PngEdit.convertPathToPolygons (testPath, 15); 
-		
-//		if (debug_polygons != null) { 
-//			testPaint.setColor (Color.BLACK); 
-//			testPaint.setStyle (Paint.Style.STROKE); 
-//			for (float[] testPolygon : debug_polygons) { 
-//				canvas.drawCircle (testPolygon[0], testPolygon[1], 5, testPaint); 
-//				canvas.drawLines (testPolygon, 0, testPolygon.length, testPaint); 
-//				canvas.drawLines (testPolygon, 2, testPolygon.length - 2, testPaint); 
-//				canvas.drawLine (testPolygon[testPolygon.length - 2], testPolygon[testPolygon.length - 1], 
-//						testPolygon[0], testPolygon[1], testPaint); 
-//			} 
-//			for (int x = 0; x < getWidth (); x += 15) 
-//				for (int y = (int) debug_polygons[0][33] - 60; y < (int) debug_polygons[debug_polygons.length - 1][1] + 60; y += 15) 
-//					drawTestCircle (x, y, canvas); 
-//		} 
 		// If the target image is a small version, use it: 
 		if (paperPoints != null) { 
 			paperGenerator.setupGraphPaperPaint (getWidth (), paperPaint); 
 			canvas.drawLines (paperPoints, paperPaint); 
-		} else /*switch (knownSmallVersion) */{ 
-//			case R.drawable.plain_graph_paper_4x4_small: 
-//				paperGenerator.drawGraphPaper (canvas, paperPaint); 
-//				break; 
-//			default: 
+		} else { 
 				if (isAnnotatedPage) { 
 					int background = 0; 
 					synchronized (edit) {
@@ -1009,7 +713,6 @@ public class PageView extends ImageView {
 								   : paperGenerator.getScaleFactor (canvas.getWidth ()); 
 		float minSpan = optimization_minStrokeSpan * getWidth (); 
 		if (edit.value != null) synchronized (edit) { 
-//			PngEdit.LittleEdit e; 
 			if (minSpan != 0) { 
 				for (PngEdit.LittleEdit e : edit.value.mEdits) { 
 					if (e.points.length < 8) continue; 
@@ -1040,15 +743,6 @@ public class PageView extends ImageView {
 					canvas.drawLines (e.points, strokePaint); 
 				} 
 			} else 
-//				for (PngEdit.LittleEdit e : edit.value.mEdits) { 
-//	//			for (int i = 0; i < edit.value.mEdits.size (); i++) { 
-//	//				e = edit.value.mEdits.elementAt (i); 
-//					strokePaint.setColor (e.color); 
-//					float strokeWidth = e.brushWidth * brushScale; 
-//					if (strokeWidth < 1f) strokeWidth = 0f; // Thinnest possible. 
-//					strokePaint.setStrokeWidth (strokeWidth); 
-//					canvas.drawLines (e.points, strokePaint); 
-//				} 
 				for (PngEdit.Cache.Entry entry : strokeCache.mList) {
 					strokePaint.setColor (entry.color); 
 					float strokeWidth = entry.brushWidth * brushScale; 

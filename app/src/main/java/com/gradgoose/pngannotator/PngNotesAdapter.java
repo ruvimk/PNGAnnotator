@@ -144,16 +144,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		return list2; 
 	} 
 	
-	public interface CacheUpdatedListener { 
-		void onThumbnailCacheUpdated (); 
-		void onTileCacheUpdated (); 
-	} 
-	
 	FileListCache.OnFilesChangedListener mOnFilesChangedListener = null; 
-	CacheUpdatedListener mOnCacheUpdatedListener = null; 
-	void setOnCacheUpdatedListener (CacheUpdatedListener listener) { 
-		mOnCacheUpdatedListener = listener; 
-	} 
 	
 	public File [] prepareFileList () { 
 		File list [] [] = mCache.asyncListFiles (mFilterJustImages, 

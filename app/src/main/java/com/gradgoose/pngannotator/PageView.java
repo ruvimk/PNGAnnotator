@@ -459,9 +459,11 @@ public class PageView extends ImageView {
 	@Override public void onDetachedFromWindow () { 
 		super.onDetachedFromWindow (); 
 		mAttachedToWindow = false; 
-		if (hasGlideImage) 
+		if (hasGlideImage) { 
 			Glide.with (this) 
 					.clear (this); 
+			hasGlideImage = false; 
+		} 
 //		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 
 	} 
 	
@@ -472,7 +474,10 @@ public class PageView extends ImageView {
 				mBackgroundBitmap = null; 
 			} 
 		} 
-		Glide.with (this).clear (this); 
+		if (hasGlideImage) { 
+			Glide.with (this).clear (this); 
+			hasGlideImage = false; 
+		} 
 	} 
 	
 	boolean hasGlideImage = false; 

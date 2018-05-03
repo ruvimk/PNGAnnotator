@@ -108,7 +108,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		@Override public boolean accept (File file) { 
 			if (HIDDEN_FOLDERS != null && HIDDEN_FOLDERS.contains (file.getPath ())) 
 				return false; // Do not show folders that are on the "hidden" list. 
-			return file.isDirectory () || file.getName ().toLowerCase ().endsWith (".pdf"); 
+			return !new File (file, NoteActivity.HOME_TAG).exists () && // <-- Do not show our home folder in the documents, etc. 
+						   (file.isDirectory () || file.getName ().toLowerCase ().endsWith (".pdf")); 
 		} 
 	}; 
 	

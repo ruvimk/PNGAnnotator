@@ -412,7 +412,10 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 		public void bind (File itemFile) { 
 			File additionalFile = getAdditionalDirToShow (itemFile); 
-			iconView.setImageResource (itemFile.isDirectory () ? R.drawable.ic_folder_peach_120dp : R.drawable.ic_book_orange_120dp); 
+			int folderIconResource = itemFile.isDirectory () ? R.drawable.ic_folder_peach_120dp : R.drawable.ic_book_orange_120dp; 
+			if (itemFile.getAbsolutePath ().equals ("Pictures")) 
+				folderIconResource = R.drawable.ic_picture_120dp; 
+			iconView.setImageResource (folderIconResource); 
 			itemView.setTag (R.id.item_file, itemFile); 
 			boolean showNameView = additionalFile == null && mActionModeActive; 
 			nameView.setVisibility (showNameView ? View.GONE : View.VISIBLE); 

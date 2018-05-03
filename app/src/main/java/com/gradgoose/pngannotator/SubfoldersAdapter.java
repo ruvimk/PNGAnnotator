@@ -158,9 +158,9 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		@Override public void onClick (View view) { 
 			Object tag = view.getTag (R.id.item_file); 
 			if (tag != null && tag instanceof File) { 
-				File itemFile = (File) tag;
+				File itemFile = (File) tag; 
 				if (mFolderClickListener == null || mFolderClickListener.onFolderClick (itemFile)) 
-				openSubfolder (itemFile); 
+					openSubfolder (itemFile); 
 			} 
 		} 
 	}; 

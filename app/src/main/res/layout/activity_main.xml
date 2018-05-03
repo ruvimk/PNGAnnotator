@@ -42,7 +42,12 @@
 			android:layout_gravity="bottom|start"
 			android:src="@drawable/ic_arrow_upward_black_24dp"
 			android:background="@drawable/ic_blank_page"
-			android:padding="@dimen/pg_up_down_btn_pad"
+			android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
+			android:paddingRight="@dimen/pg_up_down_btn_pad_side"
+			android:paddingTop="@dimen/pg_up_down_btn_pad_top"
+			android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
+			android:layout_marginLeft="@dimen/pg_up_down_btn_size"
+			android:layout_marginStart="@dimen/pg_up_down_btn_size"
 			android:contentDescription="@string/label_page_up"
 			/>
 		<ImageView
@@ -52,7 +57,38 @@
 			android:layout_gravity="bottom|end"
 			android:src="@drawable/ic_arrow_downward_black_24dp"
 			android:background="@drawable/ic_blank_page"
-			android:padding="@dimen/pg_up_down_btn_pad"
+			android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
+			android:paddingRight="@dimen/pg_up_down_btn_pad_side"
+			android:paddingTop="@dimen/pg_up_down_btn_pad_top"
+			android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
+			android:layout_marginRight="@dimen/pg_up_down_btn_size"
+			android:layout_marginEnd="@dimen/pg_up_down_btn_size"
+			android:contentDescription="@string/label_page_down"
+			/>
+		<ImageView
+			android:id="@+id/ivGoPageHome"
+			android:layout_width="@dimen/pg_up_down_btn_size"
+			android:layout_height="@dimen/pg_up_down_btn_size"
+			android:layout_gravity="bottom|start"
+			android:src="@drawable/ic_arrow_upmost_black_24dp"
+			android:background="@drawable/ic_blank_page"
+			android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
+			android:paddingRight="@dimen/pg_up_down_btn_pad_side"
+			android:paddingTop="@dimen/pg_up_down_btn_pad_top"
+			android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
+			android:contentDescription="@string/label_page_up"
+			/>
+		<ImageView
+			android:id="@+id/ivGoPageEnd"
+			android:layout_width="@dimen/pg_up_down_btn_size"
+			android:layout_height="@dimen/pg_up_down_btn_size"
+			android:layout_gravity="bottom|end"
+			android:src="@drawable/ic_arrow_downmost_black_24dp"
+			android:background="@drawable/ic_blank_page"
+			android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
+			android:paddingRight="@dimen/pg_up_down_btn_pad_side"
+			android:paddingTop="@dimen/pg_up_down_btn_pad_top"
+			android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
 			android:contentDescription="@string/label_page_down"
 			/>
 	</FrameLayout> 

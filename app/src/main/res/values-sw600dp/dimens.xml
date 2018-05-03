@@ -2,7 +2,9 @@
 <resources>
 	
 	<dimen name="pg_up_down_btn_size">120dp</dimen>
-	<dimen name="pg_up_down_btn_pad">16dp</dimen>
+	<dimen name="pg_up_down_btn_pad_side">10dp</dimen>
+	<dimen name="pg_up_down_btn_pad_top">28dp</dimen>
+	<dimen name="pg_up_down_btn_pad_bottom">20dp</dimen>
 	
 	
 	

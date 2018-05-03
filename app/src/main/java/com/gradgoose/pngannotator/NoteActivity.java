@@ -1021,10 +1021,11 @@ public class NoteActivity extends Activity {
 		return mBrowsingFolders.elementAt (0).equals (mPictures); 
 	} 
 	boolean isBrowsingRootFolder () { 
-		for (File folder : mBrowsingFolders) 
-			if (folder.equals (mDCIM)) 
-				return true; 
-		return false; 
+		return mBrowsingFolders.elementAt (0).equals (mHomeFolder); 
+//		for (File folder : mBrowsingFolders) 
+//			if (folder.equals (mDCIM)) 
+//				return true; 
+//		return false; 
 	} 
 	boolean wantDisplaySubfoldersAsBig () { 
 		return (!hasImages () && !isPDF ()) || 

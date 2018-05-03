@@ -32,6 +32,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 
 import java.io.File;
@@ -536,6 +537,7 @@ public class PageView extends ImageView {
 		if (!isAnnotatedPage && !isPDF) { 
 			Glide.with (this) 
 					.load (file) 
+					.apply (RequestOptions.skipMemoryCacheOf (true)) 
 					.listener (new RequestListener<Drawable> () { 
 						@Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
 							if (mErrorCallback != null) 
@@ -640,6 +642,7 @@ public class PageView extends ImageView {
 		if (!isAnnotatedPage && !isPDF) 
 			Glide.with (PageView.this) 
 					.load (itemFile) 
+					.apply (RequestOptions.skipMemoryCacheOf (true)) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
 					.into (PageView.this); 
 		// Notify adapter's listener, etc. (for example, to re-render the PDF page): 

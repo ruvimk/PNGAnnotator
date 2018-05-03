@@ -29,6 +29,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestBuilder;
+import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
@@ -545,7 +547,7 @@ public class PageView extends ImageView {
 			// We set natural width and height for the annotated page case after we load the edits. 
 		} 
 		if (!isAnnotatedPage && !isPDF) { 
-			Glide.with (this) 
+			RequestBuilder builder = Glide.with (this) 
 					.load (file) 
 					.apply (RequestOptions.skipMemoryCacheOf (true)) 
 					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
@@ -559,9 +561,10 @@ public class PageView extends ImageView {
 						@Override public boolean onResourceReady (Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) { 
 							return false; 
 						} 
-					}) 
-					.thumbnail (THUMBNAIL_MULTIPLIER) 
-					.into (this); 
+					}); 
+			if (viewMode == VIEW_LARGE)
+				builder.thumbnail (THUMBNAIL_MULTIPLIER); 
+			builder.into (this); 
 			hasGlideImage = true; 
 		} 
 		else if (hasGlideImage) { 
@@ -651,14 +654,16 @@ public class PageView extends ImageView {
 			Glide.with (this) 
 				.clear (this); 
 		// Reload image: 
-		if (!isAnnotatedPage && !isPDF) 
-			Glide.with (PageView.this) 
+		if (!isAnnotatedPage && !isPDF) { 
+			RequestBuilder builder = Glide.with (PageView.this)
 					.load (itemFile) 
 					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
 					.apply (RequestOptions.skipMemoryCacheOf (true)) 
-					.apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)) 
-					.thumbnail (THUMBNAIL_MULTIPLIER) 
-					.into (PageView.this); 
+					.apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)); 
+			if (viewMode == VIEW_LARGE) 
+				builder.thumbnail (THUMBNAIL_MULTIPLIER); 
+			builder.into (PageView.this); 
+		} 
 		// Notify adapter's listener, etc. (for example, to re-render the PDF page): 
 		if (mSizeChangeCallback != null) 
 			mSizeChangeCallback.onSizeChanged (); 

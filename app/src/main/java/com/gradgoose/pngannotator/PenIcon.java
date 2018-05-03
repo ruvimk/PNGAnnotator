@@ -88,7 +88,9 @@ public class PenIcon extends ImageView {
 		} 
 		if (!penImage.exists ()) { // Create a cache of the bitmap: 
 			// Initialize, if have not done so yet: 
-			ensureBitmapRightSize ();
+			if (!ensureBitmapRightSize ()) { 
+				return; 
+			} 
 			// Draw the pen bitmap: 
 			Bitmap greenPen = BitmapFactory.decodeResource (getResources (), R.mipmap.ic_green_pen);
 			mCanvas.drawBitmap (greenPen, 0, 0, null);
@@ -133,6 +135,10 @@ public class PenIcon extends ImageView {
 	@Override public void onMeasure (int widthMeasureSpec, int heightMeasureSpec) { 
 		setMeasuredDimension (mPenWidth, mPenHeight); 
 	} 
+	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
+		super.onSizeChanged (w, h, oldW, oldH); 
+		ensureBitmapRightSize (); 
+	} 
 	
 	Paint mPenFill = new Paint (); 
 	@Override public void onDraw (Canvas canvas) { 
@@ -142,12 +148,12 @@ public class PenIcon extends ImageView {
 		} 
 	} 
 	
-	void ensureBitmapRightSize () { 
+	boolean ensureBitmapRightSize () { 
 		int needW = getWidth (); 
 		int needH = getHeight (); 
 		if (needW == 0 || needH == 0) {
 			Log.i (TAG, "ensureBitmapRightSize (): Pen icon ImageView width or height is 0, so can't create a bitmap ... "); 
-			return; 
+			return false; 
 		} 
 		if (mBitmap == null || mBitmap.getWidth () != needW || mBitmap.getHeight () != needH) { 
 			if (mBitmap != null) 
@@ -156,6 +162,7 @@ public class PenIcon extends ImageView {
 			mCanvas = new Canvas (mBitmap); 
 			pixels = new int [needW * needH]; 
 		} 
+		return true; 
 	} 
 	
 } 

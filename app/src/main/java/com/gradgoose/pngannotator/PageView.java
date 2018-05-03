@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.Drawable;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.nfc.tech.NfcA;
 import android.os.AsyncTask;
@@ -470,6 +471,7 @@ public class PageView extends ImageView {
 	} 
 	
 	boolean hasGlideImage = false; 
+	int needRotateAngle = 0; 
 	public void setItemFile (File file, int page) { 
 		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
 		int oldPage = itemPage; 
@@ -489,9 +491,46 @@ public class PageView extends ImageView {
 			final BitmapFactory.Options options = new BitmapFactory.Options (); 
 			options.inJustDecodeBounds = true; 
 			if (file != null) BitmapFactory.decodeFile (file.getPath (), options); 
+			if (file != null) try {
+				// Get the image orientation (the camera app takes portrait pictures in landscape for some devices): 
+				// (See SO/questions/12933085/android-camera-intent-saving-image-landscape-when-taken-portrait) 
+				ExifInterface exif = new ExifInterface (file.getPath ()); 
+				String orientString = exif.getAttribute (ExifInterface.TAG_ORIENTATION); 
+				int orientation = orientString != null ? Integer.parseInt (orientString) : ExifInterface.ORIENTATION_NORMAL; 
+				switch (orientation) { 
+					case ExifInterface.ORIENTATION_ROTATE_90: 
+						needRotateAngle = 90; 
+						break; 
+					case ExifInterface.ORIENTATION_ROTATE_180: 
+						needRotateAngle = 180; 
+						break; 
+					case ExifInterface.ORIENTATION_ROTATE_270: 
+						needRotateAngle = 270; 
+						break; 
+					case ExifInterface.ORIENTATION_NORMAL: 
+					default: 
+						needRotateAngle = 0; 
+				} 
+			} catch (IOException err) { 
+				Log.e (TAG, err.getMessage ()); 
+				needRotateAngle = 0; 
+			} 
+			else { 
+				// file is null 
+				Log.i (TAG, "setItemFile () file parameter is null; defaulting to normal orientation (angle = 0)"); 
+				needRotateAngle = 0; 
+			} 
 			// Set our natural width and height variables to better handle onMeasure (): 
-			mBitmapNaturalWidth = options.outWidth; 
-			mBitmapNaturalHeight = options.outHeight; 
+			if (needRotateAngle == 90 || needRotateAngle == 270) { 
+				// The orientation requires us to swap the width and the height ... 
+				//noinspection SuspiciousNameCombination
+				mBitmapNaturalWidth = options.outHeight;
+				//noinspection SuspiciousNameCombination
+				mBitmapNaturalHeight = options.outWidth; 
+			} else { 
+				mBitmapNaturalWidth = options.outWidth; 
+				mBitmapNaturalHeight = options.outHeight; 
+			} 
 			// We set natural width and height for the annotated page case after we load the edits. 
 		} 
 		if (!isAnnotatedPage && !isPDF) { 

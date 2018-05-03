@@ -1,6 +1,8 @@
 <resources>
 	<string name="app_name">PNG Annotator</string>
 	
+	<string name="home_folder_name">Pen Notetaker</string> 
+	
 	<string name="title_format">[folder]</string> 
 	<string name="title_goto_page">Go to page:</string> 
 	<string name="title_root_dir">My Folders</string> 

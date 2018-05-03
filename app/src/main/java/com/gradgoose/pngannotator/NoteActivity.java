@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Vector;
 
@@ -38,6 +39,8 @@ import static com.gradgoose.pngannotator.SubfoldersAdapter.isOwnedByMe;
 
 public class NoteActivity extends Activity { 
 	static final String TAG = "NoteActivity"; 
+	
+	static final String HOME_TAG = ".pnhome"; 
 	
 	int mOverviewColumnCount = 3; 
 	
@@ -49,6 +52,58 @@ public class NoteActivity extends Activity {
 	
 	File mDownloads = null; 
 	File mDocuments = null; 
+	
+	File mHomeFolder = null; 
+	
+	private File findHomeFolder () { 
+		File quickCheck1 = mDocuments != null ? new File (mDocuments, HOME_TAG) : null; 
+		if (quickCheck1 != null && quickCheck1.exists ()) return quickCheck1; 
+		File quickCheck2 = new File (mPictures, HOME_TAG); 
+		if (quickCheck2.exists ()) return quickCheck2; 
+		File result = findTaggedFolder (mDocuments, HOME_TAG); 
+		if (result != null) return result; 
+		result = findTaggedFolder (mPictures, HOME_TAG); 
+		if (result != null) return result; 
+		result = findTaggedFolder (mSdDCIM, HOME_TAG); 
+		if (result != null) return result; 
+		result = findTaggedFolder (mSdPictures, HOME_TAG); 
+		if (result != null) return result; 
+		result = findTaggedFolder (mDownloads, HOME_TAG); 
+		return result; 
+	} 
+	FileFilter mJustFolders = new FileFilter () { 
+		@Override public boolean accept (File file) { 
+			return file.isDirectory (); 
+		} 
+	}; 
+	private @Nullable File findTaggedFolder (@Nullable File searchIn, String tagFileName) { 
+		if (searchIn == null) return null; 
+		File test = new File (searchIn, tagFileName); 
+		if (test.exists ()) return searchIn; 
+		File list [] = searchIn.listFiles (mJustFolders); 
+		for (File child : list) { 
+			File subResult = findTaggedFolder (child, tagFileName); 
+			if (subResult != null) 
+				return subResult; 
+		} 
+		return null; 
+	} 
+	private @Nullable File createHomeFolder () { 
+		String homeName = getString (R.string.home_folder_name); 
+		File homeFolder = mDocuments != null ? new File (mDocuments, homeName) : new File (mPictures, homeName); 
+		if (!homeFolder.exists () && !homeFolder.mkdirs ()) return null; 
+		File tagFile = new File (homeFolder, HOME_TAG); 
+		if (!tagFile.exists ()) { 
+			try {
+				if (!tagFile.createNewFile ()) { 
+					Log.i (TAG, "Home folder tag file already exists ... "); 
+				} 
+			} catch (IOException err) { 
+				Log.e (TAG, "Error creating home folder tag file. I/O Exception: " + err.getMessage ()); 
+			} 
+		} 
+		return homeFolder; 
+	} 
 	
 	boolean mPaused = false; 
 	
@@ -142,6 +197,10 @@ public class NoteActivity extends Activity {
 		String sdCard = System.getenv("SECONDARY_STORAGE"); 
 		mSdDCIM = new File (sdCard + mDCIM.getAbsolutePath ().substring (inCard.length ())); 
 		mSdPictures = new File (sdCard + mPictures.getAbsolutePath ().substring (inCard.length ())); 
+		// Find our home folder: 
+		mHomeFolder = findHomeFolder (); 
+		if (mHomeFolder == null) 
+			mHomeFolder = createHomeFolder (); 
 		// See if we had a folder already open last time that we can reopen now: 
 		if (savedInstanceState != null) { 
 			if (savedInstanceState.containsKey (STATE_BROWSING_PATH)) 

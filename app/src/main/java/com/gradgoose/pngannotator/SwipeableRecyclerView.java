@@ -302,6 +302,12 @@ public class SwipeableRecyclerView extends RecyclerView {
 							 : lm.getChildAt (0); 
 		pageScroll (child.getWidth (), child.getHeight ()); 
 	} 
+	public void pageHome () { 
+		scrollToPosition (0); 
+	} 
+	public void pageEnd () {  
+		scrollToPosition (getAdapter ().getItemCount () - 1); 
+	} 
 	public void pageScroll (int width, int height) { 
 		if (isHorizontalOrientation ()) 
 			scrollBy (width, 0); 

@@ -1195,7 +1195,7 @@ public class NoteActivity extends Activity {
 			} 
 		}); 
 		// Put it into the list only if it's not empty (to avoid a scroll bar problem): 
-		if (mSubfoldersAdapter.mList.length > 0) 
+		if (mSubfoldersAdapter.getItemCount () > 0) 
 			mNotesAdapter.setHeaderItemViews (new View [] {mRvSubfolderBrowser}); 
 		// Pen options: 
 		mRvPenOptions = findViewById (R.id.rvPenOptions); 

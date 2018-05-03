@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,6 +32,8 @@ import java.util.Vector;
  */
 
 public class SubfoldersAdapter extends RecyclerView.Adapter { 
+	static final String TAG = "SubfoldersAdapter"; 
+	
 	final Context mContext; 
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
@@ -451,6 +454,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	
 	@Override public int getItemCount () { 
+		Log.i (TAG, "getItemCount (): returning " + (mList.length + additionalDirsToShow.length)); 
 		return mList.length + additionalDirsToShow.length; 
 	} 
 	

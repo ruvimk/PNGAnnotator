@@ -300,8 +300,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		public void bind (File itemFile, int positionInList) { 
 			final int pageIndex = mIsPDF ? positionInList - countHeaderViews () : 1; 
+			String pageNumberLabel = mIsPDF ? String.format (Locale.US, mContext.getString (R.string.label_pg_of), pageIndex + 1, mPdfPageCount) : ""; 
 			titleView.setText (itemFile.getName ()); 
-			topRightView.setText (mIsPDF ? String.format (Locale.US, mContext.getString (R.string.label_pg_of), pageIndex + 1, mPdfPageCount) : ""); 
+			topRightView.setText (pageNumberLabel); 
+			topRightView.setVisibility (pageNumberLabel.isEmpty () ? View.GONE : View.VISIBLE); 
 			mItemFile = itemFile; 
 			mListPosition = positionInList; 
 			pageView.setOnClickListener (onClickListener); 

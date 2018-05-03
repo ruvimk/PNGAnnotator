@@ -113,10 +113,12 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 	}; 
 	
-	public SubfoldersAdapter (Context context, Vector<File> browsingDir) { 
+	public SubfoldersAdapter (Context context, Vector<File> browsingDir, @Nullable File [] additionalFoldersToShow) { 
 		super (); 
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 
+		if (additionalFoldersToShow != null) 
+			ADDITIONAL_DIRS_TO_SHOW = additionalFoldersToShow; 
 		prepareFileList (); 
 		mStableIds = new HashMap<> (mList.length); 
 		loadIds (mList); 
@@ -157,10 +159,16 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			Object tag = view.getTag (R.id.item_file); 
 			if (tag != null && tag instanceof File) { 
 				File itemFile = (File) tag;
+				if (mFolderClickListener == null || mFolderClickListener.onFolderClick (itemFile)) 
 				openSubfolder (itemFile); 
 			} 
 		} 
 	}; 
+	
+	public interface OnFolderClickListener { 
+		boolean onFolderClick (File folderClicked); 
+	} 
+	OnFolderClickListener mFolderClickListener = null; 
 	
 	Vector<Vector<File>> getSelectedFiles () { 
 		Vector<Vector<File>> result = new Vector<> (mSelection.size ()); 

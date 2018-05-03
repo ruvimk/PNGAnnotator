@@ -40,7 +40,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	static SharedPreferences PRIVATE_CLIPBOARD = null; 
 	static final Object CLIPBOARD_MUTEX = new Object (); 
 	
-	static File [] ADDITIONAL_DIRS_TO_SHOW = new File [0]; 
+	File [] additionalDirsToShow = new File [0]; 
 	
 	File mList [] [] = null; 
 	
@@ -118,7 +118,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		mContext = context; 
 		mBrowsingFolder = browsingDir; 
 		if (additionalFoldersToShow != null) 
-			ADDITIONAL_DIRS_TO_SHOW = additionalFoldersToShow; 
+			additionalDirsToShow = additionalFoldersToShow; 
 		prepareFileList (); 
 		mStableIds = new HashMap<> (mList.length); 
 		loadIds (mList); 
@@ -127,7 +127,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	
 	@Nullable File getAdditionalDirToShow (File matchingFile) { 
-		for (File f : ADDITIONAL_DIRS_TO_SHOW) { 
+		for (File f : additionalDirsToShow) { 
 			if (f != matchingFile) continue; 
 			return f; 
 		} 
@@ -429,9 +429,9 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	
 	@Override public void onBindViewHolder (RecyclerView.ViewHolder holder, int position) { 
 		if (holder instanceof Holder) 
-			((Holder) holder).bind (position < ADDITIONAL_DIRS_TO_SHOW.length ? 
-											ADDITIONAL_DIRS_TO_SHOW[position] : 
-											getItemFile (position - ADDITIONAL_DIRS_TO_SHOW.length)); 
+			((Holder) holder).bind (position < additionalDirsToShow.length ? 
+											additionalDirsToShow[position] : 
+											getItemFile (position - additionalDirsToShow.length)); 
 	} 
 	
 	@Override public int getItemViewType (int position) {
@@ -439,9 +439,9 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	}
 	
 	@Override public long getItemId (int position) { 
-		if (position < ADDITIONAL_DIRS_TO_SHOW.length) 
+		if (position < additionalDirsToShow.length) 
 			return 1 + position; 
-		File itemFile = getItemFile (position - ADDITIONAL_DIRS_TO_SHOW.length); 
+		File itemFile = getItemFile (position - additionalDirsToShow.length); 
 		if (itemFile != null) { 
 			String path = itemFile.getAbsolutePath (); 
 			if (mStableIds.containsKey (path)) 
@@ -451,7 +451,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	
 	@Override public int getItemCount () { 
-		return mList.length + ADDITIONAL_DIRS_TO_SHOW.length; 
+		return mList.length + additionalDirsToShow.length; 
 	} 
 	
 } 

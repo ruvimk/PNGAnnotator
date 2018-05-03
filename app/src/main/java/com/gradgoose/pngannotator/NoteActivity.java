@@ -54,6 +54,9 @@ public class NoteActivity extends Activity {
 	File mDocuments = null; 
 	
 	File mHomeFolder = null; 
+	File mAllPictures = new File ("Pictures"); 
+	
+	File [] mAdditionalDirsToShow = new File [0]; 
 	
 	private File findHomeFolder () { 
 		File quickCheck1 = mDocuments != null ? new File (mDocuments, HOME_TAG) : null; 
@@ -81,6 +84,8 @@ public class NoteActivity extends Activity {
 		File test = new File (searchIn, tagFileName); 
 		if (test.exists ()) return searchIn; 
 		File list [] = searchIn.listFiles (mJustFolders); 
+		if (list == null) 
+			return null; 
 		for (File child : list) { 
 			File subResult = findTaggedFolder (child, tagFileName); 
 			if (subResult != null) 
@@ -229,33 +234,32 @@ public class NoteActivity extends Activity {
 			if (initialScrollFraction == 0 && extras.containsKey (STATE_SCROLL_FRACTION)) 
 				initialScrollFraction = extras.getFloat (STATE_SCROLL_FRACTION); 
 		} 
-		if (mBrowsingFolders == null) // Else use the default of the DCIM folder. 
+		if (mBrowsingFolders == null) // Else use the default, i.e. the app home folder. 
 		{ 
 			mBrowsingFolders = new Vector<> (); 
-			mBrowsingFolders.add (mPictures); 
-			mBrowsingFolders.add (mDCIM); 
-			if (mSdDCIM.exists ()) 
-				mBrowsingFolders.add (mSdDCIM); 
-			if (mSdPictures.exists ()) 
-				mBrowsingFolders.add (mSdPictures); 
+			mBrowsingFolders.add (mHomeFolder); 
 		} 
 		if (mParentFolder == null) { // Use the parents of mBrowsingFolders ... 
 			mParentFolder = new Vector<> (mBrowsingFolders.capacity ()); 
 			if (!isBrowsingRootFolder ()) { 
 				// Only do this if this is not the root folder. 
-				for (File file : mBrowsingFolders) { 
-					File parent = file.getParentFile (); 
-					if (!mParentFolder.contains (parent)) // Check this, just in case. 
-						mParentFolder.add (parent); 
+				if (isBrowsingAllPicturesFolder ()) { 
+					mParentFolder.add (mHomeFolder); 
+				} else { 
+					for (File file : mBrowsingFolders) { 
+						File parent = file.getParentFile (); 
+						if (!mParentFolder.contains (parent)) // Check this, just in case. 
+							mParentFolder.add (parent); 
+					} 
 				} 
 			} 
 		} 
 		// If we're in the root folder, then we should show links to the documents and downloads folders: 
 		if (isBrowsingRootFolder ()) { 
 			if (mDocuments == null) 
-				SubfoldersAdapter.ADDITIONAL_DIRS_TO_SHOW = new File [] { mDownloads }; 
-			else SubfoldersAdapter.ADDITIONAL_DIRS_TO_SHOW = new File [] { mDocuments, mDownloads }; 
-		} else SubfoldersAdapter.ADDITIONAL_DIRS_TO_SHOW = new File [0]; 
+				mAdditionalDirsToShow = new File [] { mDownloads, mAllPictures }; 
+			else mAdditionalDirsToShow = new File [] { mDocuments, mDownloads, mAllPictures }; 
+		} else mAdditionalDirsToShow = new File [0]; 
 		// Check to see if we have a record of what scroll position we were at last time: 
 		if (initialScrollItemPosition == 0) // (only if we don't have one loaded from onRestore...) 
 			initialScrollItemPosition = leftOff.getInt ("Scroll:" + mBrowsingFolders.get (0).getPath (), 0); 
@@ -1003,6 +1007,19 @@ public class NoteActivity extends Activity {
 		mAnimateZoomLeaveStep.run (); 
 	} 
 	
+	Vector<File> getPictureFolders () { 
+		Vector<File> pictureFolders = new Vector<> (); 
+		pictureFolders.add (mPictures); 
+		pictureFolders.add (mDCIM); 
+		if (mSdDCIM.exists ()) 
+			pictureFolders.add (mSdDCIM); 
+		if (mSdPictures.exists ()) 
+			pictureFolders.add (mSdPictures); 
+		return pictureFolders; 
+	} 
+	boolean isBrowsingAllPicturesFolder () { 
+		return mBrowsingFolders.elementAt (0).equals (mPictures); 
+	} 
 	boolean isBrowsingRootFolder () { 
 		for (File folder : mBrowsingFolders) 
 			if (folder.equals (mDCIM)) 
@@ -1084,7 +1101,22 @@ public class NoteActivity extends Activity {
 				.inflate (R.layout.subfolder_browser, 
 						vgRoot, 
 						false); 
-		mSubfoldersAdapter = new SubfoldersAdapter (this, mBrowsingFolders); 
+		mSubfoldersAdapter = new SubfoldersAdapter (this, mBrowsingFolders, mAdditionalDirsToShow); 
+		mSubfoldersAdapter.mFolderClickListener = new SubfoldersAdapter.OnFolderClickListener () { 
+			@Override public boolean onFolderClick (File folderClicked) { 
+				if (folderClicked.equals (mAllPictures)) { 
+					Intent viewPictures = new Intent (NoteActivity.this, NoteActivity.class); 
+					Vector<File> pictureFolders = getPictureFolders (); 
+					String [] paths = new String [pictureFolders.size ()]; 
+					for (int i = 0; i < paths.length; i++) 
+						paths[i] = pictureFolders.elementAt (i).getAbsolutePath (); 
+					viewPictures.putExtra (STATE_BROWSING_PATH, paths); 
+					startActivity (viewPictures); 
+					return true; 
+				} 
+				return true; 
+			} 
+		}; 
 		mNotesAdapter = new PngNotesAdapter (this, mBrowsingFolders, 
 													new FileListCache.OnFilesChangedListener () { 
 														@Override 

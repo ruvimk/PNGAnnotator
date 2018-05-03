@@ -1366,5 +1366,11 @@ public class NoteActivity extends Activity {
 		super.finish (); 
 	} 
 	
+	@Override public void onDestroy () { 
+		if (mNotesAdapter != null) 
+			mNotesAdapter.cleanUp (); 
+		super.onDestroy (); 
+	} 
+	
 	
 } 

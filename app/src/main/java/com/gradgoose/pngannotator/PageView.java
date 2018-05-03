@@ -483,6 +483,35 @@ public class PageView extends ImageView {
 		} 
 	} 
 	
+	void loadGlideImage (File imageFile) { 
+		if (!isAnnotatedPage && !isPDF) { 
+			RequestBuilder builder = Glide.with (this) 
+											 .load (imageFile) 
+											 .apply (RequestOptions.skipMemoryCacheOf (true)) 
+											 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
+											 .apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)) 
+											 .listener (new RequestListener<Drawable> () { 
+												 @Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
+													 if (mErrorCallback != null) 
+														 mErrorCallback.onBitmapLoadError (); 
+													 return false; 
+												 } 
+												 @Override public boolean onResourceReady (Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) { 
+													 return false; 
+												 } 
+											 }); 
+			if (viewMode == VIEW_LARGE) 
+				builder.thumbnail (THUMBNAIL_MULTIPLIER); 
+			builder.into (this); 
+			hasGlideImage = true; 
+		} 
+		else if (hasGlideImage) { 
+			Glide.with (this) 
+					.clear (this); 
+			hasGlideImage = false; 
+		} 
+	} 
+	
 	boolean hasGlideImage = false; 
 	int needRotateAngle = 0; 
 	public void setItemFile (File file, int page) { 
@@ -546,32 +575,8 @@ public class PageView extends ImageView {
 			} 
 			// We set natural width and height for the annotated page case after we load the edits. 
 		} 
-		if (!isAnnotatedPage && !isPDF) { 
-			RequestBuilder builder = Glide.with (this) 
-					.load (file) 
-					.apply (RequestOptions.skipMemoryCacheOf (true)) 
-					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
-					.apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)) 
-					.listener (new RequestListener<Drawable> () { 
-						@Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
-							if (mErrorCallback != null) 
-								mErrorCallback.onBitmapLoadError (); 
-							return false; 
-						} 
-						@Override public boolean onResourceReady (Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) { 
-							return false; 
-						} 
-					}); 
-			if (viewMode == VIEW_LARGE)
-				builder.thumbnail (THUMBNAIL_MULTIPLIER); 
-			builder.into (this); 
-			hasGlideImage = true; 
-		} 
-		else if (hasGlideImage) { 
-			Glide.with (this) 
-					.clear (this); 
-			hasGlideImage = false; 
-		} 
+		// Load the image with the Glide library: 
+		loadGlideImage (file); 
 		// Now load our edits for this picture: 
 		if (oldFile == null || !oldFile.equals (itemFile) || oldPage != itemPage) { 
 			final File targetFile = file; 
@@ -654,16 +659,7 @@ public class PageView extends ImageView {
 			Glide.with (this) 
 				.clear (this); 
 		// Reload image: 
-		if (!isAnnotatedPage && !isPDF) { 
-			RequestBuilder builder = Glide.with (PageView.this)
-					.load (itemFile) 
-					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
-					.apply (RequestOptions.skipMemoryCacheOf (true)) 
-					.apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)); 
-			if (viewMode == VIEW_LARGE) 
-				builder.thumbnail (THUMBNAIL_MULTIPLIER); 
-			builder.into (PageView.this); 
-		} 
+		loadGlideImage (itemFile); 
 		// Notify adapter's listener, etc. (for example, to re-render the PDF page): 
 		if (mSizeChangeCallback != null) 
 			mSizeChangeCallback.onSizeChanged (); 

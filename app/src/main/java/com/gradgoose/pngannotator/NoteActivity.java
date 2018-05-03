@@ -902,6 +902,8 @@ public class NoteActivity extends Activity {
 	
 	View ivPageUp = null; 
 	View ivPageDown = null; 
+	View ivPageHome = null; 
+	View ivPageEnd = null; 
 	
 	ProgressBar pbMainProgress = null; 
 	
@@ -1215,6 +1217,8 @@ public class NoteActivity extends Activity {
 		// Page navigation buttons: 
 		ivPageUp = findViewById (R.id.ivGoPageUp); 
 		ivPageDown = findViewById (R.id.ivGoPageDown); 
+		ivPageHome = findViewById (R.id.ivGoPageHome); 
+		ivPageEnd = findViewById (R.id.ivGoPageEnd); 
 		ivPageUp.setOnClickListener (new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				if (mRvBigPages != null) 
@@ -1225,6 +1229,18 @@ public class NoteActivity extends Activity {
 			@Override public void onClick (View view) { 
 				if (mRvBigPages != null) 
 					mRvBigPages.pageDown (); 
+			} 
+		}); 
+		ivPageHome.setOnClickListener (new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				if (mRvBigPages != null) 
+					mRvBigPages.pageHome (); 
+			} 
+		}); 
+		ivPageEnd.setOnClickListener (new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				if (mRvBigPages != null) 
+					mRvBigPages.pageEnd (); 
 			} 
 		}); 
 		updateViewsForPageNav (); 
@@ -1345,6 +1361,8 @@ public class NoteActivity extends Activity {
 		boolean pageNavVisible = isPageNavShowing () && (hasImages () || isPDF ()); 
 		ivPageUp.setVisibility (pageNavVisible ? View.VISIBLE : View.GONE); 
 		ivPageDown.setVisibility (pageNavVisible ? View.VISIBLE : View.GONE); 
+		ivPageHome.setVisibility (pageNavVisible ? View.VISIBLE : View.GONE); 
+		ivPageEnd.setVisibility (pageNavVisible ? View.VISIBLE : View.GONE); 
 	} 
 	
 	boolean canGoBack () { 

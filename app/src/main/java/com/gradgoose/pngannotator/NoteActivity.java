@@ -1113,7 +1113,7 @@ public class NoteActivity extends Activity {
 						paths[i] = pictureFolders.elementAt (i).getAbsolutePath (); 
 					viewPictures.putExtra (STATE_BROWSING_PATH, paths); 
 					startActivity (viewPictures); 
-					return true; 
+					return false; 
 				} 
 				return true; 
 			} 

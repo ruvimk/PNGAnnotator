@@ -50,8 +50,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	boolean mPenMode = false; 
 	boolean mToolMode = false; 
 	
-	boolean mUsePictureFrameBackground = true; 
-	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
 	float mBrush = 3.0f; 
@@ -280,8 +278,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		final TextView titleView; 
 		final TextView topRightView; 
 		final View tileContainer; 
-		final View horizontalRule; 
-		final View verticalRule; 
 		final View.OnClickListener onClickListener = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				if (mOnNoteInteractListener != null) mOnNoteInteractListener.onNotePageClicked (mItemFile, mListPosition); 
@@ -300,8 +296,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			titleView = root.findViewById (R.id.tvPageTitle); 
 			topRightView = root.findViewById (R.id.tvTopRightCornerText); 
 			tileContainer = root.findViewById (R.id.flPageTile); 
-			horizontalRule = root.findViewById (R.id.vHorizontalRule); 
-			verticalRule = root.findViewById (R.id.vVerticalRule); 
 			mAllPageViews.add (pageView); 
 		} 
 		public void bind (File itemFile, int positionInList) { 
@@ -312,10 +306,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			mListPosition = positionInList; 
 			pageView.setOnClickListener (onClickListener); 
 			pageView.setOnLongClickListener (onLongClickListener); 
-			tileContainer.setBackgroundResource (mUsePictureFrameBackground ? android.R.drawable.picture_frame : 0); 
-			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
-			horizontalRule.setVisibility (mUsePictureFrameBackground ? View.GONE : View.VISIBLE); 
-			verticalRule.setVisibility (mUsePictureFrameBackground ? View.GONE : View.VISIBLE); 
+//			tileContainer.setBackgroundResource (mUsePictureFrameBackground ? android.R.drawable.picture_frame : 0); 
+//			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.viewMode = mViewMode; 
 			renderPage (pageIndex); 
@@ -383,10 +375,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the bitmap's. 
 			pageView.invalidate (); 
 		} 
-	} 
-	
-	public void usePictureFrameBackground (boolean whetherUsePictureFrame) { 
-		mUsePictureFrameBackground = whetherUsePictureFrame; 
 	} 
 	
 	void cleanUp () { 

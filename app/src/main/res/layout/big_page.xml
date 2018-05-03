@@ -3,7 +3,6 @@
 	android:id="@+id/flPageTile"
 	android:layout_width="match_parent" 
 	android:layout_height="wrap_content"
-	android:background="@android:drawable/picture_frame"
 	>
 	
 	<com.gradgoose.pngannotator.PageView
@@ -40,21 +39,5 @@
 		android:layout_gravity="top|end"
 		android:text="TITLE"
 		/>
-	
-	<View
-		android:id="@+id/vHorizontalRule"
-		android:layout_width="match_parent"
-		android:layout_height="1dp"
-		android:background="#8888"
-		android:layout_gravity="bottom"
-		/> 
-	
-	<View
-		android:id="@+id/vVerticalRule"
-		android:layout_width="1dp"
-		android:layout_height="match_parent"
-		android:background="#8888"
-		android:layout_gravity="end"
-		/> 
 	
 </FrameLayout>

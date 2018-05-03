@@ -60,6 +60,8 @@ public class PageView extends ImageView {
 	
 	int viewMode = VIEW_LARGE; 
 	
+	float borderWidth = 1.0f; 
+	
 	File itemFile = null; 
 	int itemPage = 0; 
 	
@@ -264,6 +266,8 @@ public class PageView extends ImageView {
 		erasePaint.setColor (ERASE_COLOR); 
 //		erasePaint.setXfermode (new PorterDuffXfermode (PorterDuff.Mode.SRC_OUT)); 
 //		setLayerType (LAYER_TYPE_SOFTWARE, null); 
+		borderPaint.setStyle (Paint.Style.STROKE); 
+		borderPaint.setColor (Color.argb (128, 0, 0, 0)); 
 		mOtherGestureDetector = new GestureDetector (getContext (), new GestureDetector.OnGestureListener () { 
 			@Override public boolean onDown (MotionEvent motionEvent) { 
 				return true; 
@@ -722,6 +726,8 @@ public class PageView extends ImageView {
 	Paint paperPaint = new Paint (); // For drawing graph paper, etc. 
 	PaperGenerator paperGenerator = new PaperGenerator (); 
 	
+	Paint borderPaint = new Paint (); 
+	
 	int prevColor = 0; 
 	int prevTool = 0; 
 	
@@ -812,6 +818,9 @@ public class PageView extends ImageView {
 		strokePaint.setStrokeWidth (Math.max (PaperGenerator.getPxPerMm (mBitmapNaturalWidth, 
 				mBitmapNaturalHeight) * mBrush * brushScale, 1f)); // Just cap this to 1+, for simple one-liner code. 
 		canvas.drawLines (tmpPoints, 0, tmpPointCount, strokePaint); 
+		// Draw a border around this view: 
+		borderPaint.setStrokeWidth (2 * borderWidth); 
+		canvas.drawRect (0, 0, getWidth (), getHeight (), borderPaint); 
 	} 
 	
 } 

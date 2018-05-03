@@ -1257,7 +1257,6 @@ public class NoteActivity extends Activity {
 		// Change the layout manager: 
 		boolean useGrid = canShowAsGrid () && prefs.getBoolean ("notes-overview", false); 
 		mScalePageContainer.allowZoomOut = !useGrid; // Allow zoom-out leave gesture if we're in full-page view. 
-		mNotesAdapter.usePictureFrameBackground (useGrid); // Use picture frame tiles if they're in a grid. 
 		mNotesAdapter.setViewMode (useGrid ? PageView.VIEW_SMALL : PageView.VIEW_LARGE); 
 		mRvBigPages.setLayoutManager (useGrid ? mNoteOverviewLayoutManager : mNotesLayoutManager); 
 		// Wait for the RecyclerView to finish loading, and then scroll to the right place: 

@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical"
 	tools:context="com.gradgoose.pngannotator.NoteActivity"
 	android:id="@+id/vMainRoot"
 	>
@@ -13,90 +12,89 @@
 		android:id="@+id/rvPenOptions"
 		android:layout_width="match_parent"
 		android:layout_height="52dp"
+		android:layout_gravity="top"
 		android:background="@drawable/pen_selection_background"
 		/>
 	
-	<FrameLayout
-		android:id="@+id/flNotesArea"
+	<com.gradgoose.pngannotator.ScaleDetectorContainer
+		android:id="@+id/flScaleDetectorContainer"
 		android:layout_width="match_parent"
-		android:layout_height="0dp"
-		android:layout_weight="1">
-		<com.gradgoose.pngannotator.ScaleDetectorContainer
-			android:id="@+id/flScaleDetectorContainer"
+		android:layout_height="match_parent"
+		android:layout_marginTop="52dp"
+		>
+		<com.gradgoose.pngannotator.SwipeableRecyclerView
+			android:id="@+id/rvBigPages"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent">
-			<com.gradgoose.pngannotator.SwipeableRecyclerView
-				android:id="@+id/rvBigPages"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent"
-				android:clipToPadding="false"
-				android:scrollbars="vertical|horizontal"
-				android:animateLayoutChanges="false"
-				android:background="#eee"
-				/>
-		</com.gradgoose.pngannotator.ScaleDetectorContainer> 
-		<ImageView
-			android:id="@+id/ivGoPageUp"
-			android:layout_width="@dimen/pg_up_down_btn_size"
-			android:layout_height="@dimen/pg_up_down_btn_size" 
-			android:layout_gravity="bottom|start"
-			android:src="@drawable/ic_arrow_upward_black_24dp"
-			android:background="@drawable/ic_blank_page"
-			android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
-			android:paddingRight="@dimen/pg_up_down_btn_pad_side"
-			android:paddingTop="@dimen/pg_up_down_btn_pad_top"
-			android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
-			android:layout_marginLeft="@dimen/pg_up_down_btn_size"
-			android:layout_marginStart="@dimen/pg_up_down_btn_size"
-			android:contentDescription="@string/label_page_up"
+			android:layout_height="match_parent"
+			android:clipToPadding="false"
+			android:scrollbars="vertical|horizontal"
+			android:animateLayoutChanges="false"
+			android:background="#eee"
 			/>
-		<ImageView
-			android:id="@+id/ivGoPageDown"
-			android:layout_width="@dimen/pg_up_down_btn_size"
-			android:layout_height="@dimen/pg_up_down_btn_size" 
-			android:layout_gravity="bottom|end"
-			android:src="@drawable/ic_arrow_downward_black_24dp"
-			android:background="@drawable/ic_blank_page"
-			android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
-			android:paddingRight="@dimen/pg_up_down_btn_pad_side"
-			android:paddingTop="@dimen/pg_up_down_btn_pad_top"
-			android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
-			android:layout_marginRight="@dimen/pg_up_down_btn_size"
-			android:layout_marginEnd="@dimen/pg_up_down_btn_size"
-			android:contentDescription="@string/label_page_down"
-			/>
-		<ImageView
-			android:id="@+id/ivGoPageHome"
-			android:layout_width="@dimen/pg_up_down_btn_size"
-			android:layout_height="@dimen/pg_up_down_btn_size"
-			android:layout_gravity="bottom|start"
-			android:src="@drawable/ic_arrow_upmost_black_24dp"
-			android:background="@drawable/ic_blank_page"
-			android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
-			android:paddingRight="@dimen/pg_up_down_btn_pad_side"
-			android:paddingTop="@dimen/pg_up_down_btn_pad_top"
-			android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
-			android:contentDescription="@string/label_page_up"
-			/>
-		<ImageView
-			android:id="@+id/ivGoPageEnd"
-			android:layout_width="@dimen/pg_up_down_btn_size"
-			android:layout_height="@dimen/pg_up_down_btn_size"
-			android:layout_gravity="bottom|end"
-			android:src="@drawable/ic_arrow_downmost_black_24dp"
-			android:background="@drawable/ic_blank_page"
-			android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
-			android:paddingRight="@dimen/pg_up_down_btn_pad_side"
-			android:paddingTop="@dimen/pg_up_down_btn_pad_top"
-			android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
-			android:contentDescription="@string/label_page_down"
-			/>
-	</FrameLayout> 
+	</com.gradgoose.pngannotator.ScaleDetectorContainer> 
+	<ImageView
+		android:id="@+id/ivGoPageUp"
+		android:layout_width="@dimen/pg_up_down_btn_size"
+		android:layout_height="@dimen/pg_up_down_btn_size" 
+		android:layout_gravity="bottom|start"
+		android:src="@drawable/ic_arrow_upward_black_24dp"
+		android:background="@drawable/ic_blank_page"
+		android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
+		android:paddingRight="@dimen/pg_up_down_btn_pad_side"
+		android:paddingTop="@dimen/pg_up_down_btn_pad_top"
+		android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
+		android:layout_marginLeft="@dimen/pg_up_down_btn_size"
+		android:layout_marginStart="@dimen/pg_up_down_btn_size"
+		android:contentDescription="@string/label_page_up"
+		/>
+	<ImageView
+		android:id="@+id/ivGoPageDown"
+		android:layout_width="@dimen/pg_up_down_btn_size"
+		android:layout_height="@dimen/pg_up_down_btn_size" 
+		android:layout_gravity="bottom|end"
+		android:src="@drawable/ic_arrow_downward_black_24dp"
+		android:background="@drawable/ic_blank_page"
+		android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
+		android:paddingRight="@dimen/pg_up_down_btn_pad_side"
+		android:paddingTop="@dimen/pg_up_down_btn_pad_top"
+		android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
+		android:layout_marginRight="@dimen/pg_up_down_btn_size"
+		android:layout_marginEnd="@dimen/pg_up_down_btn_size"
+		android:contentDescription="@string/label_page_down"
+		/>
+	<ImageView
+		android:id="@+id/ivGoPageHome"
+		android:layout_width="@dimen/pg_up_down_btn_size"
+		android:layout_height="@dimen/pg_up_down_btn_size"
+		android:layout_gravity="bottom|start"
+		android:src="@drawable/ic_arrow_upmost_black_24dp"
+		android:background="@drawable/ic_blank_page"
+		android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
+		android:paddingRight="@dimen/pg_up_down_btn_pad_side"
+		android:paddingTop="@dimen/pg_up_down_btn_pad_top"
+		android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
+		android:contentDescription="@string/label_page_up"
+		/>
+	<ImageView
+		android:id="@+id/ivGoPageEnd"
+		android:layout_width="@dimen/pg_up_down_btn_size"
+		android:layout_height="@dimen/pg_up_down_btn_size"
+		android:layout_gravity="bottom|end"
+		android:src="@drawable/ic_arrow_downmost_black_24dp"
+		android:background="@drawable/ic_blank_page"
+		android:paddingLeft="@dimen/pg_up_down_btn_pad_side"
+		android:paddingRight="@dimen/pg_up_down_btn_pad_side"
+		android:paddingTop="@dimen/pg_up_down_btn_pad_top"
+		android:paddingBottom="@dimen/pg_up_down_btn_pad_bottom"
+		android:contentDescription="@string/label_page_down"
+		/>
 	
 	<ProgressBar
 		android:id="@+id/pbMainProgress"
 		style="?android:attr/progressBarStyleHorizontal"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content" />
+		android:layout_height="wrap_content" 
+		android:layout_gravity="bottom"
+		/>
 	
-</LinearLayout>
+</FrameLayout>

@@ -52,13 +52,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	boolean mUsePictureFrameBackground = true; 
 	
-	int mSampleMode = PageView.SAMPLE_NORMAL; 
-	int mLoadMode = PageView.LOAD_ORIGINAL; 
-	int mPreviewMode = PageView.PREVIEW_THUMBNAIL; 
-	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
 	float mBrush = 3.0f; 
+	
+	int mViewMode = PageView.VIEW_LARGE; 
 	
 	PageView.ErrorCallback mErrorCallback = null; 
 	
@@ -76,14 +74,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	PdfDocument pdfDocument = null; 
 	int mPdfPageCount = 0; 
 	
-	void setSampleMode (int sampleMode) { 
-		mSampleMode = sampleMode; 
-	} 
-	void setLoadMode (int loadMode) { 
-		mLoadMode = loadMode; 
-	} 
-	void setPreviewMode (int previewMode) { 
-		mPreviewMode = previewMode; 
+	void setViewMode (int mode) { 
+		mViewMode = mode; 
 	} 
 	
 	void setNoteInteractListener (OnNoteInteractListener listener) { 
@@ -325,9 +317,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			horizontalRule.setVisibility (mUsePictureFrameBackground ? View.GONE : View.VISIBLE); 
 			verticalRule.setVisibility (mUsePictureFrameBackground ? View.GONE : View.VISIBLE); 
 			pageView.mErrorCallback = mErrorCallback; 
-			pageView.sampleMode = mSampleMode; 
-			pageView.loadMode = mLoadMode; 
-			pageView.previewMode = mPreviewMode; 
+			pageView.viewMode = mViewMode; 
 			renderPage (pageIndex); 
 			pageView.setItemFile (itemFile, pageIndex); 
 			pageView.setPenMode (mPenMode); 

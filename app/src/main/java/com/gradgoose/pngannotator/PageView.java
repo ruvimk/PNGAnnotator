@@ -45,23 +45,18 @@ import java.io.IOException;
 
 public class PageView extends ImageView { 
 	static final String TAG = "PageView"; 
-	static final int SAMPLE_NORMAL = 0; // Use calcInSampleSize () as usual. 
-	static final int SAMPLE_SPARSE = 1; // Load images in half the NORMAL resolution. 
-	static final int LOAD_ORIGINAL = 0; // Load actual bitmaps. 
-	static final int LOAD_TILE = 1; // Load scaled-down tiles if available. 
-	static final int PREVIEW_THUMBNAIL = 0; // Show the 16x16 version while loading the bigger bitmap. 
-	static final int PREVIEW_THUMBNAIL_IF_EXISTS = 1; // Show 16x16 version only if a pre-scaled one is available in the cache. 
-	static final int PREVIEW_NONE = 2; // Don't show anything at all while loading the bigger bitmap. 
+	static final int VIEW_LARGE = 0; 
+	static final int VIEW_SMALL = 1; 
 	
 	static final int THUMBNAIL_SIZE = 64; 
 	static final float THUMBNAIL_MULTIPLIER = 0.01f; 
 	
-	static final float GLIDE_USE_PIXEL_SIZE = .75f; // Change this to update image load density. 
-	float GLIDE_SIZE_MULT = 0.125f; // This will be changed by the constructor. 
+	static final float GLIDE_USE_PIXEL_LARGE_SIZE = .75f; // Change this to update image load density. 
+	static final float GLIDE_USE_PIXEL_SMALL_SIZE = .50f; 
+	float GLIDE_LARGE_SIZE_MULT = 0.125f; // This will be changed by the constructor. 
+	float GLIDE_SMALL_SIZE_MULT = 0.125f; 
 	
-	int sampleMode = SAMPLE_NORMAL; 
-	int loadMode = LOAD_ORIGINAL; 
-	int previewMode = PREVIEW_THUMBNAIL; 
+	int viewMode = VIEW_LARGE; 
 	
 	File itemFile = null; 
 	int itemPage = 0; 
@@ -256,7 +251,8 @@ public class PageView extends ImageView {
 	public PageView (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
 		metrics = getResources ().getDisplayMetrics (); 
-		GLIDE_SIZE_MULT = GLIDE_USE_PIXEL_SIZE / metrics.density; 
+		GLIDE_LARGE_SIZE_MULT = GLIDE_USE_PIXEL_LARGE_SIZE / metrics.density; 
+		GLIDE_SMALL_SIZE_MULT = GLIDE_USE_PIXEL_SMALL_SIZE / metrics.density; 
 		strokePaint.setStyle (Paint.Style.STROKE); 
 		strokePaint.setStrokeCap (Paint.Cap.ROUND); 
 		strokePaint.setStrokeJoin (Paint.Join.ROUND); 
@@ -553,7 +549,7 @@ public class PageView extends ImageView {
 					.load (file) 
 					.apply (RequestOptions.skipMemoryCacheOf (true)) 
 					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
-					.apply (RequestOptions.sizeMultiplierOf (GLIDE_SIZE_MULT)) 
+					.apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)) 
 					.listener (new RequestListener<Drawable> () { 
 						@Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
 							if (mErrorCallback != null) 
@@ -660,7 +656,7 @@ public class PageView extends ImageView {
 					.load (itemFile) 
 					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
 					.apply (RequestOptions.skipMemoryCacheOf (true)) 
-					.apply (RequestOptions.sizeMultiplierOf (GLIDE_SIZE_MULT)) 
+					.apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
 					.into (PageView.this); 
 		// Notify adapter's listener, etc. (for example, to re-render the PDF page): 

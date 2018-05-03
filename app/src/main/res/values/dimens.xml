@@ -11,6 +11,8 @@
 	<dimen name="pg_up_down_btn_pad_side">5dp</dimen>
 	<dimen name="pg_up_down_btn_pad_top">14dp</dimen>
 	<dimen name="pg_up_down_btn_pad_bottom">10dp</dimen>
+	
+	<dimen name="pen_options_height">52dp</dimen> 
 
 	<!-- The default paper size (1 = letter; 0 = A4): -->
 	<integer name="default_paper_size">0</integer> 

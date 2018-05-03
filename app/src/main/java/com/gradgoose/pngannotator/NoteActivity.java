@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -1012,6 +1013,9 @@ public class NoteActivity extends Activity {
 		updateViewsForPenMode (); 
 		// Show the pen options only if there are images available for editing: 
 		mRvPenOptions.setVisibility (canEdit () ? View.VISIBLE : View.GONE); 
+		ViewGroup.LayoutParams lpNote = mScalePageContainer.getLayoutParams (); 
+		FrameLayout.LayoutParams lpNoteFL = (FrameLayout.LayoutParams) lpNote; 
+		lpNoteFL.topMargin = canEdit () ? getResources ().getDimensionPixelOffset (R.dimen.pen_options_height) : 0; 
 	} 
 	void initUserInterface () { 
 		ViewGroup vgRoot = (ViewGroup) findViewById (R.id.vMainRoot); 

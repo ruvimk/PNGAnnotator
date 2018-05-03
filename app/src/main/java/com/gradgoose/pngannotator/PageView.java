@@ -483,7 +483,7 @@ public class PageView extends ImageView {
 		} 
 	} 
 	
-	void loadGlideImage (File imageFile) { 
+	private void loadGlideImage (File imageFile) { 
 		if (!isAnnotatedPage && !isPDF) { 
 			RequestBuilder builder = Glide.with (this) 
 											 .load (imageFile) 

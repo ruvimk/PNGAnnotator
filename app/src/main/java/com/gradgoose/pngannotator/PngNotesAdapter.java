@@ -328,7 +328,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				mStableIds.put (file.getAbsolutePath (), ++maximum); 
 	} 
 	private void loadIds () { 
-		prepareFileList (); 
+		if (mIsPDF) 
+			preparePageList (); 
+		else 
+			prepareFileList (); 
 		loadIds (mList); 
 	} 
 	

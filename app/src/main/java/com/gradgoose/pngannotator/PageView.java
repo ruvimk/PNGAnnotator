@@ -459,6 +459,9 @@ public class PageView extends ImageView {
 	@Override public void onDetachedFromWindow () { 
 		super.onDetachedFromWindow (); 
 		mAttachedToWindow = false; 
+		if (hasGlideImage) 
+			Glide.with (this) 
+					.clear (this); 
 //		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 
 	} 
 	

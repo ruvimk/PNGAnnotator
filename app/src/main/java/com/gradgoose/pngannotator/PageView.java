@@ -56,6 +56,9 @@ public class PageView extends ImageView {
 	static final int THUMBNAIL_SIZE = 64; 
 	static final float THUMBNAIL_MULTIPLIER = 0.01f; 
 	
+	static final float GLIDE_USE_PIXEL_SIZE = .75f; // Change this to update image load density. 
+	float GLIDE_SIZE_MULT = 0.125f; // This will be changed by the constructor. 
+	
 	int sampleMode = SAMPLE_NORMAL; 
 	int loadMode = LOAD_ORIGINAL; 
 	int previewMode = PREVIEW_THUMBNAIL; 
@@ -252,6 +255,8 @@ public class PageView extends ImageView {
 	static final int ERASE_COLOR = Color.WHITE; 
 	public PageView (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
+		metrics = getResources ().getDisplayMetrics (); 
+		GLIDE_SIZE_MULT = GLIDE_USE_PIXEL_SIZE / metrics.density; 
 		strokePaint.setStyle (Paint.Style.STROKE); 
 		strokePaint.setStrokeCap (Paint.Cap.ROUND); 
 		strokePaint.setStrokeJoin (Paint.Join.ROUND); 
@@ -548,6 +553,7 @@ public class PageView extends ImageView {
 					.load (file) 
 					.apply (RequestOptions.skipMemoryCacheOf (true)) 
 					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
+					.apply (RequestOptions.sizeMultiplierOf (GLIDE_SIZE_MULT)) 
 					.listener (new RequestListener<Drawable> () { 
 						@Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
 							if (mErrorCallback != null) 
@@ -654,6 +660,7 @@ public class PageView extends ImageView {
 					.load (itemFile) 
 					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
 					.apply (RequestOptions.skipMemoryCacheOf (true)) 
+					.apply (RequestOptions.sizeMultiplierOf (GLIDE_SIZE_MULT)) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
 					.into (PageView.this); 
 		// Notify adapter's listener, etc. (for example, to re-render the PDF page): 
@@ -685,8 +692,6 @@ public class PageView extends ImageView {
 				}); 
 			} 
 		}).start (); 
-		// Get display metrics (the object that allows us to convert CM to DP): 
-		metrics = Resources.getSystem ().getDisplayMetrics (); 
 	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 

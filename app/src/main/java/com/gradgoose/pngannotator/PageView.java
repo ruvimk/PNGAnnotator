@@ -30,6 +30,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
@@ -538,6 +539,7 @@ public class PageView extends ImageView {
 			Glide.with (this) 
 					.load (file) 
 					.apply (RequestOptions.skipMemoryCacheOf (true)) 
+					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
 					.listener (new RequestListener<Drawable> () { 
 						@Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
 							if (mErrorCallback != null) 
@@ -642,6 +644,7 @@ public class PageView extends ImageView {
 		if (!isAnnotatedPage && !isPDF) 
 			Glide.with (PageView.this) 
 					.load (itemFile) 
+					.apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
 					.apply (RequestOptions.skipMemoryCacheOf (true)) 
 					.thumbnail (THUMBNAIL_MULTIPLIER) 
 					.into (PageView.this); 

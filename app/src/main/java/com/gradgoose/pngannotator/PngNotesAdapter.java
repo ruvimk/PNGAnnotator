@@ -129,99 +129,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		return new File (tileDir, fullFileName); 
 	} 
-	static class UpdateCache extends AsyncTask<File [], Void, Integer> { 
-		Context mContext; 
-		CacheUpdatedListener mOnUpdate = null; 
-		int mWhichDir = 0; 
-		public UpdateCache (Context context, int whichDir) { 
-			mContext = context; 
-			mWhichDir = whichDir; 
-		} 
-		void close () { 
-			mContext = null; 
-			mOnUpdate = null; 
-		} 
-		@Override protected Integer doInBackground (File [] ... files) {
-			int windowWidth = 1024; 
-			int windowHeight = 1024; 
-			int changedCount = 0; 
-			if (mContext instanceof Activity) { 
-				DisplayMetrics displayMetrics = new DisplayMetrics (); 
-				((Activity) mContext).getWindowManager () 
-						.getDefaultDisplay () 
-						.getMetrics (displayMetrics); 
-				windowWidth = displayMetrics.widthPixels; 
-				windowHeight = displayMetrics.heightPixels; 
-			} 
-			for (File [] list : files) {
-				for (File picture : list) {
-					String path = picture.getPath (); 
-					if (path.endsWith (".apg")) continue; // Skip, since this is not a bitmap. 
-					// Get the file where to save the thumbnail: 
-					File thumbnail = mWhichDir == 1 ? getTileFile (mContext, picture) : getThumbnailFile (mContext, picture); 
-					if (thumbnail == null) continue;
-					// If the picture didn't change, skip updating the thumbnail: 
-					if (thumbnail.exists () &&
-								thumbnail.lastModified () > picture.lastModified ())
-						continue;
-					// Load just the image dimensions first: 
-					final BitmapFactory.Options options = new BitmapFactory.Options ();
-					options.inJustDecodeBounds = true;
-					BitmapFactory.decodeFile (picture.getPath (), options);
-					// Load a REALLY small version for time time being, while it's loading 
-					// (this is to avoid white blanks and confusing the user by showing 
-					// them some random picture that they have just seen from a 
-					// recycled view): 
-					options.inJustDecodeBounds = false;
-					// For a tile, load a bigger bitmap first. 
-					options.inSampleSize = PageView.calculateInSampleSize (options.outWidth, 
-							options.outHeight, 1024, 1024); 
-					// Load a small version of the picture into a bitmap: 
-					Bitmap big = BitmapFactory.decodeFile (picture.getPath (), options); 
-					if (big == null) continue; // Picture could have changed in the meantime ... 
-					// We're loading tiles ... 
-					int needSize = mWhichDir == 1 ? Math.min (windowWidth / 2, windowHeight / 2) 
-										   : PageView.THUMBNAIL_SIZE; 
-					Bitmap bmp = Bitmap.createScaledBitmap (big, needSize, needSize, true); 
-					if (bmp != big) 
-						big.recycle (); 
-					// Save the small bitmap to a PNG thumbnail: 
-					try {
-						FileOutputStream fos = new FileOutputStream (thumbnail, false);
-						bmp.compress (Bitmap.CompressFormat.PNG, 100, fos);
-						fos.close (); 
-						changedCount++; 
-					} catch (IOException e) {
-						e.printStackTrace (); 
-					}
-					bmp.recycle ();
-				} 
-			} 
-			return changedCount; 
-		} 
-		@Override public void onCancelled () { 
-			close (); 
-		} 
-		@Override public void onPostExecute (Integer result) { 
-			if (result > 0) { 
-				if (mOnUpdate != null) { 
-					if (mWhichDir == 0) mOnUpdate.onThumbnailCacheUpdated (); 
-					else if (mWhichDir == 1) mOnUpdate.onTileCacheUpdated (); 
-				} 
-			} 
-			close (); 
-		} 
-	} 
-	private void updateThumbnailCache () {
-		UpdateCache updateCache = new UpdateCache (mContext, 0); 
-		updateCache.mOnUpdate = mOnCacheUpdatedListener; 
-		updateCache.execute (mList); 
-	} 
-	private void updateTileCache () { 
-		UpdateCache updateCache = new UpdateCache (mContext, 1); 
-		updateCache.mOnUpdate = mOnCacheUpdatedListener; 
-		updateCache.execute (mList); 
-	} 
 	static File [] getFlattenedList (File list [] []) { 
 		int total = 0; 
 		for (File l [] : list) 
@@ -251,12 +158,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	public File [] prepareFileList () { 
 		File list [] [] = mCache.asyncListFiles (mFilterJustImages, 
 				new FileListCache.OnFilesChangedListener () { 
-					private void updateCache () { 
-						// Update thumbnails: 
-						updateThumbnailCache (); 
-						// Update tiles for grid view mode: 
-						updateTileCache (); 
-					} 
 					@Override public void onFilesChanged (File [][] list) { 
 						mList = getFlattenedList (list); 
 						// Callback: 

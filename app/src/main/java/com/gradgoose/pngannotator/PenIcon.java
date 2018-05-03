@@ -147,6 +147,7 @@ public class PenIcon extends ImageView {
 		int needH = getHeight (); 
 		if (needW == 0 || needH == 0) {
 			Log.i (TAG, "ensureBitmapRightSize (): Pen icon ImageView width or height is 0, so can't create a bitmap ... "); 
+			return; 
 		} 
 		if (mBitmap == null || mBitmap.getWidth () != needW || mBitmap.getHeight () != needH) { 
 			if (mBitmap != null) 

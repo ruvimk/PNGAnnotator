@@ -29,9 +29,7 @@ public class PenIcon extends ImageView {
 	
 	int mColor = Color.TRANSPARENT; 
 	
-	Bitmap mBitmap = null; 
-	Canvas mCanvas = null; 
-	int pixels [] = null; 
+	Paint mColorPaint = new Paint (); 
 	
 	public PenIcon (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
@@ -42,126 +40,60 @@ public class PenIcon extends ImageView {
 		} finally { 
 			a.recycle (); 
 		} 
-	} 
-	
-	static final int COLOR_ZERO_THRESHOLD = 50; 
-	static boolean isGreen (int color) { 
-		return Color.green (color) > COLOR_ZERO_THRESHOLD && 
-					   Color.red (color) < COLOR_ZERO_THRESHOLD &&
-					   Color.blue (color) < COLOR_ZERO_THRESHOLD; 
+		mColorPaint.setStyle (Paint.Style.FILL); 
 	} 
 	
 	public void setColor (int color) { 
 		mColor = color; 
-		initBitmap (); 
+		invalidate (); 
 	} 
 	public int getColor () { 
 		return mColor; 
 	} 
 	
-	boolean mUseCachedBitmap = false; 
-	File penImage = null; 
-	int mPenWidth = 48; 
-	int mPenHeight = 48; 
-	void initBitmap () { 
-		int color = mColor; 
-		File folder = PensAdapter.getPensFolder (getContext ()); 
-		penImage = new File (folder, Integer.toString (color, 16) + ".png"); 
-		BitmapFactory.Options options = null; 
-		if (penImage.exists ()) { 
-			options = new BitmapFactory.Options (); 
-			options.inJustDecodeBounds = true; 
-			BitmapFactory.decodeFile (penImage.getPath (), options); 
-			mPenWidth = options.outWidth; 
-			mPenHeight = options.outHeight; 
-			try { 
-				mBitmap = BitmapFactory.decodeFile (penImage.getAbsolutePath ()); 
-				setImageBitmap (mBitmap); 
-			} catch (OutOfMemoryError err) { 
-				Toast.makeText (getContext (), R.string.title_out_of_mem, 
-						Toast.LENGTH_SHORT).show (); 
-				err.printStackTrace (); 
-			} 
-			requestLayout (); 
-			invalidate (); 
-			mUseCachedBitmap = true; 
-		} 
-		if (!penImage.exists ()) { // Create a cache of the bitmap: 
-			// Initialize, if have not done so yet: 
-			ensureBitmapRightSize (); 
-			// Draw the pen bitmap: 
-			Bitmap greenPen = BitmapFactory.decodeResource (getResources (), R.mipmap.ic_green_pen);
-			mCanvas.drawBitmap (greenPen, 0, 0, null);
-			greenPen.recycle ();
-			// Now go and replace pure green (0, 255, 0) with our color: 
-			mBitmap.getPixels (pixels, 0, mBitmap.getWidth (),
-					0, 0, mBitmap.getWidth (), mBitmap.getHeight ());
-			for (int i = 0; i < pixels.length; i++)
-				if (isGreen (pixels[i]))
-					pixels[i] = mColor;
-			mBitmap.setPixels (pixels, 0, mBitmap.getWidth (),
-					0, 0, mBitmap.getWidth (), mBitmap.getHeight ());
-			// Save the bitmap to the cache file: 
-			if (penImage != null) {
-				try {
-					// Write the cached bitmap into file: 
-					FileOutputStream outputStream = new FileOutputStream (penImage, false);
-					mBitmap.compress (Bitmap.CompressFormat.PNG, 100, outputStream);
-					outputStream.close ();
-					// Set the image bitmap to this: 
-					setImageBitmap (mBitmap); 
-					// From now on, use the cached bitmap: 
-					mUseCachedBitmap = true;
-				} catch (IOException e) {
-					e.printStackTrace ();
-				}
-			}
-		} 
+	private void drawPenColor (Canvas canvas) { 
+		int w = getWidth (); 
+		int h = getHeight (); 
+		mColorPaint.setColor (mColor); 
+		canvas.save (); 
+		
+//		canvas.drawRect (0, 0, 10, 10, mColorPaint); 
+		canvas.translate (w * 4 / 10, h * 4 / 10); 
+		canvas.rotate (45); 
+		canvas.scale (w / 6, h * 5 / 16); 
+		canvas.translate (.4f, -.1f); 
+		canvas.drawRect (0, 0, 1, 1, mColorPaint); 
+		
+		canvas.save (); 
+		canvas.translate (1, 1); 
+		canvas.rotate (23); 
+		canvas.scale (1, .5f); 
+		canvas.translate (-1, -1); 
+		canvas.translate (.1f, 0); 
+		canvas.drawRect (0, 0, 1, 1, mColorPaint); 
+		canvas.restore (); 
+		
+		canvas.translate (.31f, 0); 
+		canvas.scale (1, .6f); 
+		canvas.drawRect (0, 0, 1, 1, mColorPaint); 
+		
+		canvas.restore (); 
+		
+		canvas.save (); 
+		
+		canvas.translate (w / 10, h * 9 / 10); 
+		canvas.scale (w / 10, h / 10); 
+		canvas.translate (1f, -1.7f); 
+		canvas.skew (-.5f, 0); 
+		canvas.scale (1.2f, 1.2f); 
+		canvas.drawRect (0, 0, 1, 1, mColorPaint); 
+		
+		canvas.restore (); 
 	} 
 	
-	@Override public void onAttachedToWindow () { 
-		super.onAttachedToWindow (); 
-		if (mBitmap == null) initBitmap (); 
-	} 
-	@Override public void onDetachedFromWindow () { 
-		super.onDetachedFromWindow (); 
-		if (mBitmap != null) { 
-			mBitmap.recycle (); 
-			mBitmap = null; 
-		} 
-	} 
-	@Override public void onMeasure (int widthMeasureSpec, int heightMeasureSpec) { 
-		setMeasuredDimension (mPenWidth, mPenHeight); 
-	} 
-	@Override public void onSizeChanged (int w, int h, int oldW, int oldH) { 
-		super.onSizeChanged (w, h, oldW, oldH); 
-		ensureBitmapRightSize (); 
-	} 
-	
-	Paint mPenFill = new Paint (); 
 	@Override public void onDraw (Canvas canvas) { 
-		if (mUseCachedBitmap) { 
-			// Just draw the regular way, which draws the cached picture file: 
-			super.onDraw (canvas); 
-		} 
-	} 
-	
-	boolean ensureBitmapRightSize () { 
-		int needW = getWidth (); 
-		int needH = getHeight (); 
-		if (needW == 0 && needH == 0) 
-			needW = needH = 48; 
-		else if (needW == 0 || needH == 0) 
-			needW = needH = Math.max (needW, needH); 
-		if (mBitmap == null || mBitmap.getWidth () != needW || mBitmap.getHeight () != needH) { 
-			if (mBitmap != null) 
-				mBitmap.recycle (); 
-			mBitmap = Bitmap.createBitmap (needW, needH, Bitmap.Config.ARGB_8888); 
-			mCanvas = new Canvas (mBitmap); 
-			pixels = new int [needW * needH]; 
-			return true; 
-		} 
-		return false; 
+		drawPenColor (canvas); 
+		super.onDraw (canvas); 
 	} 
 	
 } 

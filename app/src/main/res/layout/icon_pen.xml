@@ -17,5 +17,6 @@
 		android:layout_height="match_parent"
 		android:contentDescription="@string/access_pen"
 		android:padding="2dp"
+		android:src="@mipmap/ic_pen_transparent_400p"
 		/> 
 </FrameLayout> 

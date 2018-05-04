@@ -293,6 +293,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 											 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 
 												(y - firstInterceptY) * (y - firstInterceptY)) 
 									 >= MIN_DISPLACEMENT_TO_SCROLL) 
+											&& event.getPointerCount () == 1 
 		) 
 											|| 
 					   super.onInterceptTouchEvent (event)); 

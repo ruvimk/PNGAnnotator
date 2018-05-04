@@ -50,10 +50,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 	public SwipeableRecyclerView (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
 		DisplayMetrics metrics = getResources ().getDisplayMetrics (); 
-		MIN_DELTA_TO_SWIPE = Math.min (metrics.widthPixels / 6,
+		MIN_DELTA_TO_SWIPE = Math.min (metrics.widthPixels / 4,
 				TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f,
 						metrics)); 
-		MIN_DISPLACEMENT_TO_SCROLL = Math.min (metrics.widthPixels / 8, 
+		MIN_DISPLACEMENT_TO_SCROLL = Math.min (metrics.widthPixels / 4, 
 				TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
 				metrics)); 
 		MAX_DISPLACEMENT_FOR_CLICK = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.5f, 
@@ -141,7 +141,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 	} 
 	void updateSwipePosition () { 
 		boolean horizontal = isHorizontalOrientation (); 
-		float effectQuotient = Math.abs (swipeDelta / (horizontal ? prevX - firstInterceptY : prevY - firstInterceptX)); 
+		float firstDeltaCoordinate = (horizontal ? prevX - firstInterceptY : prevY - firstInterceptX); 
+		float effectQuotient = firstDeltaCoordinate == 0 ? 1 : Math.abs (swipeDelta / firstDeltaCoordinate); 
 		float effectScale = effectQuotient > 1 ? 1 : effectQuotient * effectQuotient; 
 		float nowX = horizontal ? 0 : -swipeDelta * effectScale; 
 		float nowY = horizontal ? -swipeDelta * effectScale: 0; 
@@ -238,7 +239,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 			} else if (action == MotionEvent.ACTION_UP) { 
 				stillSwiping = false; 
 				stillAnimating = true; 
-				if (Math.abs (swipeDelta / (horizontal ? y - firstInterceptY : x - firstInterceptX)) > 1) { // i.e., we're not scrolling vertically while swiping horizontally ... 
+				if (Math.abs (swipeDelta / (horizontal ? x - firstInterceptX : y - firstInterceptY)) > 1) { // i.e., we're not scrolling vertically while swiping horizontally ... 
 					if (swipeDelta >= MIN_DELTA_TO_SWIPE && canSwipe (swipeDelta)) { 
 						// Restore the scroll: 
 						if (horizontal) 
@@ -260,6 +261,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 //					go (nextIndex); 
 						go (-1); 
 					} 
+				} else { 
+					swipeDelta = (swipeDelta > 0 ? 1 : -1) * MIN_DELTA_TO_SWIPE * 0.9f; 
 				} 
 				finishScrollAnimation (); 
 			} else if (action == MotionEvent.ACTION_CANCEL) { 
@@ -284,12 +287,14 @@ public class SwipeableRecyclerView extends RecyclerView {
 			swipeDelta = 0; 
 			firstDelta = 0; 
 		} 
+		boolean horizontal = isHorizontalOrientation (); 
+		float delta = horizontal ? firstInterceptY - y : firstInterceptX - x; 
 //		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 //		else getParent ().requestDisallowInterceptTouchEvent (true); 
 		// The scale detector will set isScaleEvent, we will set it, if we detect a scale. 
-		return (/*isScaleEvent || */(canSwipe (firstInterceptX - x) && 
-						Math.abs (x - firstInterceptX) > Math.abs (y - firstInterceptY) && 
-											 (Math.abs (x - firstInterceptX) >= MIN_DELTA_TO_SWIPE || 
+		return (/*isScaleEvent || */(canSwipe (delta) && 
+											 Math.abs (delta / (horizontal ? x - firstInterceptX : y - firstInterceptY)) > 1 && 
+											 (Math.abs (delta) >= MIN_DELTA_TO_SWIPE || 
 											 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 
 												(y - firstInterceptY) * (y - firstInterceptY)) 
 									 >= MIN_DISPLACEMENT_TO_SCROLL) 

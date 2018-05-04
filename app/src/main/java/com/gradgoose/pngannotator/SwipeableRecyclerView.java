@@ -3,6 +3,7 @@ package com.gradgoose.pngannotator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
@@ -307,19 +308,42 @@ public class SwipeableRecyclerView extends RecyclerView {
 		LayoutManager lm = getLayoutManager (); 
 		if (lm.getChildCount () == 0) 
 			return; 
+		int skipCount = getPageSkipCount (); 
 		View child = lm.getChildCount () > 1 ? 
 							 lm.getChildAt (1) 
 							 : lm.getChildAt (0); 
-		pageScroll (-child.getWidth (), -child.getHeight ()); 
+		pageScroll (-skipCount * child.getWidth (), -skipCount * child.getHeight ()); 
 	} 
 	public void pageDown () { 
 		LayoutManager lm = getLayoutManager (); 
 		if (lm.getChildCount () == 0) 
 			return; 
+		int skipCount = getPageSkipCount (); 
 		View child = lm.getChildCount () > 1 ? 
 							 lm.getChildAt (1) 
 							 : lm.getChildAt (0); 
-		pageScroll (child.getWidth (), child.getHeight ()); 
+		pageScroll (+skipCount * child.getWidth (), +skipCount * child.getHeight ()); 
+	} 
+	private int getPageSkipCount () { 
+		LayoutManager lm = getLayoutManager (); 
+		int skipCount = 1; 
+		if (lm instanceof LinearLayoutManager) { 
+			// This logic makes it easier to skip pages if multiple pages are completely visible ... 
+			// (e.g., think: grid-view, where there's like 2 rows of completely visible pages, 
+			// and hitting 'page down' would otherwise awkwardly just scroll one row down, 
+			// rather than scrolling one page down). 
+			LinearLayoutManager llm = (LinearLayoutManager) lm; 
+			int spanCount = 1; 
+			if (llm instanceof GridLayoutManager) { 
+				spanCount = ((GridLayoutManager) llm).getSpanCount (); 
+			} 
+			int count = 1 + (llm.findLastCompletelyVisibleItemPosition () - 
+								llm.findFirstCompletelyVisibleItemPosition ()) 
+					/ spanCount; 
+			if (count > 1) 
+				skipCount = count; 
+		} 
+		return skipCount; 
 	} 
 	public void pageHome () { 
 		scrollToPosition (0); 

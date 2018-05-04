@@ -1055,11 +1055,13 @@ public class NoteActivity extends Activity {
 		if (!wantDisplaySubfoldersAsBig ()) { 
 			// If there ARE images to display, then list the subfolders up above the images: 
 			mSubfoldersLayoutManager = mSubfoldersLinearLayoutManager; 
+			mSubfoldersAdapter.matchParentWidth = false; // Wrap content for each folder/item. 
 		} else { 
 			// If no images to browse, then it would look weird with a bunch of empty 
 			// space below the subfolder browser; in this case, make the subfolder 
 			// browser take up all the space it needs by assigning it a grid layout: 
 			mSubfoldersLayoutManager = mSubfoldersGridLayoutManager; 
+			mSubfoldersAdapter.matchParentWidth = true; // Should match parent for grid items. 
 			// Clear the background color: 
 			mRvSubfolderBrowser.setBackgroundColor (Color.TRANSPARENT); 
 		} 

@@ -47,6 +47,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	
 	File mList [] [] = null; 
 	
+	boolean matchParentWidth = false; 
+	
 	static boolean isOwnedByMe (File file) { 
 		return file != null && (SubfoldersAdapter.OWNED_FOLDERS.contains (file.getPath ()) || isOwnedByMe (file.getParentFile ())); 
 	} 
@@ -417,6 +419,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 				folderIconResource = R.drawable.ic_picture_120dp; 
 			iconView.setImageResource (folderIconResource); 
 			itemView.setTag (R.id.item_file, itemFile); 
+			ViewGroup.LayoutParams lp = itemView.getLayoutParams (); 
+			lp.width = matchParentWidth ? ViewGroup.LayoutParams.MATCH_PARENT : ViewGroup.LayoutParams.WRAP_CONTENT; 
 			boolean showNameView = additionalFile == null && mActionModeActive; 
 			nameView.setVisibility (showNameView ? View.GONE : View.VISIBLE); 
 			checkboxView.setVisibility (showNameView ? View.VISIBLE : View.GONE); 

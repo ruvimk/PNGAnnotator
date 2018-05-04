@@ -3,9 +3,10 @@
 	
 	<string name="home_folder_name">Pen Notepad</string> 
 	
+	<string name="title_root_dir">Pen Notepad</string> 
+	
 	<string name="title_format">[folder]</string> 
 	<string name="title_goto_page">Go to page:</string> 
-	<string name="title_root_dir">Pen Taker</string> 
 	<string name="title_brush_width">Brush Width</string> 
 	
 	<string name="title_new_folder">New Folder Name</string> 

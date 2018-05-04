@@ -38,6 +38,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
 	
+	final String picturesFolderName; 
+	
 	static SharedPreferences OWNED_FOLDERS = null; 
 	static SharedPreferences HIDDEN_FOLDERS = null; 
 	static SharedPreferences PRIVATE_CLIPBOARD = null; 
@@ -124,6 +126,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		mBrowsingFolder = browsingDir; 
 		if (additionalFoldersToShow != null) 
 			additionalDirsToShow = additionalFoldersToShow; 
+		picturesFolderName = context.getString (R.string.title_pictures); 
 		prepareFileList (); 
 		mStableIds = new HashMap<> (mList.length); 
 		loadIds (mList); 
@@ -415,7 +418,8 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		public void bind (File itemFile) { 
 			File additionalFile = getAdditionalDirToShow (itemFile); 
 			int folderIconResource = itemFile.isDirectory () ? R.drawable.ic_folder_peach_120dp : R.drawable.ic_book_orange_120dp; 
-			if (itemFile.getPath ().equals ("Pictures")) 
+			String itemPath = itemFile.getPath (); 
+			if (itemPath.equals ("Pictures") || itemPath.equals (picturesFolderName)) 
 				folderIconResource = R.drawable.ic_picture_120dp; 
 			iconView.setImageResource (folderIconResource); 
 			itemView.setTag (R.id.item_file, itemFile); 
@@ -424,7 +428,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			boolean showNameView = additionalFile == null && mActionModeActive; 
 			nameView.setVisibility (showNameView ? View.GONE : View.VISIBLE); 
 			checkboxView.setVisibility (showNameView ? View.VISIBLE : View.GONE); 
-			cutIcon.setVisibility (additionalFile == null && PRIVATE_CLIPBOARD.contains (itemFile.getPath ()) ? View.VISIBLE : View.GONE); 
+			cutIcon.setVisibility (additionalFile == null && PRIVATE_CLIPBOARD.contains (itemPath) ? View.VISIBLE : View.GONE); 
 			nameView.setText (itemFile.getName ()); 
 			checkboxView.setText (itemFile.getName ()); 
 			checkboxView.setChecked (isFileSelected (itemFile.getName ())); 

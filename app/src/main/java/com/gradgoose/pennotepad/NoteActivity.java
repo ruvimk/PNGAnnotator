@@ -54,7 +54,7 @@ public class NoteActivity extends Activity {
 	File mDocuments = null; 
 	
 	File mHomeFolder = null; 
-	File mAllPictures = new File ("Pictures"); 
+	File mAllPictures = null; // Will be either "Pictures" or an equivalent in another language. 
 	
 	File [] mAdditionalDirsToShow = new File [0]; 
 	
@@ -206,6 +206,8 @@ public class NoteActivity extends Activity {
 		mHomeFolder = findHomeFolder (); 
 		if (mHomeFolder == null) 
 			mHomeFolder = createHomeFolder (); 
+		// Make sure the pictures folder we show to the user is named correctly: 
+		mAllPictures = new File (getString (R.string.title_pictures)); 
 		// See if we had a folder already open last time that we can reopen now: 
 		if (savedInstanceState != null) { 
 			if (savedInstanceState.containsKey (STATE_BROWSING_PATH)) 

@@ -31,7 +31,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 	long timestep = 20; 
 	
 	final float MAX_DISPLACEMENT_FOR_CLICK; 
-	final float MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN; 
 	
 	public interface SwipeCallback { 
 		void swipeComplete (int direction); 
@@ -51,14 +50,14 @@ public class SwipeableRecyclerView extends RecyclerView {
 	public SwipeableRecyclerView (Context context, AttributeSet attributeSet) { 
 		super (context, attributeSet); 
 		DisplayMetrics metrics = getResources ().getDisplayMetrics (); 
-		MIN_DELTA_TO_SWIPE = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
-				metrics); 
-		MIN_DISPLACEMENT_TO_SCROLL = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
-				metrics); 
+		MIN_DELTA_TO_SWIPE = Math.min (metrics.widthPixels / 6,
+				TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f,
+						metrics)); 
+		MIN_DISPLACEMENT_TO_SCROLL = Math.min (metrics.widthPixels / 8, 
+				TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.75f, 
+				metrics)); 
 		MAX_DISPLACEMENT_FOR_CLICK = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.5f, 
 				metrics); 
-		MAX_DISTANCE_FROM_EDGE_FOR_PAGE_TURN = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 
-				0.8f, metrics); 
 //		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
 //			float prevScale = 1; 
 //			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
@@ -142,8 +141,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 	} 
 	void updateSwipePosition () { 
 		boolean horizontal = isHorizontalOrientation (); 
-		float nowX = horizontal ? 0 : -swipeDelta; 
-		float nowY = horizontal ? -swipeDelta : 0; 
+		float effectQuotient = Math.abs (swipeDelta / (horizontal ? prevX - firstInterceptY : prevY - firstInterceptX)); 
+		float effectScale = effectQuotient > 1 ? 1 : effectQuotient * effectQuotient; 
+		float nowX = horizontal ? 0 : -swipeDelta * effectScale; 
+		float nowY = horizontal ? -swipeDelta * effectScale: 0; 
 		ViewGroup.LayoutParams lp = getLayoutParams (); 
 		FrameLayout.LayoutParams flParams = lp instanceof FrameLayout.LayoutParams ? 
 													 (FrameLayout.LayoutParams) lp : null; 
@@ -172,6 +173,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float currentCoordinate = 0; 
 	float firstX = 0; 
 	float firstY = 0; 
+	float firstDelta = 0; 
 	float lastJumpX = 0; 
 	float lastJumpY = 0; 
 	float prevX = 0; 
@@ -213,9 +215,13 @@ public class SwipeableRecyclerView extends RecyclerView {
 				Log.d (TAG, "First coordinate: " + coordinate); 
 				stillSwiping = true; 
 				stillAnimating = false; 
+				firstDelta = swipeDelta = (horizontal ? firstInterceptX - firstX : firstInterceptY - firstY); // Initial delta ... 
+				if (canSwipe (swipeDelta)) { 
+					updateSwipePosition (); 
+				} 
 			} else if (action == MotionEvent.ACTION_MOVE) { 
 				currentCoordinate = coordinate; 
-				swipeDelta = canSwipe (firstCoordinate - currentCoordinate) ? firstCoordinate - currentCoordinate : 0; 
+				swipeDelta = (canSwipe (firstCoordinate - currentCoordinate) ? firstCoordinate - currentCoordinate : 0) + firstDelta; 
 				long now = System.currentTimeMillis (); 
 				float dt = (float) (now - prevT) / 1e3f; 
 				scrollVX = horizontal ? (prevX - x) / dt : 0; 
@@ -232,26 +238,28 @@ public class SwipeableRecyclerView extends RecyclerView {
 			} else if (action == MotionEvent.ACTION_UP) { 
 				stillSwiping = false; 
 				stillAnimating = true; 
-				if (swipeDelta >= MIN_DELTA_TO_SWIPE && canSwipe (swipeDelta)) { 
-					// Restore the scroll: 
-					if (horizontal) 
-						scrollBy ((int) (x - firstX), 0); 
-					else scrollBy (0, (int) (y - firstY)); 
-					// Open the next folder inside this folder's parent: 
+				if (Math.abs (swipeDelta / (horizontal ? y - firstInterceptY : x - firstInterceptX)) > 1) { // i.e., we're not scrolling vertically while swiping horizontally ... 
+					if (swipeDelta >= MIN_DELTA_TO_SWIPE && canSwipe (swipeDelta)) { 
+						// Restore the scroll: 
+						if (horizontal) 
+							scrollBy ((int) (x - firstX), 0); 
+						else scrollBy (0, (int) (y - firstY)); 
+						// Open the next folder inside this folder's parent: 
 //					int nextIndex = (currentIndex + 1) % mParentSubfolders.length; 
 //					go (nextIndex); 
-					go (+1); 
-				} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE && canSwipe (swipeDelta)) { 
-					// Restore the scroll: 
-					if (horizontal) 
-						scrollBy ((int) (x - firstX), 0); 
-					else scrollBy (0, (int) (y - firstY)); 
-					// Open the previous folder inside this folder's parent: 
+						go (+1); 
+					} else if (swipeDelta <= -MIN_DELTA_TO_SWIPE && canSwipe (swipeDelta)) { 
+						// Restore the scroll: 
+						if (horizontal) 
+							scrollBy ((int) (x - firstX), 0); 
+						else scrollBy (0, (int) (y - firstY)); 
+						// Open the previous folder inside this folder's parent: 
 //					int nextIndex = currentIndex - 1; 
 //					if (nextIndex < 0) 
 //						nextIndex = mParentSubfolders.length - 1; 
 //					go (nextIndex); 
-					go (-1); 
+						go (-1); 
+					} 
 				} 
 				finishScrollAnimation (); 
 			} else if (action == MotionEvent.ACTION_CANCEL) { 
@@ -273,15 +281,20 @@ public class SwipeableRecyclerView extends RecyclerView {
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 
 			firstInterceptX = x; 
 			firstInterceptY = y; 
+			swipeDelta = 0; 
+			firstDelta = 0; 
 		} 
 //		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 //		else getParent ().requestDisallowInterceptTouchEvent (true); 
 		// The scale detector will set isScaleEvent, we will set it, if we detect a scale. 
 		return (/*isScaleEvent || */(canSwipe (firstInterceptX - x) && 
 						Math.abs (x - firstInterceptX) > Math.abs (y - firstInterceptY) && 
-							 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 
+											 (Math.abs (x - firstInterceptX) >= MIN_DELTA_TO_SWIPE || 
+											 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 
 												(y - firstInterceptY) * (y - firstInterceptY)) 
-									 >= MIN_DISPLACEMENT_TO_SCROLL) || 
+									 >= MIN_DISPLACEMENT_TO_SCROLL) 
+		) 
+											|| 
 					   super.onInterceptTouchEvent (event)); 
 	} 
 	public void pageUp () { 
@@ -347,6 +360,6 @@ public class SwipeableRecyclerView extends RecyclerView {
 //					   mParentSubfolders.length > 1; 
 //	} 
 	protected boolean handleTouch () { 
-		return canSwipe (swipeDelta); 
+		return swipeDelta == 0f || canSwipe (swipeDelta); 
 	} 
 } 

@@ -309,6 +309,13 @@ public class SwipeableRecyclerView extends RecyclerView {
 		if (lm.getChildCount () == 0) 
 			return; 
 		int skipCount = getPageSkipCount (); 
+		if (skipCount > 1) { 
+			int nextItem = getPageUpScrollPosition (); 
+			if (nextItem >= 0) { 
+				scrollToPosition (nextItem); 
+				return; 
+			} 
+		} 
 		View child = lm.getChildCount () > 1 ? 
 							 lm.getChildAt (1) 
 							 : lm.getChildAt (0); 
@@ -319,6 +326,13 @@ public class SwipeableRecyclerView extends RecyclerView {
 		if (lm.getChildCount () == 0) 
 			return; 
 		int skipCount = getPageSkipCount (); 
+		if (skipCount > 1) { 
+			int nextItem = getPageDownScrollPosition (); 
+			if (nextItem >= 0 && lm instanceof LinearLayoutManager) { 
+				((LinearLayoutManager) lm).scrollToPositionWithOffset (nextItem, 0); 
+				return; 
+			} 
+		} 
 		View child = lm.getChildCount () > 1 ? 
 							 lm.getChildAt (1) 
 							 : lm.getChildAt (0); 
@@ -344,6 +358,42 @@ public class SwipeableRecyclerView extends RecyclerView {
 				skipCount = count; 
 		} 
 		return skipCount; 
+	} 
+	private int getPageDownScrollPosition () { 
+		LayoutManager lm = getLayoutManager (); 
+		if (lm instanceof LinearLayoutManager) { 
+			// This logic makes it easier to skip pages if multiple pages are completely visible ... 
+			// (e.g., think: grid-view, where there's like 2 rows of completely visible pages, 
+			// and hitting 'page down' would otherwise awkwardly just scroll one row down, 
+			// rather than scrolling one page down). 
+			LinearLayoutManager llm = (LinearLayoutManager) lm; 
+			int spanCount = 1; 
+			if (llm instanceof GridLayoutManager) { 
+				spanCount = ((GridLayoutManager) llm).getSpanCount (); 
+			} 
+			int lastPosition = llm.findLastCompletelyVisibleItemPosition (); 
+			return lastPosition - (lastPosition % spanCount) + spanCount; 
+		} 
+		return -1; 
+	}
+	private int getPageUpScrollPosition () { 
+		LayoutManager lm = getLayoutManager (); 
+		if (lm instanceof LinearLayoutManager) { 
+			// This logic makes it easier to skip pages if multiple pages are completely visible ... 
+			// (e.g., think: grid-view, where there's like 2 rows of completely visible pages, 
+			// and hitting 'page down' would otherwise awkwardly just scroll one row down, 
+			// rather than scrolling one page down). 
+			LinearLayoutManager llm = (LinearLayoutManager) lm; 
+			int spanCount = 1; 
+			if (llm instanceof GridLayoutManager) { 
+				spanCount = ((GridLayoutManager) llm).getSpanCount (); 
+			} 
+			int lastPosition = llm.findLastCompletelyVisibleItemPosition (); 
+			int nowPosition = llm.findFirstCompletelyVisibleItemPosition (); 
+			int difference = lastPosition - nowPosition; 
+			return nowPosition - difference + difference % spanCount; 
+		} 
+		return -1; 
 	} 
 	public void pageHome () { 
 		scrollToPosition (0); 

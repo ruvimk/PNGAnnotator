@@ -1,4 +1,4 @@
-package com.gradgoose.pngannotator;
+package com.gradgoose.pennotepad;
 
 import android.content.Context;
 import android.graphics.Color;

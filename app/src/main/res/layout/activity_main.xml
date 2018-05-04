@@ -4,7 +4,7 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	tools:context="com.gradgoose.pngannotator.NoteActivity"
+	tools:context="com.gradgoose.pennotepad.NoteActivity"
 	android:id="@+id/vMainRoot"
 	>
 	
@@ -16,13 +16,13 @@
 		android:background="@drawable/pen_selection_background"
 		/>
 	
-	<com.gradgoose.pngannotator.ScaleDetectorContainer
+	<com.gradgoose.pennotepad.ScaleDetectorContainer
 		android:id="@+id/flScaleDetectorContainer"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:layout_marginTop="@dimen/pen_options_height"
 		>
-		<com.gradgoose.pngannotator.SwipeableRecyclerView
+		<com.gradgoose.pennotepad.SwipeableRecyclerView
 			android:id="@+id/rvBigPages"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
@@ -31,7 +31,7 @@
 			android:animateLayoutChanges="false"
 			android:background="#eee"
 			/>
-	</com.gradgoose.pngannotator.ScaleDetectorContainer> 
+	</com.gradgoose.pennotepad.ScaleDetectorContainer> 
 	<ImageView
 		android:id="@+id/ivGoPageUp"
 		android:layout_width="@dimen/pg_up_down_btn_size"

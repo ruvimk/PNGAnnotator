@@ -5,7 +5,7 @@
 	android:layout_height="wrap_content"
 	>
 	
-	<com.gradgoose.pngannotator.PageView
+	<com.gradgoose.pennotepad.PageView
 		android:id="@+id/pvBigPage"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content" 

@@ -1,4 +1,4 @@
-package com.gradgoose.pngannotator;
+package com.gradgoose.pennotepad;
 
 import android.app.Activity;
 import android.app.AlertDialog;

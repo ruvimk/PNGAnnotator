@@ -1,4 +1,4 @@
-package com.gradgoose.pngannotator;
+package com.gradgoose.pennotepad;
 
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
@@ -35,7 +35,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Vector;
 
-import static com.gradgoose.pngannotator.SubfoldersAdapter.isOwnedByMe;
+import static com.gradgoose.pennotepad.SubfoldersAdapter.isOwnedByMe;
 
 public class NoteActivity extends Activity { 
 	static final String TAG = "NoteActivity"; 

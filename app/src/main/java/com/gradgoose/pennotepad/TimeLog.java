@@ -1,4 +1,4 @@
-package com.gradgoose.pngannotator;
+package com.gradgoose.pennotepad;
 
 import java.io.File;
 import java.io.FileOutputStream;

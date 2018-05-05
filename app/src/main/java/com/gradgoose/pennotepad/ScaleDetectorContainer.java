@@ -507,6 +507,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			child.setScaleY (scaleY); 
 			child.setPivotX (clamp (pivotX, 0, getWidth ())); 
 			child.setPivotY (clamp (pivotY, 0, getHeight ())); 
+			child.invalidate (); 
 		} 
 		nowPivotX = pivotX; 
 		nowPivotY = pivotY; 

@@ -421,6 +421,12 @@ public class SwipeableRecyclerView extends RecyclerView {
 	boolean canSwipe (float direction) { 
 		return mCallback != null && mCallback.canSwipe (direction == 0 ? 0 : (direction > 0 ? +1 : -1)); 
 	} 
+	@Override public void invalidate () { 
+		super.invalidate (); 
+		Adapter adapter = getAdapter (); 
+		if (adapter != null) 
+			adapter.notifyDataSetChanged (); 
+	} 
 //	void go (int index) {
 //		Intent intent = new Intent (getContext (), NoteActivity.class); 
 //		String current [] = new String [mParentSubfolders[index].length]; 

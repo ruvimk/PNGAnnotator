@@ -73,6 +73,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	PdfDocument pdfDocument = null; 
 	int mPdfPageCount = 0; 
 	
+	RecyclerView mAttachedRecyclerView = null; 
+	@Override public void onAttachedToRecyclerView (RecyclerView recyclerView) { 
+		super.onAttachedToRecyclerView (recyclerView); 
+		mAttachedRecyclerView = recyclerView; 
+	} 
+	
 	void setViewMode (int mode) { 
 		mViewMode = mode; 
 	} 
@@ -337,14 +343,23 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		synchronized void renderPage (int pageIndex, int putX, int putY, int putWidth, int putHeight) { 
 			if (mIsPDF && pdfDocument != null) { 
 				pdfiumCore.openPage (pdfDocument, pageIndex); 
+				int rvW = 1; 
+				int rvH = 1; 
+				if (mAttachedRecyclerView != null) { 
+					rvW = mAttachedRecyclerView.getWidth (); 
+					rvH = mAttachedRecyclerView.getHeight (); 
+				} 
 				int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
 				int srcHeight = pdfiumCore.getPageHeight (pdfDocument, pageIndex); 
 				int targetWidth = pageView.getWidth (); 
 				int targetHeight = targetWidth * srcHeight / srcWidth; 
 				int loadWidth = targetWidth == 0 ? srcWidth : Math.min (srcWidth, targetWidth); 
-				int loadHeight = targetHeight == 0 ? srcHeight : Math.min (srcHeight, targetHeight); 
+				int naturalHeight = targetHeight == 0 ? srcHeight : Math.min (srcHeight, targetHeight); 
+				int otherHeight = loadWidth * rvH / rvW; 
+				int loadHeight = Math.max (naturalHeight, otherHeight); 
 				pageView.mBitmapNaturalWidth = loadWidth; 
-				pageView.mBitmapNaturalHeight = loadHeight; 
+				pageView.mBitmapNaturalHeight = naturalHeight; 
+				pageView.mBitmapLoadHeight = loadHeight; 
 				if (putWidth == 0) putWidth = loadWidth; 
 				if (putHeight == 0) putHeight = loadHeight; 
 				pageView.lastRenderX = putX; 
@@ -377,7 +392,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, putX, putY, putWidth, putHeight); 
 						pageView.mBackgroundBitmap = bmp; 
 						pageView.mBitmapNaturalWidth = loadWidth; 
-						pageView.mBitmapNaturalHeight = loadHeight; 
+						pageView.mBitmapNaturalHeight = naturalHeight; 
+						pageView.mBitmapLoadHeight = loadHeight; 
 					} 
 				} 
 			} else { 

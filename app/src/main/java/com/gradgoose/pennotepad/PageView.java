@@ -453,6 +453,7 @@ public class PageView extends ImageView {
 	} 
 	int mBitmapNaturalWidth = 1; 
 	int mBitmapNaturalHeight = 1; 
+	int mBitmapLoadHeight = 1; 
 	boolean isAnnotatedPage = false; 
 	boolean isPDF = false; 
 	
@@ -770,7 +771,7 @@ public class PageView extends ImageView {
 		getLocalVisibleRect (localVisible); 
 		getLocationOnScreen (viewLocation); 
 		int w = getWidth (); 
-		int h = getHeight (); 
+		int h = Math.max (getHeight (), mBitmapLoadHeight); 
 		float totalScale = getScaleFactor (); 
 		float smallW = (float) w / totalScale; 
 		float smallH = (float) h / totalScale; 
@@ -786,8 +787,8 @@ public class PageView extends ImageView {
 		bmpDest.bottom = smallH + bmpDest.top; 
 		bmpSource.left = 0; 
 		bmpSource.top = 0; 
-		int renderX = (int) (-localVisible.left); 
-		int renderY = (int) (-localVisible.top); 
+		int renderX = -localVisible.left; 
+		int renderY = -localVisible.top; 
 		int renderW = (int) bigW; 
 		int renderH = (int) bigH; 
 		if (renderY > 0) 

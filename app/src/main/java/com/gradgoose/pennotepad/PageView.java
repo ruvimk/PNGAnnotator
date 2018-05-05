@@ -1,36 +1,31 @@
 package com.gradgoose.pennotepad;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
-import android.net.Uri;
-import android.nfc.tech.NfcA;
-import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewParent;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
-import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
@@ -72,6 +67,13 @@ public class PageView extends ImageView {
 	
 	static class EditHolder { 
 		PngEdit value = null; 
+	} 
+	
+	RequestRedrawPDF redrawRequestListener = null; 
+	
+	public interface RequestRedrawPDF { 
+		void requestRedrawPagePDF (PageView pageView, File file, int page, 
+								   int putX, int putY, int putWidth, int putHeight); 
 	} 
 	
 	public interface ErrorCallback { 
@@ -696,6 +698,12 @@ public class PageView extends ImageView {
 	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 
+		int [] locationScreen = new int [2]; 
+		int [] locationWindow = new int [2];
+		Rect visible = new Rect (); 
+		getLocationInWindow (locationWindow); 
+		getLocationOnScreen (locationScreen); 
+		getLocalVisibleRect (visible); 
 		if (mToolMode) { 
 			if (event.getAction () == MotionEvent.ACTION_DOWN || 
 					event.getAction () == MotionEvent.ACTION_POINTER_DOWN) { 
@@ -733,15 +741,73 @@ public class PageView extends ImageView {
 	
 	DisplayMetrics metrics = new DisplayMetrics (); 
 	
+	int lastRenderX = 0; 
+	int lastRenderY = 0; 
+	int lastRenderW = 0; 
+	int lastRenderH = 0; 
+	
+	Rect globalVisible = new Rect (); 
+	Rect localVisible = new Rect (); 
+	int viewLocation [] = new int [2]; 
+	
+	float getScaleFactor () {
+		float scale = getScaleX ();
+		ViewParent parent = getParent (); 
+		while (parent instanceof View) { 
+			scale *= ((View) parent).getScaleX (); 
+			parent = parent.getParent (); 
+		} 
+		return scale; 
+	} 
+	
+	Rect bmpSource = new Rect (); 
+	RectF bmpDest = new RectF (); 
+	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
+		getGlobalVisibleRect (globalVisible); 
+		getLocalVisibleRect (localVisible); 
+		getLocationOnScreen (viewLocation); 
+		int w = getWidth (); 
+		int h = getHeight (); 
+		float totalScale = getScaleFactor (); 
+		float smallW = (float) w / totalScale; 
+		float smallH = (float) h / totalScale; 
+		float bigW = (float) w * totalScale; 
+		float bigH = (float) h * totalScale; 
+		bmpDest.left = localVisible.left / totalScale; 
+		bmpDest.top = localVisible.top / totalScale; 
+		if (bmpDest.top < 0) 
+			bmpDest.top = 0; 
+		else if (bmpDest.top > h - smallH) 
+			bmpDest.top = h - smallH; 
+		bmpDest.right = smallW + bmpDest.left; 
+		bmpDest.bottom = smallH + bmpDest.top; 
+		bmpSource.left = 0; 
+		bmpSource.top = 0; 
+		int renderX = (int) (-localVisible.left); 
+		int renderY = (int) (-localVisible.top); 
+		int renderW = (int) bigW; 
+		int renderH = (int) bigH; 
+		if (renderY > 0) 
+			renderY = 0; 
+		else if (renderY < h - bigH) 
+			renderY = (int) (h - bigH); 
+		if (renderX != lastRenderX || renderY != lastRenderY || renderW != lastRenderW || renderH != lastRenderH) { 
+			if (redrawRequestListener != null) { 
+				redrawRequestListener.requestRedrawPagePDF (this, itemFile, itemPage, 
+						renderX, renderY, renderW, renderH); 
+			} 
+		} 
 		synchronized (mBackgroundBmpMutex) { 
 			if (mBackgroundBitmap != null) { 
-				canvas.save (); 
-				canvas.scale ((float) getWidth () / mBitmapNaturalWidth, (float) getWidth () / mBitmapNaturalWidth); 
-				canvas.drawBitmap (mBackgroundBitmap, 0, 0, null); 
-				canvas.restore (); 
+				bmpSource.right = mBackgroundBitmap.getWidth (); 
+				bmpSource.bottom = mBackgroundBitmap.getHeight (); 
+//				canvas.save (); 
+//				canvas.scale ((float) getWidth () / mBitmapNaturalWidth, (float) getWidth () / mBitmapNaturalWidth); 
+				canvas.drawBitmap (mBackgroundBitmap, bmpSource, bmpDest, null); 
+//				canvas.restore (); 
 			} 
 		} 
 		// If the target image is a small version, use it: 

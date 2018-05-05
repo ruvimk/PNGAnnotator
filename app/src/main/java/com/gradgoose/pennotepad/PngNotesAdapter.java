@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.ParcelFileDescriptor;
@@ -290,6 +291,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		}; 
 		File mItemFile; 
 		int mListPosition; 
+		PageView.RequestRedrawPDF mRedrawListener = new PageView.RequestRedrawPDF () { 
+			@Override public void requestRedrawPagePDF (PageView pageView, File file, int page, 
+														int putX, int putY, int putWidth, int putHeight) { 
+				renderPage (page, putX, putY, putWidth, putHeight); 
+			} 
+		}; 
 		public Holder (View root) { 
 			super (root); 
 			pageView = root.findViewById (R.id.pvBigPage); 
@@ -312,7 +319,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 //			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.viewMode = mViewMode; 
-			renderPage (pageIndex); 
+			renderPage (pageIndex, 0, 0, 0, 0); 
+			pageView.redrawRequestListener = mRedrawListener; 
 			pageView.setItemFile (itemFile, pageIndex); 
 			pageView.setPenMode (mPenMode); 
 			pageView.setToolMode (mToolMode); 
@@ -321,12 +329,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.mBrush = mBrush; 
 			if (mIsPDF) pageView.mSizeChangeCallback = new PageView.SizeChanged () { 
 				@Override public void onSizeChanged () { 
-					renderPage (pageIndex); 
+					renderPage (pageIndex, 0, 0, 0, 0); 
 				} 
 			}; 
 			else pageView.mSizeChangeCallback = null; 
 		} 
-		synchronized void renderPage (int pageIndex) { 
+		synchronized void renderPage (int pageIndex, int putX, int putY, int putWidth, int putHeight) { 
 			if (mIsPDF && pdfDocument != null) { 
 				pdfiumCore.openPage (pdfDocument, pageIndex); 
 				int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
@@ -337,6 +345,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				int loadHeight = targetHeight == 0 ? srcHeight : Math.min (srcHeight, targetHeight); 
 				pageView.mBitmapNaturalWidth = loadWidth; 
 				pageView.mBitmapNaturalHeight = loadHeight; 
+				if (putWidth == 0) putWidth = loadWidth; 
+				if (putHeight == 0) putHeight = loadHeight; 
+				pageView.lastRenderX = putX; 
+				pageView.lastRenderY = putY; 
+				pageView.lastRenderW = putWidth; 
+				pageView.lastRenderH = putHeight; 
 				if (targetWidth != 0) { 
 					Bitmap bmp = null; 
 					synchronized (pageView.mBackgroundBmpMutex) { 
@@ -360,7 +374,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						} 
 					} 
 					if (bmp != null) { 
-						pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, 0, 0, loadWidth, loadHeight); 
+						pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, putX, putY, putWidth, putHeight); 
 						pageView.mBackgroundBitmap = bmp; 
 						pageView.mBitmapNaturalWidth = loadWidth; 
 						pageView.mBitmapNaturalHeight = loadHeight; 

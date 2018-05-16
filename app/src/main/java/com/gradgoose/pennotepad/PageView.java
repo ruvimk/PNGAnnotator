@@ -73,7 +73,8 @@ public class PageView extends ImageView {
 	
 	public interface RequestRedrawPDF { 
 		void requestRedrawPagePDF (PageView pageView, File file, int page, 
-								   int putX, int putY, int putWidth, int putHeight); 
+								   int putX, int putY, int putWidth, int putHeight, 
+								   int wideScaleParameter, boolean skipDrawingIfPutParametersTheSame); 
 	} 
 	
 	public interface ErrorCallback { 
@@ -790,18 +791,18 @@ public class PageView extends ImageView {
 		int w = getWidth (); 
 		int h = Math.max (getHeight (), mBitmapLoadHeight); 
 		float totalScale = getScaleFactor (); 
-		float smallW = (float) w / totalScale; 
-		float smallH = (float) h / totalScale; 
+//		float smallW = (float) w / totalScale; 
+//		float smallH = (float) h / totalScale; 
 		float bigW = (float) w * totalScale; 
 		float bigH = (float) h * totalScale; 
-		bmpDest.left = localVisible.left / totalScale; 
-		bmpDest.top = localVisible.top / totalScale; 
-		if (bmpDest.top < 0) 
-			bmpDest.top = 0; 
-		else if (bmpDest.top > h - smallH) 
-			bmpDest.top = h - smallH; 
-		bmpDest.right = smallW + bmpDest.left; 
-		bmpDest.bottom = smallH + bmpDest.top; 
+//		bmpDest.left = localVisible.left / totalScale; 
+//		bmpDest.top = localVisible.top / totalScale; 
+//		if (bmpDest.top < 0) 
+//			bmpDest.top = 0; 
+//		else if (bmpDest.top > h - smallH) 
+//			bmpDest.top = h - smallH; 
+//		bmpDest.right = smallW + bmpDest.left; 
+//		bmpDest.bottom = smallH + bmpDest.top; 
 		bmpSource.left = 0; 
 		bmpSource.top = 0; 
 		int renderX = -localVisible.left; 
@@ -819,13 +820,17 @@ public class PageView extends ImageView {
 		if (renderX != lastRenderX || renderY != lastRenderY || renderW != lastRenderW || renderH != lastRenderH) { 
 			if (redrawRequestListener != null) { 
 				redrawRequestListener.requestRedrawPagePDF (this, itemFile, itemPage, 
-						renderX, renderY, renderW, renderH); 
+						renderX, renderY, renderW, renderH, 2, true); 
 			} 
 		} 
 		synchronized (mBackgroundBmpMutex) { 
 			if (mBackgroundBitmap != null) { 
 				bmpSource.right = mBackgroundBitmap.getWidth (); 
 				bmpSource.bottom = mBackgroundBitmap.getHeight (); 
+				bmpDest.left = -lastRenderX / totalScale; 
+				bmpDest.top = -lastRenderY / totalScale; 
+				bmpDest.right = bmpDest.left + w * mBitmapNaturalWidth / lastRenderW; 
+				bmpDest.bottom = bmpDest.top + h * mBitmapLoadHeight / lastRenderH; 
 //				canvas.save (); 
 //				canvas.scale ((float) getWidth () / mBitmapNaturalWidth, (float) getWidth () / mBitmapNaturalWidth); 
 				canvas.drawBitmap (mBackgroundBitmap, bmpSource, bmpDest, null); 

@@ -299,8 +299,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		int mListPosition; 
 		PageView.RequestRedrawPDF mRedrawListener = new PageView.RequestRedrawPDF () { 
 			@Override public void requestRedrawPagePDF (PageView pageView, File file, int page, 
-														int putX, int putY, int putWidth, int putHeight) { 
-				renderPage (page, putX, putY, putWidth, putHeight); 
+														int putX, int putY, int putWidth, int putHeight, 
+														int wideScaleParameter,
+														boolean skipDrawingIfPutParametersTheSame) { 
+				renderPage (page, putX, putY, putWidth, putHeight, wideScaleParameter, skipDrawingIfPutParametersTheSame); 
 			} 
 		}; 
 		public Holder (View root) { 
@@ -325,7 +327,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 //			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.viewMode = mViewMode; 
-			renderPage (pageIndex, 0, 0, 0, 0); 
+			renderPage (pageIndex, 0, 0, 0, 0, 1, false); 
 			pageView.redrawRequestListener = mRedrawListener; 
 			pageView.setItemFile (itemFile, pageIndex); 
 			pageView.setPenMode (mPenMode); 
@@ -335,12 +337,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.mBrush = mBrush; 
 			if (mIsPDF) pageView.mSizeChangeCallback = new PageView.SizeChanged () { 
 				@Override public void onSizeChanged () { 
-					renderPage (pageIndex, 0, 0, 0, 0); 
+					renderPage (pageIndex, 0, 0, 0, 0, 1, true); 
 				} 
 			}; 
 			else pageView.mSizeChangeCallback = null; 
 		} 
-		synchronized void renderPage (int pageIndex, int putX, int putY, int putWidth, int putHeight) { 
+		synchronized void renderPage (int pageIndex, int putX, int putY, int putWidth, int putHeight, 
+									  int wideScaleParameter, boolean skipRenderIfSamePutParams) { 
 			if (mIsPDF && pdfDocument != null) { 
 				pdfiumCore.openPage (pdfDocument, pageIndex); 
 				int rvW = 1; 
@@ -362,11 +365,28 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				pageView.mBitmapLoadHeight = loadHeight; 
 				if (putWidth == 0) putWidth = loadWidth; 
 				if (putHeight == 0) putHeight = loadHeight; 
-				pageView.lastRenderX = putX; 
-				pageView.lastRenderY = putY; 
-				pageView.lastRenderW = putWidth; 
-				pageView.lastRenderH = putHeight; 
+				if (wideScaleParameter > 1) { 
+					if (putWidth / wideScaleParameter >= loadWidth) { 
+						putX = Math.min (0, putX - putWidth * (wideScaleParameter - 1) / 2); 
+						putWidth /= wideScaleParameter; 
+					} 
+					if (putHeight / wideScaleParameter >= loadHeight) { 
+						putY = Math.min (0, putY - putHeight * (wideScaleParameter - 1) / 2); 
+						putHeight /= wideScaleParameter; 
+					} 
+				} 
+				if (skipRenderIfSamePutParams && 
+						pageView.mBackgroundBitmap != null && 
+						putX == pageView.lastRenderX && 
+						putY == pageView.lastRenderY && 
+						putWidth == pageView.lastRenderW && 
+						putHeight == pageView.lastRenderH) 
+					return; 
 				if (targetWidth != 0) { 
+					pageView.lastRenderX = putX; 
+					pageView.lastRenderY = putY; 
+					pageView.lastRenderW = putWidth; 
+					pageView.lastRenderH = putHeight; 
 					Bitmap bmp = null; 
 					synchronized (pageView.mBackgroundBmpMutex) { 
 						if (pageView.mBackgroundBitmap != null) { 
@@ -395,6 +415,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						pageView.mBitmapNaturalHeight = naturalHeight; 
 						pageView.mBitmapLoadHeight = loadHeight; 
 					} 
+				} else {
+					pageView.lastRenderX = 0; 
+					pageView.lastRenderY = 0; 
+					pageView.lastRenderW = 0; 
+					pageView.lastRenderH = 0; 
 				} 
 			} else { 
 				if (pageView.mBackgroundBitmap != null) { 

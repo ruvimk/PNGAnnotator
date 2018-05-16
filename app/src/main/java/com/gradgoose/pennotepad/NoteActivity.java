@@ -334,8 +334,8 @@ public class NoteActivity extends Activity {
 				.apply (); 
 		mReloadOnNextResume = true; 
 		mPaused = true; 
-		if (mNotesAdapter != null) 
-			mNotesAdapter.cleanUp (); 
+//		if (mNotesAdapter != null) 
+//			mNotesAdapter.cleanUp (); 
 		saveTimeLog (); 
 		super.onPause (); 
 	} 
@@ -1461,14 +1461,14 @@ public class NoteActivity extends Activity {
 	} 
 	
 	@Override public void finish () { 
-		if (mNotesAdapter != null) 
-			mNotesAdapter.cleanUp (); 
+//		if (mNotesAdapter != null) 
+//			mNotesAdapter.cleanUp (); 
 		super.finish (); 
 	} 
 	
 	@Override public void onDestroy () { 
-		if (mNotesAdapter != null) 
-			mNotesAdapter.cleanUp (); 
+//		if (mNotesAdapter != null) 
+//			mNotesAdapter.cleanUp (); 
 		super.onDestroy (); 
 	} 
 	

@@ -808,6 +808,10 @@ public class PageView extends ImageView {
 		int renderY = -localVisible.top; 
 		int renderW = (int) bigW; 
 		int renderH = (int) bigH; 
+		if (renderX > 0) 
+			renderX = 0; 
+		else if (renderX < w - bigW) 
+			renderX = (int) (w - bigW); 
 		if (renderY > 0) 
 			renderY = 0; 
 		else if (renderY < h - bigH) 

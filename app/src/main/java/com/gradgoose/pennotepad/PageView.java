@@ -661,7 +661,7 @@ public class PageView extends ImageView {
 					wMode == MeasureSpec.EXACTLY || 
 							(wMode == MeasureSpec.AT_MOST && hMode != MeasureSpec.EXACTLY); 
 			if (changeHeight && hMode != MeasureSpec.EXACTLY) 
-				needHeight = needWidth * mBitmapNaturalHeight / mBitmapNaturalWidth; 
+				needHeight = needWidth * Math.max (mBitmapNaturalHeight, mBitmapLoadHeight) / mBitmapNaturalWidth; 
 			if (hMode == MeasureSpec.AT_MOST && needHeight > maxHeight) { 
 				needWidth = needWidth * maxHeight / needHeight; 
 				needHeight = maxHeight; 

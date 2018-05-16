@@ -782,6 +782,8 @@ public class PageView extends ImageView {
 	Rect bmpSource = new Rect (); 
 	RectF bmpDest = new RectF (); 
 	
+	static final int WIDE_SCALE_BUFFER_PARAMETER = 2; 
+	
 	@Override public void onDraw (Canvas canvas) { 
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
@@ -820,7 +822,7 @@ public class PageView extends ImageView {
 		if (renderX != lastRenderX || renderY != lastRenderY || renderW != lastRenderW || renderH != lastRenderH) { 
 			if (redrawRequestListener != null) { 
 				redrawRequestListener.requestRedrawPagePDF (this, itemFile, itemPage, 
-						renderX, renderY, renderW, renderH, 2, true); 
+						renderX, renderY, renderW, renderH, WIDE_SCALE_BUFFER_PARAMETER, true); 
 			} 
 		} 
 		synchronized (mBackgroundBmpMutex) { 
@@ -829,10 +831,15 @@ public class PageView extends ImageView {
 				bmpSource.bottom = mBackgroundBitmap.getHeight (); 
 				bmpDest.left = -lastRenderX / totalScale; 
 				bmpDest.top = -lastRenderY / totalScale; 
-				bmpDest.right = bmpDest.left + w * mBitmapNaturalWidth / lastRenderW; 
-				bmpDest.bottom = bmpDest.top + h * mBitmapLoadHeight / lastRenderH; 
+				bmpDest.right = bmpDest.left + w * w / lastRenderW; 
+				bmpDest.bottom = bmpDest.top + h * h / lastRenderH; 
+				bmpDest.left = localVisible.left / totalScale; 
+				bmpDest.top = localVisible.top / totalScale; 
+				bmpDest.right = bmpDest.left + w / totalScale; 
+				bmpDest.bottom = bmpDest.top + h / totalScale; 
 //				canvas.save (); 
 //				canvas.scale ((float) getWidth () / mBitmapNaturalWidth, (float) getWidth () / mBitmapNaturalWidth); 
+				canvas.drawRect (bmpDest, strokePaint); 
 				canvas.drawBitmap (mBackgroundBitmap, bmpSource, bmpDest, null); 
 //				canvas.restore (); 
 			} 

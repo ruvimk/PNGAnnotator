@@ -359,7 +359,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				int loadWidth = targetWidth == 0 ? srcWidth : Math.min (srcWidth, targetWidth); 
 				int naturalHeight = targetHeight == 0 ? srcHeight : Math.min (srcHeight, targetHeight); 
 				int otherHeight = loadWidth * rvH / rvW; 
-				int loadHeight = Math.max (naturalHeight, otherHeight); 
+				int loadHeight = Math.max (naturalHeight, Math.min (otherHeight, naturalHeight * 2)); // The min () is there to prevent a memory-intensive thing 
+										// in the case that it's a PDF with lots of pages whose height << their width. So this serves as a memory cap, sort of, 
+										// limiting usage to twice the size of the screen. 
 				pageView.mBitmapNaturalWidth = loadWidth; 
 				pageView.mBitmapNaturalHeight = naturalHeight; 
 				pageView.mBitmapLoadHeight = loadHeight; 
@@ -367,12 +369,18 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				if (putHeight == 0) putHeight = loadHeight; 
 				if (wideScaleParameter > 1) { 
 					if (putWidth / wideScaleParameter >= loadWidth) { 
-						putX = Math.min (0, putX - putWidth * (wideScaleParameter - 1) / 2); 
+						putX = Math.min (0, putX + putWidth * (wideScaleParameter - 1) / 2); 
 						putWidth /= wideScaleParameter; 
+					} else { 
+						putX = 0; 
+						putWidth = loadWidth; 
 					} 
 					if (putHeight / wideScaleParameter >= loadHeight) { 
-						putY = Math.min (0, putY - putHeight * (wideScaleParameter - 1) / 2); 
+						putY = Math.min (0, putY + putHeight * (wideScaleParameter - 1) / 2); 
 						putHeight /= wideScaleParameter; 
+					} else { 
+						putY = 0; 
+						putHeight = loadHeight; 
 					} 
 				} 
 				if (skipRenderIfSamePutParams && 

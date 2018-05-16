@@ -470,8 +470,12 @@ public class PageView extends ImageView {
 		super.onDetachedFromWindow (); 
 		mAttachedToWindow = false; 
 		if (hasGlideImage) { 
-			Glide.with (this) 
-					.clear (this); 
+			try { 
+				Glide.with (this) 
+						.clear (this); 
+			} catch (IllegalArgumentException err) { 
+				Log.e (TAG, err.getLocalizedMessage ()); 
+			} 
 			hasGlideImage = false; 
 		} 
 //		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 
@@ -485,7 +489,11 @@ public class PageView extends ImageView {
 			} 
 		} 
 		if (hasGlideImage) { 
-			Glide.with (this).clear (this); 
+			try { 
+				Glide.with (this).clear (this); 
+			} catch (IllegalArgumentException err) { 
+				Log.e (TAG, err.getLocalizedMessage ()); 
+			} 
 			hasGlideImage = false; 
 		} 
 	} 
@@ -513,8 +521,12 @@ public class PageView extends ImageView {
 			hasGlideImage = true; 
 		} 
 		else if (hasGlideImage) { 
-			Glide.with (this) 
-					.clear (this); 
+			try { 
+				Glide.with (this) 
+						.clear (this); 
+			} catch (IllegalArgumentException err) { 
+				Log.e (TAG, err.getLocalizedMessage ()); 
+			} 
 			hasGlideImage = false; 
 		} 
 	} 
@@ -662,9 +674,14 @@ public class PageView extends ImageView {
 		super.onSizeChanged (w, h, oldW, oldH); 
 //		Log.d (TAG, "onSizeChanged (): Reloading bitmaps, scaling vectors ..."); 
 		// Load blank into this view: 
-		if (hasGlideImage) 
-			Glide.with (this) 
-				.clear (this); 
+		if (hasGlideImage) { 
+			try { 
+				Glide.with (this) 
+						.clear (this); 
+			} catch (IllegalArgumentException err) { 
+				Log.e (TAG, err.getLocalizedMessage ()); 
+			} 
+		} 
 		// Reload image: 
 		loadGlideImage (itemFile); 
 		// Notify adapter's listener, etc. (for example, to re-render the PDF page): 

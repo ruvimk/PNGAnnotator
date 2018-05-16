@@ -90,12 +90,14 @@ public class ScaleDetectorContainer extends FrameLayout {
 				else if (currentScale > 1.25) { 
 					// Don't change currentScale; leave it zoomed in. 
 					isScaleEvent = false; 
+					refreshViews (); 
 					return; 
 				} else if (onScaleDone != null) onScaleDone.onZoomLeave (scaleGestureDetector.getFocusX (), 
 						scaleGestureDetector.getFocusY ()); 
 				else setScale (1, 1, 0, 0); 
 				currentScale = 1; 
 				isScaleEvent = false; 
+				refreshViews (); 
 			} 
 		}); 
 		mGeneralGestureDetector = new GestureDetector (context, new GestureDetector.OnGestureListener () { 
@@ -147,6 +149,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			getParent ().requestDisallowInterceptTouchEvent (false); 
 			mOverscrollEdgeEffect1.onRelease (); 
 			mOverscrollEdgeEffect2.onRelease (); 
+			refreshViews (); 
 		} 
 		return result; 
 	} 
@@ -507,7 +510,6 @@ public class ScaleDetectorContainer extends FrameLayout {
 			child.setScaleY (scaleY); 
 			child.setPivotX (clamp (pivotX, 0, getWidth ())); 
 			child.setPivotY (clamp (pivotY, 0, getHeight ())); 
-			child.invalidate (); 
 		} 
 		nowPivotX = pivotX; 
 		nowPivotY = pivotY; 
@@ -515,6 +517,13 @@ public class ScaleDetectorContainer extends FrameLayout {
 	} 
 	void setPivot (float pivotX, float pivotY) { 
 		setScale (currentScale, currentScale, pivotX, pivotY); 
+	} 
+	void refreshViews () { 
+		int childCount = getChildCount (); 
+		for (int childIndex = 0; childIndex < childCount; childIndex++) { 
+			View child = getChildAt (childIndex); 
+			child.invalidate (); 
+		} 
 	} 
 	Runnable mSimpleRequestRedraw = new Runnable () { 
 		@Override public void run () { 

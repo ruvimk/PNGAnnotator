@@ -421,6 +421,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 	} 
 	
+	void refreshViews () { 
+		for (Holder h : mHolders) 
+			h.pageView.invalidate (); 
+	} 
+	
 	Vector<Holder> mHolders = new Vector<> (); 
 	
 	@Override public RecyclerView.ViewHolder onCreateViewHolder (ViewGroup parent, int viewType) { 

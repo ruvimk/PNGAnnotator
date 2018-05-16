@@ -424,8 +424,9 @@ public class SwipeableRecyclerView extends RecyclerView {
 	@Override public void invalidate () { 
 		super.invalidate (); 
 		Adapter adapter = getAdapter (); 
-		if (adapter != null) 
-			adapter.notifyDataSetChanged (); 
+		if (adapter != null && adapter instanceof PngNotesAdapter) { 
+			((PngNotesAdapter) adapter).refreshViews (); 
+		} 
 	} 
 //	void go (int index) {
 //		Intent intent = new Intent (getContext (), NoteActivity.class); 

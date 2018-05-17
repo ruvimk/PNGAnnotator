@@ -829,17 +829,17 @@ public class PageView extends ImageView {
 			if (mBackgroundBitmap != null) { 
 				bmpSource.right = mBackgroundBitmap.getWidth (); 
 				bmpSource.bottom = mBackgroundBitmap.getHeight (); 
-				bmpDest.left = -lastRenderX / totalScale; 
-				bmpDest.top = -lastRenderY / totalScale; 
+				bmpDest.left = -lastRenderX * w / lastRenderW; 
+				bmpDest.top = -lastRenderY * h / lastRenderH; 
 				bmpDest.right = bmpDest.left + w * w / lastRenderW; 
 				bmpDest.bottom = bmpDest.top + h * h / lastRenderH; 
-				bmpDest.left = localVisible.left / totalScale; 
-				bmpDest.top = localVisible.top / totalScale; 
-				bmpDest.right = bmpDest.left + w / totalScale; 
-				bmpDest.bottom = bmpDest.top + h / totalScale; 
+//				bmpDest.left = localVisible.left / totalScale; 
+//				bmpDest.top = localVisible.top / totalScale; 
+//				bmpDest.right = bmpDest.left + w / totalScale; 
+//				bmpDest.bottom = bmpDest.top + h / totalScale; 
 //				canvas.save (); 
 //				canvas.scale ((float) getWidth () / mBitmapNaturalWidth, (float) getWidth () / mBitmapNaturalWidth); 
-				canvas.drawRect (bmpDest, strokePaint); 
+//				canvas.drawRect (bmpDest, strokePaint); 
 				canvas.drawBitmap (mBackgroundBitmap, bmpSource, bmpDest, null); 
 //				canvas.restore (); 
 			} 

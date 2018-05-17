@@ -367,6 +367,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				pageView.mBitmapLoadHeight = loadHeight; 
 				if (putWidth == 0) putWidth = loadWidth; 
 				if (putHeight == 0) putHeight = loadHeight; 
+				int needSeeX = putX, needSeeY = putY, needSeeW = putWidth, needSeeH = putHeight; 
 				if (wideScaleParameter > 1) { 
 					if (putWidth / wideScaleParameter >= loadWidth) { 
 						putX = Math.min (0, putX + putWidth * (wideScaleParameter - 1) / 2); 
@@ -382,15 +383,27 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						putY = 0; 
 						putHeight = loadHeight; 
 					} 
+				} else if (wideScaleParameter == 0) { 
+					// We put this condition here just so we have an easy way of changing back to regular render mode (just set parameter = 0) ... 
+					putX = putY = 0; 
+					putWidth = loadWidth; 
+					putHeight = loadHeight; 
 				} 
-				if (skipRenderIfSamePutParams && 
-						pageView.mBackgroundBitmap != null && 
-						putX == pageView.lastRenderX && 
-						putY == pageView.lastRenderY && 
-						putWidth == pageView.lastRenderW && 
-						putHeight == pageView.lastRenderH) 
-					return; 
+				if (skipRenderIfSamePutParams && pageView.mBackgroundBitmap != null) { 
+					if (putWidth == pageView.lastRenderW && 
+								putHeight == pageView.lastRenderH) { 
+						if (putX == pageView.lastRenderX && 
+									putY == pageView.lastRenderY) 
+							return; 
+						if (needSeeX < pageView.lastRenderX && 
+								needSeeY < pageView.lastRenderY && 
+								needSeeX + needSeeW > pageView.lastRenderX + pageView.lastRenderW && 
+								needSeeY + needSeeH > pageView.lastRenderY + pageView.lastRenderH) 
+							return; 
+					} 
+				} 
 				if (targetWidth != 0) { 
+					Log.i (TAG, "Rendering area {" + putX + ", " + putY + ", " + putWidth + ", " + putHeight + "}"); 
 					pageView.lastRenderX = putX; 
 					pageView.lastRenderY = putY; 
 					pageView.lastRenderW = putWidth; 

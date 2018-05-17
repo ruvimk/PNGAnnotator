@@ -662,7 +662,7 @@ public class PageView extends ImageView {
 					wMode == MeasureSpec.EXACTLY || 
 							(wMode == MeasureSpec.AT_MOST && hMode != MeasureSpec.EXACTLY); 
 			if (changeHeight && hMode != MeasureSpec.EXACTLY) 
-				needHeight = needWidth * Math.max (mBitmapNaturalHeight, mBitmapLoadHeight) / mBitmapNaturalWidth; 
+				needHeight = needWidth * mBitmapNaturalHeight / mBitmapNaturalWidth; 
 			if (hMode == MeasureSpec.AT_MOST && needHeight > maxHeight) { 
 				needWidth = needWidth * maxHeight / needHeight; 
 				needHeight = maxHeight; 
@@ -784,29 +784,17 @@ public class PageView extends ImageView {
 	
 	static final int WIDE_SCALE_BUFFER_PARAMETER = 2; 
 	
-	@Override public void onDraw (Canvas canvas) { 
-		// Let the superclass draw the target image for us: 
-		super.onDraw (canvas); 
+	void computePageDrawPosition () { 
+		int w = getWidth (); 
+		int h = Math.max (getHeight (), mBitmapLoadHeight); 
+		if (w == 0 || h == 0) 
+			return; // Do nothing; this view has likely not been laid out yet ... 
 		getGlobalVisibleRect (globalVisible); 
 		getLocalVisibleRect (localVisible); 
 		getLocationOnScreen (viewLocation); 
-		int w = getWidth (); 
-		int h = Math.max (getHeight (), mBitmapLoadHeight); 
 		float totalScale = getScaleFactor (); 
-//		float smallW = (float) w / totalScale; 
-//		float smallH = (float) h / totalScale; 
 		float bigW = (float) w * totalScale; 
 		float bigH = (float) h * totalScale; 
-//		bmpDest.left = localVisible.left / totalScale; 
-//		bmpDest.top = localVisible.top / totalScale; 
-//		if (bmpDest.top < 0) 
-//			bmpDest.top = 0; 
-//		else if (bmpDest.top > h - smallH) 
-//			bmpDest.top = h - smallH; 
-//		bmpDest.right = smallW + bmpDest.left; 
-//		bmpDest.bottom = smallH + bmpDest.top; 
-		bmpSource.left = 0; 
-		bmpSource.top = 0; 
 		int renderX = -localVisible.left; 
 		int renderY = -localVisible.top; 
 		int renderW = (int) bigW; 
@@ -825,10 +813,27 @@ public class PageView extends ImageView {
 						renderX, renderY, renderW, renderH, WIDE_SCALE_BUFFER_PARAMETER, true); 
 			} 
 		} 
+	} 
+	
+	@Override public void onDraw (Canvas canvas) { 
+		// Let the superclass draw the target image for us: 
+		super.onDraw (canvas); 
+		int w = getWidth (); 
+		int h = w * lastRenderH / lastRenderW; 
+//		bmpDest.left = localVisible.left / totalScale; 
+//		bmpDest.top = localVisible.top / totalScale; 
+//		if (bmpDest.top < 0) 
+//			bmpDest.top = 0; 
+//		else if (bmpDest.top > h - smallH) 
+//			bmpDest.top = h - smallH; 
+//		bmpDest.right = smallW + bmpDest.left; 
+//		bmpDest.bottom = smallH + bmpDest.top; 
+		bmpSource.left = 0; 
+		bmpSource.top = 0; 
 		synchronized (mBackgroundBmpMutex) { 
 			if (mBackgroundBitmap != null) { 
-				bmpSource.right = mBackgroundBitmap.getWidth (); 
-				bmpSource.bottom = mBackgroundBitmap.getHeight (); 
+				bmpSource.right = w; 
+				bmpSource.bottom = h; 
 				bmpDest.left = -lastRenderX * w / lastRenderW; 
 				bmpDest.top = -lastRenderY * h / lastRenderH; 
 				bmpDest.right = bmpDest.left + w * w / lastRenderW; 

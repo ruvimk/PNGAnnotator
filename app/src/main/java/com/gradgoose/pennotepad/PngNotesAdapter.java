@@ -327,7 +327,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 //			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 
 			pageView.viewMode = mViewMode; 
-			renderPage (pageIndex, 0, 0, 0, 0, 1, false); 
+//			renderPage (pageIndex, 0, 0, 0, 0, 1, false); 
+			pageView.lastRenderW = pageView.lastRenderH = 0; 
+			pageView.computePageDrawPosition (); // It'll request PDF redraw by itself if it needs to. 
 			pageView.redrawRequestListener = mRedrawListener; 
 			pageView.setItemFile (itemFile, pageIndex); 
 			pageView.setPenMode (mPenMode); 
@@ -337,7 +339,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.mBrush = mBrush; 
 			if (mIsPDF) pageView.mSizeChangeCallback = new PageView.SizeChanged () { 
 				@Override public void onSizeChanged () { 
-					renderPage (pageIndex, 0, 0, 0, 0, 1, true); 
+//					renderPage (pageIndex, 0, 0, 0, 0, 1, true); 
+					pageView.computePageDrawPosition (); // It'll request PDF redraw if a redraw is necessary. 
 				} 
 			}; 
 			else pageView.mSizeChangeCallback = null; 
@@ -381,13 +384,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						putHeight /= wideScaleParameter; 
 					} else { 
 						putY = 0; 
-						putHeight = loadHeight; 
+						putHeight = naturalHeight; 
 					} 
 				} else if (wideScaleParameter == 0) { 
 					// We put this condition here just so we have an easy way of changing back to regular render mode (just set parameter = 0) ... 
 					putX = putY = 0; 
 					putWidth = loadWidth; 
-					putHeight = loadHeight; 
+					putHeight = naturalHeight; 
 				} 
 				if (skipRenderIfSamePutParams && pageView.mBackgroundBitmap != null) { 
 					if (putWidth == pageView.lastRenderW && 
@@ -448,9 +451,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					pageView.mBackgroundBitmap = null; 
 				} 
 			} 
-			if (pageView.getHeight () != 0 && pageView.mBitmapNaturalHeight != 0 && 
-						pageView.getWidth () * 100 / pageView.getHeight () != pageView.mBitmapNaturalWidth * 100 / pageView.mBitmapNaturalHeight) 
-				pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the bitmap's. 
+			if (pageView.getWidth () * pageView.lastRenderH != pageView.lastRenderW * pageView.getHeight ()) 
+				pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the render's. 
 			pageView.invalidate (); 
 		} 
 	} 
@@ -469,7 +471,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	void refreshViews () { 
 		for (Holder h : mHolders) 
-			h.pageView.invalidate (); 
+			h.pageView.computePageDrawPosition (); 
 	} 
 	
 	Vector<Holder> mHolders = new Vector<> (); 

@@ -819,7 +819,8 @@ public class PageView extends ImageView {
 		// Let the superclass draw the target image for us: 
 		super.onDraw (canvas); 
 		int w = getWidth (); 
-		int h = w * lastRenderH / lastRenderW; 
+		int h = lastRenderW != 0 ? w * lastRenderH / lastRenderW : getHeight (); 
+		float totalScale = getScaleFactor (); 
 //		bmpDest.left = localVisible.left / totalScale; 
 //		bmpDest.top = localVisible.top / totalScale; 
 //		if (bmpDest.top < 0) 

@@ -373,14 +373,18 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				int needSeeX = putX, needSeeY = putY, needSeeW = putWidth, needSeeH = putHeight; 
 				if (wideScaleParameter > 1) { 
 					if (putWidth / wideScaleParameter >= loadWidth) { 
-						putX = Math.min (0, putX + putWidth * (wideScaleParameter - 1) / 2); 
+//						putX = Math.min (0, putX - putWidth * (wideScaleParameter - 1) / 2); 
+						putX = Math.min (0, (putX - targetWidth / 2) / wideScaleParameter + targetWidth / 2); 
+//						putX /= wideScaleParameter; 
 						putWidth /= wideScaleParameter; 
 					} else { 
 						putX = 0; 
 						putWidth = loadWidth; 
 					} 
 					if (putHeight / wideScaleParameter >= loadHeight) { 
-						putY = Math.min (0, putY + putHeight * (wideScaleParameter - 1) / 2); 
+//						putY = Math.min (0, putY - putHeight * (wideScaleParameter - 1) / 2); 
+						putY = Math.min (0, (putY - targetHeight / 2) / wideScaleParameter + targetHeight / 2); 
+//						putY /= wideScaleParameter; 
 						putHeight /= wideScaleParameter; 
 					} else { 
 						putY = 0; 

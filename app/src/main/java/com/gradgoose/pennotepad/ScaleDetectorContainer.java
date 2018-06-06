@@ -192,6 +192,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			checkClick (); 
 			disallowScale = false; 
 			getParent ().requestDisallowInterceptTouchEvent (false); 
+			refreshViews (); 
 		} 
 		return isScaleEvent || isPanEvent; 
 	} 

@@ -298,11 +298,15 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		File mItemFile; 
 		int mListPosition; 
 		PageView.RequestRedrawPDF mRedrawListener = new PageView.RequestRedrawPDF () { 
-			@Override public void requestRedrawPagePDF (PageView pageView, File file, int page, 
-														int putX, int putY, int putWidth, int putHeight, 
-														int wideScaleParameter,
-														boolean skipDrawingIfPutParametersTheSame) { 
-				renderPage (page, putX, putY, putWidth, putHeight, wideScaleParameter, skipDrawingIfPutParametersTheSame); 
+			@Override public void requestRedrawPagePDF (final PageView pageView, final File file, final int page, 
+														final int putX, final int putY, final int putWidth, final int putHeight, 
+														final int wideScaleParameter,
+														final boolean skipDrawingIfPutParametersTheSame) { 
+				new Thread () { 
+					@Override public void run () { 
+						renderPage (page, putX, putY, putWidth, putHeight, wideScaleParameter, skipDrawingIfPutParametersTheSame); 
+					} 
+				}.start (); 
 			} 
 		}; 
 		public Holder (View root) { 
@@ -461,9 +465,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					pageView.mBackgroundBitmap = null; 
 				} 
 			} 
-			if (pageView.getWidth () * pageView.lastRenderH != pageView.lastRenderW * pageView.getHeight ()) 
-				pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the render's. 
-			pageView.invalidate (); 
+			((Activity) mContext).runOnUiThread (new Runnable () { 
+				@Override public void run () { 
+					if (pageView.getWidth () * pageView.lastRenderH != pageView.lastRenderW * pageView.getHeight ()) 
+						pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the render's. 
+					pageView.invalidate (); 
+				} 
+			}); 
 		} 
 	} 
 	

@@ -1162,6 +1162,7 @@ public class NoteActivity extends Activity {
 				return false; 
 			} 
 			@Override public boolean onUriLinkClicked (String linkURI) { 
+				Log.i (TAG, "Uri link: " + linkURI); 
 				return false; 
 			} 
 		}); 

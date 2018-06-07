@@ -345,6 +345,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			}; 
 			else pageView.mSizeChangeCallback = null; 
 		} 
+		int downscalePutX (int putX, int targetWidth, int wideScaleParameter) { 
+			return (putX - targetWidth / 2) / wideScaleParameter + targetWidth / 2; 
+		} 
+		int downscalePutY (int putY, int targetHeight, int wideScaleParameter) { 
+			return (putY - targetHeight / 2) / wideScaleParameter + targetHeight / 2; 
+		} 
 		synchronized void renderPage (int pageIndex, int putX, int putY, int putWidth, int putHeight, 
 									  int wideScaleParameter, boolean skipRenderIfSamePutParams) { 
 			if (mIsPDF && pdfDocument != null) { 
@@ -374,7 +380,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				if (wideScaleParameter > 1) { 
 					if (putWidth / wideScaleParameter >= loadWidth) { 
 //						putX = Math.min (0, putX - putWidth * (wideScaleParameter - 1) / 2); 
-						putX = Math.min (0, (putX - targetWidth / 2) / wideScaleParameter + targetWidth / 2); 
+						putX = downscalePutX (putX, targetWidth, wideScaleParameter); 
 //						putX /= wideScaleParameter; 
 						putWidth /= wideScaleParameter; 
 					} else { 
@@ -383,7 +389,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					} 
 					if (putHeight / wideScaleParameter >= loadHeight) { 
 //						putY = Math.min (0, putY - putHeight * (wideScaleParameter - 1) / 2); 
-						putY = Math.min (0, (putY - targetHeight / 2) / wideScaleParameter + targetHeight / 2); 
+						putY = downscalePutY (putY, targetHeight, wideScaleParameter); 
 //						putY /= wideScaleParameter; 
 						putHeight /= wideScaleParameter; 
 					} else { 
@@ -402,13 +408,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						if (putX == pageView.lastRenderX && 
 									putY == pageView.lastRenderY) 
 							return; 
-						if (needSeeX < pageView.lastRenderX && 
-								needSeeY < pageView.lastRenderY && 
-								needSeeX + needSeeW > pageView.lastRenderX + pageView.lastRenderW && 
-								needSeeY + needSeeH > pageView.lastRenderY + pageView.lastRenderH) 
+						if (Math.abs (putX - pageView.lastRenderX) < targetWidth * (wideScaleParameter - 1) / (2 * wideScaleParameter) && 
+								Math.abs (putY - pageView.lastRenderY) < targetHeight * (wideScaleParameter - 1) / (2 * wideScaleParameter)) 
 							return; 
 					} 
 				} 
+				putX = Math.min (0, putX); 
+				putY = Math.min (0, putY); 
 				if (targetWidth != 0) { 
 					Log.i (TAG, "Rendering area {" + putX + ", " + putY + ", " + putWidth + ", " + putHeight + "}"); 
 					pageView.lastRenderX = putX; 

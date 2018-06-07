@@ -351,6 +351,7 @@ public class NoteActivity extends Activity {
 			// so the lists are already up to date. 
 		} 
 		initTimeLog (); 
+		updateUserInterface (); // In case some settings (such as 'grid view' toggle) changed. 
 	} 
 	
 	void initTimeLog () { 
@@ -1092,6 +1093,8 @@ public class NoteActivity extends Activity {
 		updateBrushWidthTextShowing (); 
 		// Initialize the pen mode things: 
 		updateViewsForPenMode (); 
+		// Other updates: 
+		updateViewsForPageNav (); 
 		// Show the pen options only if there are images available for editing: 
 		mRvPenOptions.setVisibility (canEdit () ? View.VISIBLE : View.GONE); 
 		ViewGroup.LayoutParams lpNote = mScalePageContainer.getLayoutParams (); 

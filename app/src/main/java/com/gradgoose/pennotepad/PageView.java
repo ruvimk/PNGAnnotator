@@ -820,6 +820,11 @@ public class PageView extends ImageView {
 	
 	static final int WIDE_SCALE_BUFFER_PARAMETER = 2; 
 	
+	void forceRedraw () { 
+		lastRenderW = lastRenderH = 0; 
+		computePageDrawPosition (); 
+	} 
+	
 	void computePageDrawPosition () { 
 		int w = getWidth (); 
 		int h = Math.max (getHeight (), mBitmapLoadHeight); 

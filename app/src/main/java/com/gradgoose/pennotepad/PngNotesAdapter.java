@@ -589,6 +589,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		for (Holder h : mHolders) 
 			h.pageView.computePageDrawPosition (); 
 	} 
+	void forceRedrawAll () { 
+		for (Holder h : mHolders) 
+			h.pageView.forceRedraw (); 
+	} 
 	
 	Vector<Holder> mHolders = new Vector<> (); 
 	

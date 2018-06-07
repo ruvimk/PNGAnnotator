@@ -496,6 +496,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 				long now = System.currentTimeMillis (); 
 				if (now >= mAnimateStop) { 
 					setScale (mAnimateScaleTo, mAnimateScaleTo, mAnimatePivotToX, mAnimatePivotToY); 
+					refreshViews (); 
 					return; 
 				} 
 				float t = (float) (now - mAnimateStart) / (float) (mAnimateStop - mAnimateStart); 

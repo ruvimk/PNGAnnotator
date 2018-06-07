@@ -351,7 +351,7 @@ public class NoteActivity extends Activity {
 			// so the lists are already up to date. 
 		} 
 		initTimeLog (); 
-		updateUserInterface (); // In case some settings (such as 'grid view' toggle) changed. 
+		updateUserInterface (initialScrollItemPosition != 0 || initialScrollFraction != 0); // In case some settings (such as 'grid view' toggle) changed. 
 	} 
 	
 	void initTimeLog () { 

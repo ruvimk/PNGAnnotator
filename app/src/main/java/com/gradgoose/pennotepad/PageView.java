@@ -534,12 +534,22 @@ public class PageView extends ImageView {
 	
 	boolean hasGlideImage = false; 
 	int needRotateAngle = 0; 
+	long itemLastModifiedTime = 0; 
 	public void setItemFile (File file, int page) { 
 		File oldFile = itemFile; // For checking to see if we need to reload the edits or not. 
 		int oldPage = itemPage; 
 		itemFile = file; 
 		itemPage = page; 
 		if (file != null) {
+			if (file.equals (oldFile) && page == oldPage) { 
+				long lastModified = file.lastModified (); 
+				if (lastModified == itemLastModifiedTime) { 
+					// Well, the file has not been modified at all since the last load, 
+					// and this is the same file, same page; let's just skip this. 
+					Log.i (TAG, "File not modified; skipping loading. "); 
+					return; 
+				} else itemLastModifiedTime = lastModified; 
+			} 
 			String fileLowerName = file.getName ().toLowerCase ();
 			if (fileLowerName.endsWith (".apg")){ 
 					isAnnotatedPage = true; 

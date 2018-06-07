@@ -540,17 +540,28 @@ public class PageView extends ImageView {
 		int oldPage = itemPage; 
 		itemFile = file; 
 		itemPage = page; 
+		boolean needReload = true; 
 		if (file != null) {
+			String fileLowerName = file.getName ().toLowerCase (); 
 			if (file.equals (oldFile) && page == oldPage) { 
 				long lastModified = file.lastModified (); 
 				if (lastModified == itemLastModifiedTime) { 
 					// Well, the file has not been modified at all since the last load, 
 					// and this is the same file, same page; let's just skip this. 
-					Log.i (TAG, "File not modified; skipping loading. "); 
-					return; 
+					if (hasGlideImage || // If we *have* the image loaded, 
+								(!fileLowerName.endsWith (".png") && // OR: if it's not an image 
+										 !fileLowerName.endsWith (".gif") && // (not any image 
+										 !fileLowerName.endsWith (".jpg") && // extension we 
+										 !fileLowerName.endsWith (".jpeg")) // recognize), 
+							) { 
+						// Then, it's a file that doesn't need loading ... 
+						Log.i (TAG, "File not modified; skipping loading. "); 
+						return; // No need reloading at all ... 
+					} 
+					// Else, need to reload the Glide image, but still no need to reload anything else ... 
+					needReload = false; 
 				} else itemLastModifiedTime = lastModified; 
 			} 
-			String fileLowerName = file.getName ().toLowerCase ();
 			if (fileLowerName.endsWith (".apg")){ 
 					isAnnotatedPage = true; 
 			} else if (fileLowerName.endsWith (".pdf")) 
@@ -607,6 +618,9 @@ public class PageView extends ImageView {
 		} 
 		// Load the image with the Glide library: 
 		loadGlideImage (file); 
+		// If no need to reload anything else, then exit now: 
+		if (!needReload) 
+			return; 
 		// Now load our edits for this picture: 
 		if (oldFile == null || !oldFile.equals (itemFile) || oldPage != itemPage) { 
 			final File targetFile = file; 

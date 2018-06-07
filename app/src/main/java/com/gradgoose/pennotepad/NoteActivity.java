@@ -1031,8 +1031,9 @@ public class NoteActivity extends Activity {
 //		return false; 
 	} 
 	boolean wantDisplaySubfoldersAsBig () { 
-		return (!hasImages () && !isPDF ()) || 
-					   isBrowsingRootFolder (); 
+//		return (!hasImages () && !isPDF ()) || 
+//					   isBrowsingRootFolder (); 
+		return true; 
 	} 
 	
 	Runnable mReloadAll = new Runnable () { 

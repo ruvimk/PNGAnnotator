@@ -71,7 +71,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	boolean mIsPDF = false; 
 	
-	PdfiumCore pdfiumCore = null; 
+	final PdfiumCore pdfiumCore; 
 	PdfDocument pdfDocument = null; 
 	int mPdfPageCount = 0; 
 	
@@ -266,6 +266,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pdfiumCore = new PdfiumCore (context); 
 			preparePageList (); 
 		} else { 
+			pdfiumCore = null; 
 			mCache = new FileListCache (browsingDir, context.getFilesDir ()); 
 			prepareFileList (); 
 		} 
@@ -414,106 +415,108 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		synchronized void renderPage (int pageIndex, int putX, int putY, int putWidth, int putHeight, 
 									  int wideScaleParameter, boolean skipRenderIfSamePutParams) { 
 			if (mIsPDF && pdfDocument != null) { 
-				pdfiumCore.openPage (pdfDocument, pageIndex); 
-				int rvW = 1; 
-				int rvH = 1; 
-				if (mAttachedRecyclerView != null) { 
-					rvW = mAttachedRecyclerView.getWidth (); 
-					rvH = mAttachedRecyclerView.getHeight (); 
-				} 
-				int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
-				int srcHeight = pdfiumCore.getPageHeight (pdfDocument, pageIndex); 
-				int targetWidth = pageView.getWidth (); 
-				int targetHeight = targetWidth * srcHeight / srcWidth; 
-				int loadWidth = targetWidth == 0 ? srcWidth : Math.min (srcWidth, targetWidth); 
-				int naturalHeight = targetHeight == 0 ? srcHeight : Math.min (srcHeight, targetHeight); 
-				int otherHeight = loadWidth * rvH / rvW; 
-				int loadHeight = Math.max (naturalHeight, Math.min (otherHeight, naturalHeight * 2)); // The min () is there to prevent a memory-intensive thing 
-										// in the case that it's a PDF with lots of pages whose height << their width. So this serves as a memory cap, sort of, 
-										// limiting usage to twice the size of the screen. 
-				pageView.mBitmapNaturalWidth = loadWidth; 
-				pageView.mBitmapNaturalHeight = naturalHeight; 
-				pageView.mBitmapLoadHeight = loadHeight; 
-				if (putWidth == 0) putWidth = loadWidth; 
-				if (putHeight == 0) putHeight = loadHeight; 
-				int needSeeX = putX, needSeeY = putY, needSeeW = putWidth, needSeeH = putHeight; 
-				if (wideScaleParameter > 1) { 
-					if (putWidth / wideScaleParameter >= loadWidth) { 
-//						putX = Math.min (0, putX - putWidth * (wideScaleParameter - 1) / 2); 
-						putX = downscalePutX (putX, targetWidth, wideScaleParameter); 
-//						putX /= wideScaleParameter; 
-						putWidth /= wideScaleParameter; 
-					} else { 
-						putX = 0; 
-						putWidth = loadWidth; 
+				synchronized (pdfiumCore) { 
+					pdfiumCore.openPage (pdfDocument, pageIndex); 
+					int rvW = 1; 
+					int rvH = 1; 
+					if (mAttachedRecyclerView != null) { 
+						rvW = mAttachedRecyclerView.getWidth (); 
+						rvH = mAttachedRecyclerView.getHeight (); 
 					} 
-					if (putHeight / wideScaleParameter >= loadHeight) { 
+					int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
+					int srcHeight = pdfiumCore.getPageHeight (pdfDocument, pageIndex); 
+					int targetWidth = pageView.getWidth (); 
+					int targetHeight = targetWidth * srcHeight / srcWidth; 
+					int loadWidth = targetWidth == 0 ? srcWidth : Math.min (srcWidth, targetWidth); 
+					int naturalHeight = targetHeight == 0 ? srcHeight : Math.min (srcHeight, targetHeight); 
+					int otherHeight = loadWidth * rvH / rvW; 
+					int loadHeight = Math.max (naturalHeight, Math.min (otherHeight, naturalHeight * 2)); // The min () is there to prevent a memory-intensive thing  
+					// in the case that it's a PDF with lots of pages whose height << their width. So this serves as a memory cap, sort of, 
+					// limiting usage to twice the size of the screen. 
+					pageView.mBitmapNaturalWidth = loadWidth; 
+					pageView.mBitmapNaturalHeight = naturalHeight; 
+					pageView.mBitmapLoadHeight = loadHeight; 
+					if (putWidth == 0) putWidth = loadWidth; 
+					if (putHeight == 0) putHeight = loadHeight; 
+					int needSeeX = putX, needSeeY = putY, needSeeW = putWidth, needSeeH = putHeight; 
+					if (wideScaleParameter > 1) { 
+						if (putWidth / wideScaleParameter >= loadWidth) { 
+//						putX = Math.min (0, putX - putWidth * (wideScaleParameter - 1) / 2); 
+							putX = downscalePutX (putX, targetWidth, wideScaleParameter); 
+//						putX /= wideScaleParameter; 
+							putWidth /= wideScaleParameter; 
+						} else { 
+							putX = 0; 
+							putWidth = loadWidth; 
+						} 
+						if (putHeight / wideScaleParameter >= loadHeight) { 
 //						putY = Math.min (0, putY - putHeight * (wideScaleParameter - 1) / 2); 
-						putY = downscalePutY (putY, targetHeight, wideScaleParameter); 
+							putY = downscalePutY (putY, targetHeight, wideScaleParameter); 
 //						putY /= wideScaleParameter; 
-						putHeight /= wideScaleParameter; 
-					} else { 
-						putY = 0; 
+							putHeight /= wideScaleParameter; 
+						} else { 
+							putY = 0; 
+							putHeight = naturalHeight; 
+						} 
+					} else if (wideScaleParameter == 0) { 
+						// We put this condition here just so we have an easy way of changing back to regular render mode (just set parameter = 0) ... 
+						putX = putY = 0; 
+						putWidth = loadWidth; 
 						putHeight = naturalHeight; 
 					} 
-				} else if (wideScaleParameter == 0) { 
-					// We put this condition here just so we have an easy way of changing back to regular render mode (just set parameter = 0) ... 
-					putX = putY = 0; 
-					putWidth = loadWidth; 
-					putHeight = naturalHeight; 
-				} 
-				if (skipRenderIfSamePutParams && pageView.mBackgroundBitmap != null) { 
-					if (putWidth == pageView.lastRenderW && 
-								putHeight == pageView.lastRenderH) { 
-						if (putX == pageView.lastRenderX && 
-									putY == pageView.lastRenderY) 
-							return; 
-						if (Math.abs (putX - pageView.lastRenderX) < targetWidth * (wideScaleParameter - 1) / (2 * wideScaleParameter) && 
-								Math.abs (putY - pageView.lastRenderY) < targetHeight * (wideScaleParameter - 1) / (2 * wideScaleParameter)) 
-							return; 
+					if (skipRenderIfSamePutParams && pageView.mBackgroundBitmap != null) { 
+						if (putWidth == pageView.lastRenderW && 
+									putHeight == pageView.lastRenderH) { 
+							if (putX == pageView.lastRenderX && 
+										putY == pageView.lastRenderY) 
+								return; 
+							if (Math.abs (putX - pageView.lastRenderX) < targetWidth * (wideScaleParameter - 1) / (2 * wideScaleParameter) && 
+										Math.abs (putY - pageView.lastRenderY) < targetHeight * (wideScaleParameter - 1) / (2 * wideScaleParameter)) 
+								return; 
+						} 
 					} 
-				} 
-				putX = Math.min (0, putX); 
-				putY = Math.min (0, putY); 
-				if (targetWidth != 0) { 
-					Log.i (TAG, "Rendering area {" + putX + ", " + putY + ", " + putWidth + ", " + putHeight + "}"); 
-					pageView.lastRenderX = putX; 
-					pageView.lastRenderY = putY; 
-					pageView.lastRenderW = putWidth; 
-					pageView.lastRenderH = putHeight; 
-					Bitmap bmp = null; 
-					synchronized (pageView.mBackgroundBmpMutex) { 
-						if (pageView.mBackgroundBitmap != null) { 
-							if (pageView.mBackgroundBitmap.getWidth () == loadWidth && pageView.mBackgroundBitmap.getHeight () == loadHeight) { 
-								bmp = pageView.mBackgroundBitmap; 
-								pageView.mBackgroundBitmap = null; // So that it's not drawn while we modify it. 
-								new Canvas (bmp).drawColor (Color.TRANSPARENT); 
-							} else { 
-								pageView.mBackgroundBitmap.recycle (); 
-								pageView.mBackgroundBitmap = null; 
+					putX = Math.min (0, putX); 
+					putY = Math.min (0, putY); 
+					if (targetWidth != 0) { 
+						Log.i (TAG, "Rendering area {" + putX + ", " + putY + ", " + putWidth + ", " + putHeight + "}"); 
+						pageView.lastRenderX = putX; 
+						pageView.lastRenderY = putY; 
+						pageView.lastRenderW = putWidth; 
+						pageView.lastRenderH = putHeight; 
+						Bitmap bmp = null; 
+						synchronized (pageView.mBackgroundBmpMutex) { 
+							if (pageView.mBackgroundBitmap != null) { 
+								if (pageView.mBackgroundBitmap.getWidth () == loadWidth && pageView.mBackgroundBitmap.getHeight () == loadHeight) { 
+									bmp = pageView.mBackgroundBitmap; 
+									pageView.mBackgroundBitmap = null; // So that it's not drawn while we modify it. 
+									new Canvas (bmp).drawColor (Color.TRANSPARENT); 
+								} else { 
+									pageView.mBackgroundBitmap.recycle (); 
+									pageView.mBackgroundBitmap = null; 
+								} 
 							} 
 						} 
-					} 
-					if (bmp == null) { 
-						try { 
-							bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
-						} catch (OutOfMemoryError err) { 
-							if (mErrorCallback != null) 
-								mErrorCallback.onBitmapOutOfMemory (); 
+						if (bmp == null) { 
+							try { 
+								bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
+							} catch (OutOfMemoryError err) { 
+								if (mErrorCallback != null) 
+									mErrorCallback.onBitmapOutOfMemory (); 
+							} 
 						} 
+						if (bmp != null) { 
+							pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, putX, putY, putWidth, putHeight); 
+							pageView.mBackgroundBitmap = bmp; 
+							pageView.mBitmapNaturalWidth = loadWidth; 
+							pageView.mBitmapNaturalHeight = naturalHeight; 
+							pageView.mBitmapLoadHeight = loadHeight; 
+						} 
+					} else { 
+						pageView.lastRenderX = 0; 
+						pageView.lastRenderY = 0; 
+						pageView.lastRenderW = 0; 
+						pageView.lastRenderH = 0; 
 					} 
-					if (bmp != null) { 
-						pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, putX, putY, putWidth, putHeight); 
-						pageView.mBackgroundBitmap = bmp; 
-						pageView.mBitmapNaturalWidth = loadWidth; 
-						pageView.mBitmapNaturalHeight = naturalHeight; 
-						pageView.mBitmapLoadHeight = loadHeight; 
-					} 
-				} else {
-					pageView.lastRenderX = 0; 
-					pageView.lastRenderY = 0; 
-					pageView.lastRenderW = 0; 
-					pageView.lastRenderH = 0; 
 				} 
 			} else { 
 				if (pageView.mBackgroundBitmap != null) { 

@@ -355,11 +355,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				mRedrawParams.wideScaleParameter = wideScaleParameter; 
 				mRedrawParams.skipDrawingIfPutParametersTheSame = skipDrawingIfPutParametersTheSame; 
 				mRedrawParams.dirty = true; 
-				new Thread () { 
-					@Override public void run () { 
-						renderPage (page, putX, putY, putWidth, putHeight, wideScaleParameter, skipDrawingIfPutParametersTheSame); 
-					} 
-				}.start (); 
+//				new Thread () { 
+//					@Override public void run () { 
+//						renderPage (page, putX, putY, putWidth, putHeight, wideScaleParameter, skipDrawingIfPutParametersTheSame); 
+//					} 
+//				}.start (); 
 			} 
 		}; 
 		public Holder (View root) { 

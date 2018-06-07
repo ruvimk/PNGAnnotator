@@ -59,6 +59,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	PageView.ErrorCallback mErrorCallback = null; 
 	
+	boolean mActivityRunning = true; 
+	
 	OnNoteInteractListener mOnNoteInteractListener = null; 
 	
 	long headerPersistantIdStart = 0; 
@@ -271,14 +273,54 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		loadIds (mList); 
 		notifyDataSetChanged (); 
 		setHasStableIds (true); 
+		mRedrawCode.start (); 
 	} 
 	
 	Vector<PageView> mAllPageViews = new Vector<> (); 
+	final Vector<RedrawParams> mAllRedrawParams = new Vector<> (); 
+	
+	// Thread checks for dirty RedrawParams, and redraws them: 
+	private Thread mRedrawCode = new Thread () { 
+		@Override public void run () { 
+			boolean hasDirty; 
+			while (mActivityRunning) { 
+				hasDirty = false; 
+				int cnt = mAllRedrawParams.size (); 
+				for (int i = 0; i < cnt; i++) { 
+					RedrawParams params = mAllRedrawParams.elementAt (i); 
+					if (!params.dirty) continue; 
+					hasDirty = true; 
+					// Go redraw it: 
+					params.dirty = false; 
+					params.holder.renderPage (params.page, 
+							params.putX, params.putY, params.putWidth, params.putHeight, 
+							params.wideScaleParameter, params.skipDrawingIfPutParametersTheSame); 
+				} 
+				if (!hasDirty) { 
+					try { sleep (32); } catch (InterruptedException err) { err.printStackTrace (); } 
+				} 
+			} 
+		} 
+	}; 
 	
 	public class Plain extends RecyclerView.ViewHolder { 
 		public Plain (View root) { 
 			super (root); 
 		} 
+	} 
+	public static class RedrawParams { 
+		Holder holder; 
+		PageView pageView; 
+		File file; 
+		int page; 
+		int putX; 
+		int putY; 
+		int putWidth; 
+		int putHeight; 
+		int wideScaleParameter; 
+		boolean skipDrawingIfPutParametersTheSame; 
+		boolean dirty = false; 
+		RedrawParams (Holder holder) { this.holder = holder; } 
 	} 
 	public class Holder extends RecyclerView.ViewHolder { 
 		final PageView pageView; 
@@ -297,11 +339,22 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		}; 
 		File mItemFile; 
 		int mListPosition; 
+		final RedrawParams mRedrawParams = new RedrawParams (this); 
 		PageView.RequestRedrawPDF mRedrawListener = new PageView.RequestRedrawPDF () { 
 			@Override public void requestRedrawPagePDF (final PageView pageView, final File file, final int page, 
 														final int putX, final int putY, final int putWidth, final int putHeight, 
 														final int wideScaleParameter,
 														final boolean skipDrawingIfPutParametersTheSame) { 
+				mRedrawParams.pageView = pageView; 
+				mRedrawParams.file = file; 
+				mRedrawParams.page = page; 
+				mRedrawParams.putX = putX; 
+				mRedrawParams.putY = putY; 
+				mRedrawParams.putWidth = putWidth; 
+				mRedrawParams.putHeight = putHeight; 
+				mRedrawParams.wideScaleParameter = wideScaleParameter; 
+				mRedrawParams.skipDrawingIfPutParametersTheSame = skipDrawingIfPutParametersTheSame; 
+				mRedrawParams.dirty = true; 
 				new Thread () { 
 					@Override public void run () { 
 						renderPage (page, putX, putY, putWidth, putHeight, wideScaleParameter, skipDrawingIfPutParametersTheSame); 
@@ -316,6 +369,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			topRightView = root.findViewById (R.id.tvTopRightCornerText); 
 			tileContainer = root.findViewById (R.id.flPageTile); 
 			mAllPageViews.add (pageView); 
+			synchronized (mAllRedrawParams) { 
+				mAllRedrawParams.add (mRedrawParams); 
+			} 
 		} 
 		public void bind (File itemFile, int positionInList) { 
 			final int pageIndex = mIsPDF ? positionInList - countHeaderViews () : 1; 

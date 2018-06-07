@@ -472,7 +472,7 @@ public class PageView extends ImageView {
 		mAttachedToWindow = false; 
 		if (hasGlideImage) { 
 			try { 
-				Glide.with (this) 
+				Glide.with (getContext ()) 
 						.clear (this); 
 			} catch (IllegalArgumentException err) { 
 				Log.e (TAG, err.getLocalizedMessage ()); 
@@ -491,7 +491,7 @@ public class PageView extends ImageView {
 		} 
 		if (hasGlideImage) { 
 			try { 
-				Glide.with (this).clear (this); 
+				Glide.with (getContext ()).clear (this); 
 			} catch (IllegalArgumentException err) { 
 				Log.e (TAG, err.getLocalizedMessage ()); 
 			} 
@@ -501,7 +501,7 @@ public class PageView extends ImageView {
 	
 	private void loadGlideImage (File imageFile) { 
 		if (!isAnnotatedPage && !isPDF) { 
-			RequestBuilder builder = Glide.with (this) 
+			RequestBuilder builder = Glide.with (getContext ()) 
 											 .load (imageFile) 
 											 .apply (RequestOptions.skipMemoryCacheOf (true)) 
 											 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
@@ -523,7 +523,7 @@ public class PageView extends ImageView {
 		} 
 		else if (hasGlideImage) { 
 			try { 
-				Glide.with (this) 
+				Glide.with (getContext ()) 
 						.clear (this); 
 			} catch (IllegalArgumentException err) { 
 				Log.e (TAG, err.getLocalizedMessage ()); 
@@ -687,7 +687,7 @@ public class PageView extends ImageView {
 		// Load blank into this view: 
 		if (hasGlideImage) { 
 			try { 
-				Glide.with (this) 
+				Glide.with (getContext ()) 
 						.clear (this); 
 			} catch (IllegalArgumentException err) { 
 				Log.e (TAG, err.getLocalizedMessage ()); 

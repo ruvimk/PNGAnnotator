@@ -398,6 +398,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 			synchronized (mFlingMutex) { 
 				if (mFlingCancel) { 
 					mFlingRunning = false; 
+					refreshViews (); 
 					return; 
 				} 
 				if (mFlingScroller.computeScrollOffset ()) { 
@@ -427,7 +428,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 				} 
 				if (!mFlingScroller.isFinished ()) { 
 					postDelayed (this, 25); 
-				} else mFlingRunning = false; 
+				} else { 
+					mFlingRunning = false; 
+					refreshViews (); 
+				} 
 			} 
 		} 
 	}; 

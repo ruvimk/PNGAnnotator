@@ -1188,6 +1188,11 @@ public class NoteActivity extends Activity {
 		// Image annotator layout managers: 
 		mNotesLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.VERTICAL, false); 
 		mNoteOverviewLayoutManager = new GridLayoutManager (this, mOverviewColumnCount, LinearLayoutManager.VERTICAL, false); 
+		mNoteOverviewLayoutManager.setSpanSizeLookup (new GridLayoutManager.SpanSizeLookup () { 
+			@Override public int getSpanSize (int position) { 
+				return mNotesAdapter.getItemViewType (position) != 1 ? mOverviewColumnCount : 1; 
+			} 
+		}); 
 		
 		// Image annotation RecyclerView: 
 		mRvBigPages = findViewById (R.id.rvBigPages);

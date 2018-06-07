@@ -62,6 +62,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	boolean mActivityRunning = true; 
 	
+	boolean mAllowLinks = true; 
+	
 	OnNoteInteractListener mOnNoteInteractListener = null; 
 	
 	long headerPersistantIdStart = 0; 
@@ -92,6 +94,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	public interface OnNoteInteractListener { 
 		void onNotePageClicked (File itemFile, int listPosition); 
 		boolean onNotePageLongClicked (File itemFile, int listPosition); 
+		boolean onPageLinkClicked (int pageIndex); 
+		boolean onUriLinkClicked (String linkURI); 
 	} 
 	
 	public void setHeaderItemViews (View list []) { 
@@ -331,6 +335,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		final View tileContainer; 
 		final View.OnClickListener onClickListener = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
+				if (mAllowLinks && clickLink (pageView.itemPage, 
+						pageView.getWidth (), pageView.getHeight (), 
+						pageView.lastTouchedX, pageView.lastTouchedY)) { 
+					Log.i (TAG, "clickLink () returned 'true';"); 
+					return; 
+				} 
 				if (mOnNoteInteractListener != null) mOnNoteInteractListener.onNotePageClicked (mItemFile, mListPosition); 
 			} 
 		}; 

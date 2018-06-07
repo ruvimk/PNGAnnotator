@@ -748,7 +748,11 @@ public class PageView extends ImageView {
 		}).start (); 
 	} 
 	
+	float lastTouchedX = 0; 
+	float lastTouchedY = 0; 
 	@Override public boolean onTouchEvent (MotionEvent event) { 
+		lastTouchedX = event.getX (); 
+		lastTouchedY = event.getY (); 
 		int [] locationScreen = new int [2]; 
 		int [] locationWindow = new int [2];
 		Rect visible = new Rect (); 

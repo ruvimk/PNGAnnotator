@@ -437,7 +437,15 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					Log.i (TAG, "Link: [" + bounds.toString () + "] -> [" + mapped.toString () + "]"); 
 					if (mapped.contains (touchX, touchY)) { 
 						Log.i (TAG, "This is the link!"); 
-						return true; 
+						Integer destPageIdx = link.getDestPageIdx (); 
+						if (destPageIdx != null) { 
+							if (mOnNoteInteractListener != null) 
+								return mOnNoteInteractListener.onPageLinkClicked (destPageIdx); 
+						} else { 
+							if (mOnNoteInteractListener != null) 
+								return mOnNoteInteractListener.onUriLinkClicked (link.getUri ()); 
+						} 
+						return false; 
 					} 
 				} 
 			} 

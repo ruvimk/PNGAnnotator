@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.ParcelFileDescriptor;
@@ -411,6 +412,26 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		int downscalePutY (int putY, int targetHeight, int wideScaleParameter) { 
 			return (putY - targetHeight / 2) / wideScaleParameter + targetHeight / 2; 
+		} 
+		synchronized boolean clickLink (int pageIndex, int viewWidth, int viewHeight, float touchX, float touchY) { 
+			if (mIsPDF && pdfDocument != null) synchronized (pdfiumCore) { 
+				pdfiumCore.openPage (pdfDocument, pageIndex); 
+				List<PdfDocument.Link> links = pdfiumCore.getPageLinks (pdfDocument, pageIndex); 
+				Log.i (TAG, "Clicked at: [" + touchX + ", " + touchY + "]"); 
+				for (PdfDocument.Link link : links) { 
+					RectF bounds = link.getBounds (); 
+					RectF mapped = pdfiumCore.mapRectToDevice (pdfDocument, pageIndex, 
+							0, 0, viewWidth, viewHeight, 
+							0, 
+							bounds); 
+					Log.i (TAG, "Link: [" + bounds.toString () + "] -> [" + mapped.toString () + "]"); 
+					if (mapped.contains (touchX, touchY)) { 
+						Log.i (TAG, "This is the link!"); 
+						return true; 
+					} 
+				} 
+			} 
+			return false; 
 		} 
 		synchronized void renderPage (int pageIndex, int putX, int putY, int putWidth, int putHeight, 
 									  int wideScaleParameter, boolean skipRenderIfSamePutParams) { 

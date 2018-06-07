@@ -832,7 +832,7 @@ public class PageView extends ImageView {
 		bmpSource.left = 0; 
 		bmpSource.top = 0; 
 		synchronized (mBackgroundBmpMutex) { 
-			if (mBackgroundBitmap != null) { 
+			if (mBackgroundBitmap != null && lastRenderW > 0 && lastRenderH > 0) { 
 				bmpSource.right = w; 
 				bmpSource.bottom = h; 
 				bmpDest.left = -lastRenderX * w / lastRenderW; 

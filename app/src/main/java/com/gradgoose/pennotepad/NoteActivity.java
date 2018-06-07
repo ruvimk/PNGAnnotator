@@ -1158,6 +1158,12 @@ public class NoteActivity extends Activity {
 			@Override public boolean onNotePageLongClicked (File itemFile, int listPosition) { 
 				return false; 
 			} 
+			@Override public boolean onPageLinkClicked (int pageIndex) { 
+				return false; 
+			} 
+			@Override public boolean onUriLinkClicked (String linkURI) { 
+				return false; 
+			} 
 		}); 
 		mNotesAdapter.mErrorCallback = new PageView.ErrorCallback () { 
 			@Override public void onBitmapOutOfMemory () { 

@@ -49,7 +49,7 @@ public class PageView extends ImageView {
 	static final float THUMBNAIL_MULTIPLIER = 0.01f; 
 	
 	static final float GLIDE_USE_PIXEL_LARGE_SIZE = .75f; // Change this to update image load density. 
-	static final float GLIDE_USE_PIXEL_SMALL_SIZE = .50f; 
+	static final float GLIDE_USE_PIXEL_SMALL_SIZE = .66f; 
 	float GLIDE_LARGE_SIZE_MULT = 0.125f; // This will be changed by the constructor. 
 	float GLIDE_SMALL_SIZE_MULT = 0.125f; 
 	

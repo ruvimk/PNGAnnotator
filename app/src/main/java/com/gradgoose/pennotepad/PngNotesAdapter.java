@@ -343,13 +343,24 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						} 
 						if (!(obj instanceof Bitmap)) 
 							continue; 
-						((Activity) params.pageView.getContext ()).runOnUiThread (new Runnable () { 
+						Runnable r = new Runnable () { 
 							@Override public void run () { 
 								params.pageView.setImageBitmap ((Bitmap) obj); 
 								params.target = target; 
 								params.pageView.hasGlideImage = true; 
+								synchronized (this) { 
+									this.notify (); 
+								} 
 							} 
-						}); 
+						}; 
+						try { 
+							synchronized (r) { 
+								((Activity) params.pageView.getContext ()).runOnUiThread (r); 
+								r.wait (); 
+							} 
+						} catch (InterruptedException err) { 
+							err.printStackTrace (); 
+						} 
 					} 
 				} 
 				if (!hasDirty) { 
@@ -382,11 +393,22 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			FutureTarget t = target; 
 			target = null; 
 			if (t != null) { 
-				((Activity) holder.pageView.getContext ()).runOnUiThread (new Runnable () { 
+				Runnable r = new Runnable () { 
 					@Override public void run () { 
 						holder.pageView.setImageBitmap (null); 
+						synchronized (this) { 
+							this.notify (); 
+						} 
 					} 
-				}); 
+				}; 
+				try { 
+					synchronized (r) { 
+						((Activity) holder.pageView.getContext ()).runOnUiThread (r); 
+						r.wait (); 
+					} 
+				} catch (InterruptedException err) { 
+					err.printStackTrace (); 
+				} 
 				Glide.with (holder.pageView.getContext ()) 
 						.clear (t); 
 			} 

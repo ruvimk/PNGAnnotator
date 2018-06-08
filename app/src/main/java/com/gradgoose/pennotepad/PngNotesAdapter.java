@@ -307,10 +307,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 								params.wideScaleParameter, params.skipDrawingIfPutParametersTheSame); 
 					} else if (!params.pageView.isAnnotatedPage && mContext instanceof Activity && 
 																	   (Build.VERSION.SDK_INT < 17 || !((Activity) mContext).isDestroyed ())) { 
-						if (params.pageView.itemFile != null && 
-								params.pageView.itemFile.equals (params.file) && 
-								params.pageView.hasGlideImage) 
-							continue; 
 						RequestBuilder builder = Glide.with (mContext) 
 														 .asBitmap () 
 														 .load (params.file) 

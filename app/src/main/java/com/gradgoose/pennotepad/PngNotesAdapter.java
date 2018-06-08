@@ -3,36 +3,37 @@ package com.gradgoose.pennotepad;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.net.Uri;
-import android.os.AsyncTask;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.Nullable;
-import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestBuilder;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.FutureTarget;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.Target;
 import com.shockwave.pdfium.PdfDocument;
 import com.shockwave.pdfium.PdfiumCore;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -293,14 +294,59 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				hasDirty = false; 
 				int cnt = mAllRedrawParams.size (); 
 				for (int i = 0; i < cnt; i++) { 
-					RedrawParams params = mAllRedrawParams.elementAt (i); 
+					final RedrawParams params = mAllRedrawParams.elementAt (i); 
 					if (!params.dirty) continue; 
+					if (params.pageView.getWidth () == 0 || params.pageView.getHeight () == 0) 
+						continue; 
 					hasDirty = true; 
 					// Go redraw it: 
 					params.dirty = false; 
-					params.holder.renderPage (params.page, 
-							params.putX, params.putY, params.putWidth, params.putHeight, 
-							params.wideScaleParameter, params.skipDrawingIfPutParametersTheSame); 
+					if (mIsPDF) { 
+						params.holder.renderPage (params.page, 
+								params.putX, params.putY, params.putWidth, params.putHeight, 
+								params.wideScaleParameter, params.skipDrawingIfPutParametersTheSame); 
+					} else if (!params.pageView.isAnnotatedPage && mContext instanceof Activity && 
+																	   (Build.VERSION.SDK_INT < 17 || !((Activity) mContext).isDestroyed ())) { 
+						RequestBuilder builder = Glide.with (mContext) 
+														 .asBitmap () 
+														 .load (params.file) 
+														 .apply (RequestOptions.skipMemoryCacheOf (true)) 
+														 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
+														 .apply (RequestOptions.sizeMultiplierOf (params.pageView.viewMode == PageView.VIEW_SMALL ? 
+																										  params.pageView.GLIDE_SMALL_SIZE_MULT : 
+																										  params.pageView.GLIDE_LARGE_SIZE_MULT)) 
+														 .listener (new RequestListener<Bitmap> () { 
+															 @Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) { 
+																 if (mErrorCallback != null) 
+																	 mErrorCallback.onBitmapLoadError (); 
+																 return false; 
+															 } 
+															 @Override public boolean onResourceReady (Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) { 
+																 return false; 
+															 } 
+														 }); 
+						if (params.pageView.viewMode == PageView.VIEW_LARGE) 
+							builder.thumbnail (PageView.THUMBNAIL_MULTIPLIER); 
+						params.clearTarget (); 
+						final FutureTarget target = builder.submit (params.pageView.getWidth (), params.pageView.getHeight ()); 
+						final Object obj; 
+						try { 
+							obj = target.get (); 
+						} catch (Throwable err) { 
+							Log.e (TAG, "Error loading Glide target. "); 
+							err.printStackTrace (); 
+							continue; 
+						} 
+						if (!(obj instanceof Bitmap)) 
+							continue; 
+						((Activity) params.pageView.getContext ()).runOnUiThread (new Runnable () { 
+							@Override public void run () { 
+								params.pageView.setImageBitmap ((Bitmap) obj); 
+								params.target = target; 
+								params.pageView.hasGlideImage = true; 
+							} 
+						}); 
+					} 
 				} 
 				if (!hasDirty) { 
 					try { sleep (32); } catch (InterruptedException err) { err.printStackTrace (); } 
@@ -316,6 +362,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	} 
 	public static class RedrawParams { 
 		Holder holder; 
+		FutureTarget target = null; 
 		PageView pageView; 
 		File file; 
 		int page; 
@@ -327,6 +374,19 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		boolean skipDrawingIfPutParametersTheSame; 
 		boolean dirty = false; 
 		RedrawParams (Holder holder) { this.holder = holder; } 
+		synchronized void clearTarget () { 
+			FutureTarget t = target; 
+			target = null; 
+			if (t != null) { 
+				((Activity) holder.pageView.getContext ()).runOnUiThread (new Runnable () { 
+					@Override public void run () { 
+						holder.pageView.setImageBitmap (null); 
+					} 
+				}); 
+				Glide.with (holder.pageView.getContext ()) 
+						.clear (t); 
+			} 
+		} 
 	} 
 	public class Holder extends RecyclerView.ViewHolder { 
 		final PageView pageView; 
@@ -352,7 +412,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		File mItemFile; 
 		int mListPosition; 
 		final RedrawParams mRedrawParams = new RedrawParams (this); 
-		PageView.RequestRedrawPDF mRedrawListener = new PageView.RequestRedrawPDF () { 
+		PageView.RequestRedraw mRedrawListener = new PageView.RequestRedraw () { 
 			@Override public void requestRedrawPagePDF (final PageView pageView, final File file, final int page, 
 														final int putX, final int putY, final int putWidth, final int putHeight, 
 														final int wideScaleParameter,
@@ -372,6 +432,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 //						renderPage (page, putX, putY, putWidth, putHeight, wideScaleParameter, skipDrawingIfPutParametersTheSame); 
 //					} 
 //				}.start (); 
+			} 
+			@Override public void requestRedrawImage (File imageFile, PageView pageView) {
+				mRedrawParams.pageView = pageView; 
+				mRedrawParams.file = imageFile; 
+				mRedrawParams.dirty = true; 
 			} 
 		}; 
 		public Holder (View root) { 

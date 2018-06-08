@@ -69,12 +69,13 @@ public class PageView extends ImageView {
 		PngEdit value = null; 
 	} 
 	
-	RequestRedrawPDF redrawRequestListener = null; 
+	RequestRedraw redrawRequestListener = null; 
 	
-	public interface RequestRedrawPDF { 
+	public interface RequestRedraw { 
 		void requestRedrawPagePDF (PageView pageView, File file, int page, 
 								   int putX, int putY, int putWidth, int putHeight, 
 								   int wideScaleParameter, boolean skipDrawingIfPutParametersTheSame); 
+		void requestRedrawImage (File imageFile, PageView view); 
 	} 
 	
 	public interface ErrorCallback { 
@@ -501,25 +502,26 @@ public class PageView extends ImageView {
 	
 	private void loadGlideImage (File imageFile) { 
 		if (!isAnnotatedPage && !isPDF) { 
-			RequestBuilder builder = Glide.with (getContext ()) 
-											 .load (imageFile) 
-											 .apply (RequestOptions.skipMemoryCacheOf (true)) 
-											 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
-											 .apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)) 
-											 .listener (new RequestListener<Drawable> () { 
-												 @Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
-													 if (mErrorCallback != null) 
-														 mErrorCallback.onBitmapLoadError (); 
-													 return false; 
-												 } 
-												 @Override public boolean onResourceReady (Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) { 
-													 return false; 
-												 } 
-											 }); 
-			if (viewMode == VIEW_LARGE) 
-				builder.thumbnail (THUMBNAIL_MULTIPLIER); 
-			builder.into (this); 
-			hasGlideImage = true; 
+//			RequestBuilder builder = Glide.with (getContext ()) 
+//											 .load (imageFile) 
+//											 .apply (RequestOptions.skipMemoryCacheOf (true)) 
+//											 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
+//											 .apply (RequestOptions.sizeMultiplierOf (viewMode == VIEW_SMALL ? GLIDE_SMALL_SIZE_MULT : GLIDE_LARGE_SIZE_MULT)) 
+//											 .listener (new RequestListener<Drawable> () { 
+//												 @Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
+//													 if (mErrorCallback != null) 
+//														 mErrorCallback.onBitmapLoadError (); 
+//													 return false; 
+//												 } 
+//												 @Override public boolean onResourceReady (Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) { 
+//													 return false; 
+//												 } 
+//											 }); 
+//			if (viewMode == VIEW_LARGE) 
+//				builder.thumbnail (THUMBNAIL_MULTIPLIER); 
+//			builder.into (this); 
+//			hasGlideImage = true; 
+			redrawRequestListener.requestRedrawImage (imageFile, this); 
 		} 
 		else if (hasGlideImage) { 
 			try { 

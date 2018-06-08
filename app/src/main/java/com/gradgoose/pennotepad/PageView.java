@@ -76,6 +76,7 @@ public class PageView extends ImageView {
 								   int putX, int putY, int putWidth, int putHeight, 
 								   int wideScaleParameter, boolean skipDrawingIfPutParametersTheSame); 
 		void requestRedrawImage (File imageFile, PageView view); 
+		void requestClearImage (PageView view); 
 	} 
 	
 	public interface ErrorCallback { 
@@ -472,13 +473,13 @@ public class PageView extends ImageView {
 		super.onDetachedFromWindow (); 
 		mAttachedToWindow = false; 
 		if (hasGlideImage) { 
-			try { 
-				Glide.with (getContext ()) 
-						.clear (this); 
-			} catch (IllegalArgumentException err) { 
-				Log.e (TAG, err.getLocalizedMessage ()); 
-			} 
-			hasGlideImage = false; 
+//			try { 
+//				Glide.with (getContext ()) 
+//						.clear (this); 
+//			} catch (IllegalArgumentException err) { 
+//				Log.e (TAG, err.getLocalizedMessage ()); 
+//			} 
+			redrawRequestListener.requestClearImage (this); 
 		} 
 //		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 
 	} 
@@ -491,11 +492,12 @@ public class PageView extends ImageView {
 			} 
 		} 
 		if (hasGlideImage) { 
-			try { 
-				Glide.with (getContext ()).clear (this); 
-			} catch (IllegalArgumentException err) { 
-				Log.e (TAG, err.getLocalizedMessage ()); 
-			} 
+//			try { 
+//				Glide.with (getContext ()).clear (this); 
+//			} catch (IllegalArgumentException err) { 
+//				Log.e (TAG, err.getLocalizedMessage ()); 
+//			} 
+			redrawRequestListener.requestClearImage (this); 
 			hasGlideImage = false; 
 		} 
 	} 
@@ -524,12 +526,13 @@ public class PageView extends ImageView {
 			redrawRequestListener.requestRedrawImage (imageFile, this); 
 		} 
 		else if (hasGlideImage) { 
-			try { 
-				Glide.with (getContext ()) 
-						.clear (this); 
-			} catch (IllegalArgumentException err) { 
-				Log.e (TAG, err.getLocalizedMessage ()); 
-			} 
+//			try { 
+//				Glide.with (getContext ()) 
+//						.clear (this); 
+//			} catch (IllegalArgumentException err) { 
+//				Log.e (TAG, err.getLocalizedMessage ()); 
+//			} 
+			redrawRequestListener.requestClearImage (this); 
 			hasGlideImage = false; 
 		} 
 	} 
@@ -572,6 +575,8 @@ public class PageView extends ImageView {
 			isAnnotatedPage = false; 
 		} 
 		if (!isAnnotatedPage && !isPDF) { 
+			// Clear image: 
+			redrawRequestListener.requestClearImage (this); 
 			// Load just the image dimensions first: 
 			final BitmapFactory.Options options = new BitmapFactory.Options (); 
 			options.inJustDecodeBounds = true; 
@@ -710,12 +715,13 @@ public class PageView extends ImageView {
 //		Log.d (TAG, "onSizeChanged (): Reloading bitmaps, scaling vectors ..."); 
 		// Load blank into this view: 
 		if (hasGlideImage) { 
-			try { 
-				Glide.with (getContext ()) 
-						.clear (this); 
-			} catch (IllegalArgumentException err) { 
-				Log.e (TAG, err.getLocalizedMessage ()); 
-			} 
+//			try { 
+//				Glide.with (getContext ()) 
+//						.clear (this); 
+//			} catch (IllegalArgumentException err) { 
+//				Log.e (TAG, err.getLocalizedMessage ()); 
+//			} 
+			redrawRequestListener.requestClearImage (this); 
 		} 
 		// Reload image: 
 		loadGlideImage (itemFile); 

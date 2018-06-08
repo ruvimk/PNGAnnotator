@@ -385,26 +385,31 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		boolean skipDrawingIfPutParametersTheSame; 
 		boolean dirty = false; 
 		RedrawParams (Holder holder) { this.holder = holder; } 
+		private final Runnable mRunnableClear = new Runnable () { 
+			@Override public void run () { 
+				holder.pageView.setImageBitmap (null); 
+				holder.pageView.hasGlideImage = false; 
+				Log.i (TAG, "Clearing image ... "); 
+				synchronized (this) { 
+					Log.i (TAG, "Notifying other thread ... "); 
+					this.notify (); 
+				} 
+			} 
+		}; 
 		synchronized void clearTarget () { 
 			FutureTarget t = target; 
 			target = null; 
 			if (t != null) { 
-				Runnable r = new Runnable () { 
-					@Override public void run () { 
-						holder.pageView.setImageBitmap (null); 
-						synchronized (this) { 
-							this.notify (); 
-						} 
-					} 
-				}; 
 				try { 
-					synchronized (r) { 
-						((Activity) holder.pageView.getContext ()).runOnUiThread (r); 
-						r.wait (); 
+					synchronized (mRunnableClear) { 
+						Log.i (TAG, "Waiting to clear image ... "); 
+						((Activity) holder.pageView.getContext ()).runOnUiThread (mRunnableClear); 
+						mRunnableClear.wait (); 
 					} 
 				} catch (InterruptedException err) { 
 					err.printStackTrace (); 
 				} 
+				Log.i (TAG, "Done clearing image. "); 
 				Glide.with (holder.pageView.getContext ()) 
 						.clear (t); 
 			} 
@@ -459,6 +464,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				mRedrawParams.pageView = pageView; 
 				mRedrawParams.file = imageFile; 
 				mRedrawParams.dirty = true; 
+			} 
+			@Override public void requestClearImage (PageView pageView) { 
+				mRedrawParams.pageView = pageView; 
+				mRedrawParams.clearTarget (); 
 			} 
 		}; 
 		public Holder (View root) { 

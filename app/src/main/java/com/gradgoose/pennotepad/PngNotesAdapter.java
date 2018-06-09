@@ -334,7 +334,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 														 }); 
 						if (params.pageView.viewMode == PageView.VIEW_LARGE) 
 							builder.thumbnail (PageView.THUMBNAIL_MULTIPLIER); 
-						params.clearTarget (); 
 						final FutureTarget target = builder.submit (params.pageView.getWidth (), params.pageView.getHeight ()); 
 						final Object obj; 
 						try { 
@@ -349,8 +348,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						Runnable r = new Runnable () { 
 							@Override public void run () { 
 								params.pageView.setImageBitmap ((Bitmap) obj); 
+								FutureTarget t = params.target; 
 								params.target = target; 
 								params.pageView.hasGlideImage = true; 
+								if (Build.VERSION.SDK_INT < 17 || !((Activity) mContext).isDestroyed ()) 
+									Glide.with (mContext) 
+										.clear (t); 
 								synchronized (this) { 
 									this.notify (); 
 								} 

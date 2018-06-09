@@ -393,6 +393,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				synchronized (this) { 
 					Log.i (TAG, "Notifying other thread ... "); 
 					this.notify (); 
+					Log.i (TAG, "Notified other thread. "); 
 				} 
 			} 
 		}; 
@@ -404,7 +405,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					synchronized (mRunnableClear) { 
 						Log.i (TAG, "Waiting to clear image ... "); 
 						((Activity) holder.pageView.getContext ()).runOnUiThread (mRunnableClear); 
+						Log.i (TAG, "Pre-wait"); 
 						mRunnableClear.wait (); 
+						Log.i (TAG, "Post-wait"); 
 					} 
 				} catch (InterruptedException err) { 
 					err.printStackTrace (); 

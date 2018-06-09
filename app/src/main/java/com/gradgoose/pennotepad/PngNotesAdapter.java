@@ -286,8 +286,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	Vector<PageView> mAllPageViews = new Vector<> (); 
 	final Vector<RedrawParams> mAllRedrawParams = new Vector<> (); 
 	
-	static final int THUMB_FRACTION = 32; 
-	
 	// Thread checks for dirty RedrawParams, and redraws them: 
 	private Thread mRedrawCode = new Thread () { 
 		@Override public void run () { 
@@ -299,30 +297,26 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				int cnt = mAllRedrawParams.size (); 
 				for (int i = 0; i < cnt; i++) { 
 					final RedrawParams params = mAllRedrawParams.elementAt (i); 
-					if (!params.dirty && !params.thumb) continue; 
+					if (!params.dirty) continue; 
 					if (params.pageView.getWidth () == 0 || params.pageView.getHeight () == 0) 
 						continue; 
 					if (!params.dirty && hadDirty) { 
 						// If we're still drawing thumbnails, we should skip loading full images until we're done with just the thumbnails. 
 						continue; 
 					} 
-					hasDirty |= params.dirty; 
+					hasDirty = true; 
 					// Go redraw it: 
 					params.dirty = false; 
 					if (mIsPDF) { 
 						params.holder.renderPage (params.page, 
 								params.putX, params.putY, params.putWidth, params.putHeight, 
 								params.wideScaleParameter, params.skipDrawingIfPutParametersTheSame); 
-						params.thumb = false; 
 					} else if (!params.pageView.isAnnotatedPage && mContext instanceof Activity && 
 																	   (Build.VERSION.SDK_INT < 17 || !((Activity) mContext).isDestroyed ())) { 
 						RequestBuilder builder = Glide.with (mContext) 
 														 .load (params.file) 
 														 .apply (RequestOptions.skipMemoryCacheOf (true)) 
-														 .apply (RequestOptions.diskCacheStrategyOf (params.dirty ? 
-																											 DiskCacheStrategy.NONE : // None for thumbnails. 
-																											 DiskCacheStrategy.RESOURCE // Cache for full-size. 
-														 )) 
+														 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
 														 .apply (RequestOptions.sizeMultiplierOf (params.pageView.viewMode == PageView.VIEW_SMALL ? 
 																										  params.pageView.GLIDE_SMALL_SIZE_MULT : 
 																										  params.pageView.GLIDE_LARGE_SIZE_MULT)) 
@@ -339,15 +333,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 						if (params.pageView.viewMode == PageView.VIEW_LARGE) 
 							builder.thumbnail (PageView.THUMBNAIL_MULTIPLIER); 
 						final FutureTarget target; 
-						if (params.thumb) { 
-							// This was a thumbnail. Now we're loading a full-size ... 
-							target = builder.submit (params.pageView.getWidth (), params.pageView.getHeight ()); 
-							params.thumb = false; 
-						} else { 
-							target = builder.submit (Math.max (params.pageView.getWidth () / THUMB_FRACTION, 8), 
-									Math.max (params.pageView.getHeight () / THUMB_FRACTION, 8)); 
-							params.thumb = true; 
-						} 
+						// This was a thumbnail. Now we're loading a full-size ... 
+						target = builder.submit (params.pageView.getWidth (), params.pageView.getHeight ()); 
 						final Object obj; 
 						try { 
 							obj = target.get (); 
@@ -407,7 +394,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		int wideScaleParameter; 
 		boolean skipDrawingIfPutParametersTheSame; 
 		boolean dirty = false; 
-		boolean thumb = false; 
 		RedrawParams (Holder holder) { this.holder = holder; } 
 		private final Runnable mRunnableClear = new Runnable () { 
 			@Override public void run () { 

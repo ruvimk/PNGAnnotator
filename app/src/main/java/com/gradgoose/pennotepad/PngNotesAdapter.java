@@ -289,10 +289,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	// Thread checks for dirty RedrawParams, and redraws them: 
 	private Thread mRedrawCode = new Thread () { 
 		@Override public void run () { 
-			boolean hasDirty = false; 
-			boolean hadDirty; // For seeing if we should load thumbnails or actual images. 
+			boolean hasDirty; 
 			while (mActivityRunning) { 
-				hadDirty = hasDirty; 
 				hasDirty = false; 
 				int cnt = mAllRedrawParams.size (); 
 				for (int i = 0; i < cnt; i++) { 
@@ -300,10 +298,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					if (!params.dirty) continue; 
 					if (params.pageView.getWidth () == 0 || params.pageView.getHeight () == 0) 
 						continue; 
-					if (!params.dirty && hadDirty) { 
-						// If we're still drawing thumbnails, we should skip loading full images until we're done with just the thumbnails. 
-						continue; 
-					} 
 					hasDirty = true; 
 					// Go redraw it: 
 					params.dirty = false; 

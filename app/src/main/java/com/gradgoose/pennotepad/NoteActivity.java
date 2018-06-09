@@ -1,5 +1,6 @@
 package com.gradgoose.pennotepad;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
@@ -7,13 +8,16 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -206,6 +210,44 @@ public class NoteActivity extends Activity {
 		mHomeFolder = findHomeFolder (); 
 		if (mHomeFolder == null) 
 			mHomeFolder = createHomeFolder (); 
+		if (mHomeFolder == null) { 
+			if (Build.VERSION.SDK_INT >= 23) { 
+				if (checkSelfPermission (Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) { 
+					mHomeFolder = createHomeFolder (); 
+					if (mHomeFolder != null) 
+						finishSettingUpOnCreate (savedInstanceState); 
+					else errorExit (R.string.msg_create_home_folder_error); 
+				} else { 
+					inCreateState = savedInstanceState; 
+					ActivityCompat.requestPermissions (this, 
+							new String [] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 
+							1); 
+				} 
+			} 
+		} else finishSettingUpOnCreate (savedInstanceState); 
+	} 
+	private Bundle inCreateState = null; 
+	@Override public void onRequestPermissionsResult (int requestCode, @NonNull String [] permissions, 
+													  @NonNull int [] grantResults) { 
+		super.onRequestPermissionsResult (requestCode, permissions, grantResults); 
+		if (requestCode == 1) { 
+			if (grantResults[0] == PackageManager.PERMISSION_GRANTED) { 
+				mHomeFolder = createHomeFolder (); 
+				if (mHomeFolder == null) 
+					errorExit (R.string.msg_create_home_folder_error); 
+				finishSettingUpOnCreate (inCreateState); 
+				inCreateState = null; 
+			} else { 
+				errorExit (R.string.msg_create_home_folder_error); 
+			} 
+		} 
+	} 
+	private void errorExit (int msgID) { 
+		Toast.makeText (this, msgID, Toast.LENGTH_SHORT) 
+				.show (); 
+		finish (); 
+	} 
+	private void finishSettingUpOnCreate (Bundle savedInstanceState) { 
 		// Make sure the pictures folder we show to the user is named correctly: 
 		mAllPictures = new File (getString (R.string.title_pictures)); 
 		// See if we had a folder already open last time that we can reopen now: 
@@ -299,7 +341,7 @@ public class NoteActivity extends Activity {
 			} 
 			// Save the recent folders list: 
 			StringBuilder sb = new StringBuilder (recentFolders.elementAt (0).length () * 
-				recentFolders.size () * 2); 
+														  recentFolders.size () * 2); 
 			for (int i = 0; i < recentFolders.size (); i++) { 
 				if (i > 0) sb.append ("\\n"); 
 				sb.append (recentFolders.elementAt (i)); 

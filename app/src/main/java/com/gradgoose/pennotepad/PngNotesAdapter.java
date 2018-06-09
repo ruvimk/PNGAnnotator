@@ -296,7 +296,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				for (int i = 0; i < cnt; i++) { 
 					final RedrawParams params = mAllRedrawParams.elementAt (i); 
 					if (!params.dirty) continue; 
-					if (params.pageView.getWidth () == 0 || params.pageView.getHeight () == 0) 
+					if (params.file == null || params.pageView.getWidth () == 0 || params.pageView.getHeight () == 0) 
 						continue; 
 					hasDirty = true; 
 					// Go redraw it: 

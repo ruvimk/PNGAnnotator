@@ -324,8 +324,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 																 return false; 
 															 } 
 														 }); 
-						if (params.pageView.viewMode == PageView.VIEW_LARGE) 
-							builder.thumbnail (PageView.THUMBNAIL_MULTIPLIER); 
 						final FutureTarget target; 
 						// This was a thumbnail. Now we're loading a full-size ... 
 						target = builder.submit (params.pageView.getWidth (), params.pageView.getHeight ()); 

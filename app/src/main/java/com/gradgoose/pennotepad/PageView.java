@@ -576,7 +576,7 @@ public class PageView extends ImageView {
 		} 
 		if (!isAnnotatedPage && !isPDF) { 
 			// Clear image: 
-			redrawRequestListener.requestClearImage (this); 
+			setImageBitmap (null); 
 			// Load just the image dimensions first: 
 			final BitmapFactory.Options options = new BitmapFactory.Options (); 
 			options.inJustDecodeBounds = true; 

@@ -221,7 +221,7 @@ public class NoteActivity extends Activity {
 						new String [] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 
 						1); 
 			} 
-		} 
+		} else havePermission = true; 
 		if (havePermission) { 
 			if (mHomeFolder == null) 
 				mHomeFolder = createHomeFolder (); 

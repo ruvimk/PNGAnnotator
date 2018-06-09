@@ -210,23 +210,25 @@ public class NoteActivity extends Activity {
 		mSdPictures = new File (sdCard + mPictures.getAbsolutePath ().substring (inCard.length ())); 
 		// Find our home folder: 
 		mHomeFolder = findHomeFolder (); 
-		if (mHomeFolder == null) 
-			mHomeFolder = createHomeFolder (); 
-		if (mHomeFolder == null) { 
-			if (Build.VERSION.SDK_INT >= 23) { 
-				if (checkSelfPermission (Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) { 
-					mHomeFolder = createHomeFolder (); 
-					if (mHomeFolder != null) 
-						finishSettingUpOnCreate (savedInstanceState); 
-					else errorExit (R.string.msg_create_home_folder_error); 
-				} else { 
-					inCreateState = savedInstanceState; 
-					ActivityCompat.requestPermissions (this, 
-							new String [] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 
-							1); 
-				} 
+		// Take care of permissions: 
+		boolean havePermission = false; 
+		if (Build.VERSION.SDK_INT >= 23) { 
+			if (checkSelfPermission (Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) { 
+				havePermission = true; 
+			} else { 
+				inCreateState = savedInstanceState; 
+				ActivityCompat.requestPermissions (this, 
+						new String [] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 
+						1); 
 			} 
-		} else finishSettingUpOnCreate (savedInstanceState); 
+		} 
+		if (havePermission) { 
+			if (mHomeFolder == null) 
+				mHomeFolder = createHomeFolder (); 
+			if (mHomeFolder == null) 
+				errorExit (R.string.msg_create_home_folder_error); 
+			finishSettingUpOnCreate (savedInstanceState); 
+		} 
 	} 
 	private Bundle inCreateState = null; 
 	@Override public void onRequestPermissionsResult (int requestCode, @NonNull String [] permissions, 
@@ -234,7 +236,8 @@ public class NoteActivity extends Activity {
 		super.onRequestPermissionsResult (requestCode, permissions, grantResults); 
 		if (requestCode == 1) { 
 			if (grantResults[0] == PackageManager.PERMISSION_GRANTED) { 
-				mHomeFolder = createHomeFolder (); 
+				if (mHomeFolder == null) 
+					mHomeFolder = createHomeFolder (); 
 				if (mHomeFolder == null) 
 					errorExit (R.string.msg_create_home_folder_error); 
 				finishSettingUpOnCreate (inCreateState); 

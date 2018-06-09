@@ -1,5 +1,6 @@
 package com.gradgoose.pennotepad;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -44,7 +45,10 @@ public class FileListCache {
 		void onFilesNoChange (File [] [] list); 
 	} 
 	
-	public FileListCache (Vector<File> targetFolder, File appFilesDir) { 
+	final Context mContext; 
+	
+	public FileListCache (Context context, Vector<File> targetFolder, File appFilesDir) { 
+		mContext = context; 
 		mFolder = targetFolder; 
 		mFilesDir = appFilesDir; 
 	} 
@@ -223,7 +227,17 @@ public class FileListCache {
 			mTask.execute (); 
 		} else { 
 			list = getFileLists (filter); 
-			saveFileLists (myFolder, null, list, listener); 
+			final File [] [] nowList = list; 
+			if (mContext instanceof Activity) { 
+				((Activity) mContext).runOnUiThread (new Runnable () { 
+					@Override public void run () { // Just delays the callback execution a bit ... 
+						saveFileLists (myFolder, null, nowList, listener); // Or else 
+						// the callback handler may try to use the PngNotesAdapter object 
+						// before it has even been assigned (before its constructor has 
+						// even returned). 
+					} 
+				}); 
+			} 
 		} 
 		return list; 
 	} 

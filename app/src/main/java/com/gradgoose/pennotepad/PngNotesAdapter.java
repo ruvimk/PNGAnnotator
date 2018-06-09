@@ -273,7 +273,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			preparePageList (); 
 		} else { 
 			pdfiumCore = null; 
-			mCache = new FileListCache (browsingDir, context.getFilesDir ()); 
+			mCache = new FileListCache (mContext, browsingDir, context.getFilesDir ()); 
 			prepareFileList (); 
 		} 
 		mStableIds = new HashMap<> (mList.length); 

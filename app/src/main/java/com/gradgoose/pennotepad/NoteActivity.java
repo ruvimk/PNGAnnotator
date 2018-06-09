@@ -1551,7 +1551,8 @@ public class NoteActivity extends Activity {
 	@Override public void onDestroy () { 
 //		if (mNotesAdapter != null) 
 //			mNotesAdapter.cleanUp (); 
-		mNotesAdapter.mActivityRunning = false; 
+		if (mNotesAdapter != null) 
+			mNotesAdapter.mActivityRunning = false; 
 		super.onDestroy (); 
 	} 
 	

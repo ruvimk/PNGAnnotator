@@ -294,6 +294,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				hasDirty = false; 
 				int cnt = mAllRedrawParams.size (); 
 				for (int i = 0; i < cnt; i++) { 
+					RedrawParams params = mAllRedrawParams.elementAt (i); 
+					if (params.dirty && params.file == null) 
+						params.clearTarget (); 
+				} 
+				for (int i = 0; i < cnt; i++) { 
 					final RedrawParams params = mAllRedrawParams.elementAt (i); 
 					if (!params.dirty) continue; 
 					if (params.pageView.getWidth () == 0 || params.pageView.getHeight () == 0) 
@@ -470,7 +475,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			} 
 			@Override public void requestClearImage (PageView pageView) { 
 				mRedrawParams.pageView = pageView; 
-				mRedrawParams.clearTarget (); 
+				mRedrawParams.file = null; 
+				mRedrawParams.dirty = true; 
 			} 
 		}; 
 		public Holder (View root) { 

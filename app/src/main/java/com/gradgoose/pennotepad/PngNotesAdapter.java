@@ -308,20 +308,19 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					} else if (!params.pageView.isAnnotatedPage && mContext instanceof Activity && 
 																	   (Build.VERSION.SDK_INT < 17 || !((Activity) mContext).isDestroyed ())) { 
 						RequestBuilder builder = Glide.with (mContext) 
-														 .asBitmap () 
 														 .load (params.file) 
 														 .apply (RequestOptions.skipMemoryCacheOf (true)) 
 														 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
 														 .apply (RequestOptions.sizeMultiplierOf (params.pageView.viewMode == PageView.VIEW_SMALL ? 
 																										  params.pageView.GLIDE_SMALL_SIZE_MULT : 
 																										  params.pageView.GLIDE_LARGE_SIZE_MULT)) 
-														 .listener (new RequestListener<Bitmap> () { 
-															 @Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) { 
+														 .listener (new RequestListener<Drawable> () { 
+															 @Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
 																 if (mErrorCallback != null) 
 																	 mErrorCallback.onBitmapLoadError (); 
 																 return false; 
 															 } 
-															 @Override public boolean onResourceReady (Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) { 
+															 @Override public boolean onResourceReady (Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) { 
 																 return false; 
 															 } 
 														 }); 
@@ -336,11 +335,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 							err.printStackTrace (); 
 							continue; 
 						} 
-						if (!(obj instanceof Bitmap)) 
+						if (!(obj instanceof Drawable)) 
 							continue; 
 						Runnable r = new Runnable () { 
 							@Override public void run () { 
-								params.pageView.setImageBitmap ((Bitmap) obj); 
+								params.pageView.setImageDrawable ((Drawable) obj); 
 								FutureTarget t = params.target; 
 								params.target = target; 
 								params.pageView.hasGlideImage = true; 
@@ -390,7 +389,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		RedrawParams (Holder holder) { this.holder = holder; } 
 		private final Runnable mRunnableClear = new Runnable () { 
 			@Override public void run () { 
-				holder.pageView.setImageBitmap (null); 
+				holder.pageView.setImageDrawable (null); 
 				holder.pageView.hasGlideImage = false; 
 				Log.i (TAG, "Clearing image ... "); 
 				synchronized (this) { 

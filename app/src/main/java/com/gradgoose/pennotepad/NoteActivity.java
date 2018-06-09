@@ -168,6 +168,8 @@ public class NoteActivity extends Activity {
 	int initialScrollItemPosition = 0; 
 	float initialScrollFraction = 0; 
 	
+	boolean initReady = false; 
+	
 	@Override protected void onCreate (Bundle savedInstanceState) { 
 		super.onCreate (savedInstanceState); 
 		setContentView (R.layout.activity_main); 
@@ -248,6 +250,7 @@ public class NoteActivity extends Activity {
 		finish (); 
 	} 
 	private void finishSettingUpOnCreate (Bundle savedInstanceState) { 
+		initReady = true; 
 		// Make sure the pictures folder we show to the user is named correctly: 
 		mAllPictures = new File (getString (R.string.title_pictures)); 
 		// See if we had a folder already open last time that we can reopen now: 
@@ -351,6 +354,10 @@ public class NoteActivity extends Activity {
 	} 
 	// Save which folder we're working on, and what scroll position: 
 	@Override protected void onSaveInstanceState (Bundle outState) { 
+		if (!initReady) { 
+			super.onSaveInstanceState (outState); 
+			return; 
+		} 
 		// Put things into the saved instance state: 
 		String paths [] = new String [mBrowsingFolders.size ()]; 
 		for (int i = 0; i < mBrowsingFolders.size (); i++) 
@@ -365,6 +372,10 @@ public class NoteActivity extends Activity {
 	
 	boolean mReloadOnNextResume = false; 
 	@Override public void onPause () { 
+		if (!initReady) { 
+			super.onPause (); 
+			return; 
+		} 
 		// Calculate scroll position: 
 		int scrollPosition = getScrollPosition (); 
 		float scrollFraction = getScrollFraction (); 
@@ -383,6 +394,7 @@ public class NoteActivity extends Activity {
 	} 
 	@Override public void onResume () { 
 		super.onResume (); 
+		if (!initReady) return; 
 		mPaused = false; 
 		// Only reload if this is following an onPause (): 
 		if (mReloadOnNextResume) { 
@@ -400,6 +412,7 @@ public class NoteActivity extends Activity {
 		activityResumeTime = System.currentTimeMillis (); 
 	} 
 	void saveTimeLog () { 
+		if (!initReady) return; 
 		activityPauseTime = System.currentTimeMillis (); 
 		if (isTimeLogEnabled () && !isBrowsingRootFolder ()) try { 
 			TimeLog.logTime (mBrowsingFolders.elementAt (0), activityResumeTime, activityPauseTime); 
@@ -419,18 +432,18 @@ public class NoteActivity extends Activity {
 		return true; 
 	} 
 	protected boolean hasImages () { 
-		return mNotesAdapter != null ? 
+		return initReady && (mNotesAdapter != null ? 
 									mNotesAdapter.hasImages () : 
-									PngNotesAdapter.hasImages (mBrowsingFolders); 
+									PngNotesAdapter.hasImages (mBrowsingFolders)); 
 	} 
 	protected boolean isPDF () { 
-		return mNotesAdapter != null ? mNotesAdapter.mIsPDF : mBrowsingFolders.elementAt (0).getName ().toLowerCase ().endsWith (".pdf"); 
+		return initReady && (mNotesAdapter != null ? mNotesAdapter.mIsPDF : mBrowsingFolders.elementAt (0).getName ().toLowerCase ().endsWith (".pdf")); 
 	} 
 	protected boolean canShowAsGrid () { 
-		return hasImages () || mNotesAdapter.mIsPDF; 
+		return initReady && (hasImages () || mNotesAdapter.mIsPDF); 
 	} 
 	void updateMenuItems () { 
-		if (mMenuGoToPage == null) return; // Return if these have not yet been initialized. 
+		if (!initReady || mMenuGoToPage == null) return; // Return if these have not yet been initialized. 
 		boolean hasImages = hasImages (); 
 		boolean isPDF = isPDF (); 
 		mMenuGoToPage.setVisible (hasImages || isPDF); 
@@ -457,6 +470,7 @@ public class NoteActivity extends Activity {
 	} 
 	PaperGenerator mPaperGenerator = new PaperGenerator (); 
 	@Override public boolean onOptionsItemSelected (MenuItem item) { 
+		if (!initReady) return super.onOptionsItemSelected (item); 
 		switch (item.getItemId ()) { 
 //			case R.id.menu_action_annotate: 
 //				userSelectAnnotateOptions (); 
@@ -553,7 +567,7 @@ public class NoteActivity extends Activity {
 	} 
 	
 	int getScrollPosition () { 
-		if (mRvBigPages == null) return -1; 
+		if (!initReady || mRvBigPages == null) return -1; 
 		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
 		int scrollPosition; 
 		View firstView; 
@@ -586,7 +600,7 @@ public class NoteActivity extends Activity {
 		return scrollPosition; 
 	} 
 	float getScrollFraction () { 
-		if (mRvBigPages == null) return -1; 
+		if (!initReady || mRvBigPages == null) return -1; 
 		RecyclerView.LayoutManager notesLayoutManager = mRvBigPages.getLayoutManager (); 
 		int scrollPosition = getScrollPosition (); 
 		View firstView; 
@@ -604,15 +618,17 @@ public class NoteActivity extends Activity {
 	} 
 	
 	int getPageIndex () { 
-		return Math.max (mNotesLayoutManager.findFirstVisibleItemPosition () 
-				- mNotesAdapter.countHeaderViews (), 0); 
+		return initReady ? Math.max (mNotesLayoutManager.findFirstVisibleItemPosition () 
+				- mNotesAdapter.countHeaderViews (), 0) : 0; 
 	} 
 	void setPageIndex (int index) { 
+		if (!initReady) return; 
 		if (index == 0) 
 			mRvBigPages.scrollToPosition (0); 
 		else mRvBigPages.scrollToPosition (index + mNotesAdapter.countHeaderViews ()); 
 	} 
 	void scrollToItem (int itemIndex) { 
+		if (!initReady) return; 
 		mDoNotResetInitialScrollYet = true; 
 		initialScrollItemPosition = itemIndex; 
 		initialScrollFraction = 0; 
@@ -620,12 +636,14 @@ public class NoteActivity extends Activity {
 		mNotesAdapter.notifyDataSetChanged (); 
 	} 
 	int getScrollSpace () { 
+		if (!initReady) return 0; 
 		int pageIndex = getPageIndex (); 
 		int position = pageIndex > 0 ? pageIndex + mNotesAdapter.countHeaderViews () : 0; 
 		View currentView = mNotesLayoutManager.findViewByPosition (position); 
 		return currentView != null ? currentView.getTop () : 0; 
 	} 
 	void addScrollSpace (int pixelsY) { 
+		if (!initReady) return; 
 		int nowTop = getScrollSpace (); 
 		mRvBigPages.scrollBy (0, nowTop - pixelsY); 
 	} 
@@ -634,6 +652,7 @@ public class NoteActivity extends Activity {
 //		
 //	} 
 	static void userRenameFile (final NoteActivity activity, final @Nullable Vector<File> oldName, String userMessage) { 
+		if (!activity.initReady) return; 
 		final EditText editText = (EditText) activity.getLayoutInflater ().inflate (R.layout.edit_file_name, 
 				(ViewGroup) activity.findViewById (R.id.vMainRoot), false); 
 		String currentName; 
@@ -733,6 +752,7 @@ public class NoteActivity extends Activity {
 	} 
 	boolean mDeleteInProgress = false; 
 	boolean userDeleteFiles (final Vector<Vector<File>> folders) { 
+		if (!initReady) return false; 
 		if (mDeleteInProgress) { 
 			AlertDialog dialog = new AlertDialog.Builder (this) 
 					.setTitle (R.string.title_already_progress) 
@@ -880,6 +900,7 @@ public class NoteActivity extends Activity {
 		dialog.show (); 
 	} 
 	void userChangeBrushWidth () { 
+		if (!initReady) return; 
 		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_float, 
 				(ViewGroup) findViewById (R.id.vMainRoot), false); 
 		String currentWidth = String.valueOf (mNotesAdapter.mBrush); 
@@ -919,6 +940,7 @@ public class NoteActivity extends Activity {
 	} 
 	
 	void exportPages () { 
+		if (!initReady) return; 
 //		mNotesAdapter.reloadList (); // Just in case. 
 //		(new AsyncTask<File [], Integer, File> () { 
 //			boolean success = true; 
@@ -981,6 +1003,7 @@ public class NoteActivity extends Activity {
 		} 
 	} 
 	void openSettings () { 
+		if (!initReady) return; 
 		
 	} 
 	
@@ -1041,6 +1064,7 @@ public class NoteActivity extends Activity {
 		} 
 	}; 
 	void animateZoomLeave (float startPivotX, float startPivotY) { 
+		if (!initReady) return; 
 		notesZoomPivotX = startPivotX; 
 		notesZoomPivotY = startPivotY; 
 		targetZoomPivotX = (float) (getScrollPosition () % mOverviewColumnCount) * mScalePageContainer.getWidth () / mOverviewColumnCount + 
@@ -1063,10 +1087,10 @@ public class NoteActivity extends Activity {
 		return pictureFolders; 
 	} 
 	boolean isBrowsingAllPicturesFolder () { 
-		return mBrowsingFolders.elementAt (0).equals (mPictures); 
+		return initReady && mBrowsingFolders.elementAt (0).equals (mPictures); 
 	} 
 	boolean isBrowsingRootFolder () { 
-		return mBrowsingFolders.elementAt (0).equals (mHomeFolder); 
+		return initReady && mBrowsingFolders.elementAt (0).equals (mHomeFolder); 
 //		for (File folder : mBrowsingFolders) 
 //			if (folder.equals (mDCIM)) 
 //				return true; 
@@ -1096,7 +1120,7 @@ public class NoteActivity extends Activity {
 		updateUserInterface (false); 
 	} 
 	void updateUserInterface (boolean firstTimeLoading) { 
-		if (mNotesAdapter == null || mSubfoldersAdapter == null || hand == null) return; 
+		if (!initReady || mNotesAdapter == null || mSubfoldersAdapter == null || hand == null) return; 
 		// Subfolders: 
 		if (!wantDisplaySubfoldersAsBig ()) { 
 			// If there ARE images to display, then list the subfolders up above the images: 

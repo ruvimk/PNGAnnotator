@@ -1257,7 +1257,17 @@ public class NoteActivity extends Activity {
 			@Override public void onVerticalPanState (boolean isPanning) { 
 				mRvBigPages.allowTouch = !isPanning; 
 			} 
+			@Override public void onZoomChanged (float scale) { 
+				if (scale != 1f) { 
+					prefs.edit ().putFloat ("zoomed-in-scale", scale) 
+							.putBoolean ("zoomed-in-flag", true).apply (); 
+					mScalePageContainer.setZoomedInScale (scale); 
+				} else prefs.edit ().putBoolean ("zoomed-in-flag", false).apply (); 
+			} 
 		}); 
+		mScalePageContainer.setZoomedInScale (prefs.getFloat ("zoomed-in-scale", 2)); 
+		if (prefs.getBoolean ("zoomed-in-flag", false)) 
+			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale); 
 		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
 		mSubfoldersGridLayoutManager = new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 
 		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter); 

@@ -36,6 +36,9 @@ public class ScaleDetectorContainer extends FrameLayout {
 	float nowPivotX = 0; 
 	float nowPivotY = 0; 
 	float zoomedInScale = 2; 
+	void setZoomedInScale (float scale) { 
+		zoomedInScale = scale; 
+	} 
 	OnScaleDone onScaleDone = null; 
 	void setOnScaleDoneListener (OnScaleDone listener) { 
 		onScaleDone = listener; 
@@ -43,6 +46,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	public interface OnScaleDone { 
 		void onZoomLeave (float pivotX, float pivotY); 
 		void onVerticalPanState (boolean panning); 
+		void onZoomChanged (float nowScale); 
 	} 
 	float xp0 = 0; 
 	float yp0 = 0; 
@@ -85,19 +89,24 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 			
 			@Override public void onScaleEnd (ScaleGestureDetector scaleGestureDetector) { 
+				OnScaleDone listener = onScaleDone; 
 				if (currentScale > .75 && currentScale <= 1.25) 
 					setScale (1, 1, 0, 0); 
 				else if (currentScale > 1.25) { 
 					// Don't change currentScale; leave it zoomed in. 
 					isScaleEvent = false; 
 					refreshViews (); 
+					if (listener != null) 
+						listener.onZoomChanged (currentScale); 
 					return; 
-				} else if (onScaleDone != null) onScaleDone.onZoomLeave (scaleGestureDetector.getFocusX (), 
+				} else if (listener != null) listener.onZoomLeave (scaleGestureDetector.getFocusX (), 
 						scaleGestureDetector.getFocusY ()); 
 				else setScale (1, 1, 0, 0); 
 				currentScale = 1; 
 				isScaleEvent = false; 
 				refreshViews (); 
+				if (listener != null) 
+					listener.onZoomChanged (1); 
 			} 
 		}); 
 		mGeneralGestureDetector = new GestureDetector (context, new GestureDetector.OnGestureListener () { 
@@ -448,6 +457,9 @@ public class ScaleDetectorContainer extends FrameLayout {
 				initiateZoomAnimation (nowPivotX, nowPivotY, currentScale, 
 						nowPivotX, nowPivotY, 1, 
 						500); 
+				OnScaleDone listener = onScaleDone; 
+				if (listener != null)
+					listener.onZoomChanged (1); 
 			} else if (allowZoomIn) { 
 				// Zoomed out. Need to zoom in. 
 				nowPivotX = prevCenterX; 
@@ -455,6 +467,9 @@ public class ScaleDetectorContainer extends FrameLayout {
 				initiateZoomAnimation (nowPivotX, nowPivotY, currentScale, 
 						nowPivotX, nowPivotY, zoomedInScale, 
 						500); 
+				OnScaleDone listener = onScaleDone; 
+				if (listener != null) 
+					listener.onZoomChanged (zoomedInScale); 
 			} 
 		} else performClick (); 
 	} 
@@ -508,6 +523,9 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 		} 
 	}; 
+	void setScale (float scale) { 
+		setScale (scale, scale, 0, 0); 
+	} 
 	void setScale (float scaleX, float scaleY, float pivotX, float pivotY) { 
 		int childCount = getChildCount (); 
 		for (int childIndex = 0; childIndex < childCount; childIndex++) { 

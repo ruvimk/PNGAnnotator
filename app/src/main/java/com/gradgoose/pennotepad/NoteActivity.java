@@ -1141,6 +1141,10 @@ public class NoteActivity extends Activity {
 		mRvSubfolderBrowser.setLayoutManager (mSubfoldersLayoutManager); 
 		// Notes: 
 		setNotesLayoutManager (!firstTimeLoading); 
+		mScalePageContainer.setZoomedInScale (prefs.getFloat ("zoomed-in-scale", 2)); 
+		if (prefs.getBoolean ("zoomed-in-flag", false)) { 
+			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale); 
+		} 
 		// Update the views for the tool initially selected: 
 		hand.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_NONE ? 
 																		 R.drawable.black_border : 0); 
@@ -1265,9 +1269,6 @@ public class NoteActivity extends Activity {
 				} else prefs.edit ().putBoolean ("zoomed-in-flag", false).apply (); 
 			} 
 		}); 
-		mScalePageContainer.setZoomedInScale (prefs.getFloat ("zoomed-in-scale", 2)); 
-		if (prefs.getBoolean ("zoomed-in-flag", false)) 
-			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale); 
 		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
 		mSubfoldersGridLayoutManager = new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 
 		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter); 

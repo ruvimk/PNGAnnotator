@@ -1144,6 +1144,7 @@ public class NoteActivity extends Activity {
 		mScalePageContainer.setZoomedInScale (prefs.getFloat ("zoomed-in-scale", 2)); 
 		if (prefs.getBoolean ("zoomed-in-flag", false)) { 
 			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale); 
+			mScalePageContainer.setPivot (0, mRvSubfolderBrowser.getHeight ()); 
 		} 
 		// Update the views for the tool initially selected: 
 		hand.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_NONE ? 

@@ -465,7 +465,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	
 	@Override public int getItemCount () { 
-		Log.i (TAG, "getItemCount (): returning " + (mList.length + additionalDirsToShow.length)); 
+//		Log.i (TAG, "getItemCount (): returning " + (mList.length + additionalDirsToShow.length)); 
 		return mList.length + additionalDirsToShow.length; 
 	} 
 	

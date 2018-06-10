@@ -14,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
@@ -262,6 +263,11 @@ public class SwipeableRecyclerView extends RecyclerView {
 //						nextIndex = mParentSubfolders.length - 1; 
 //					go (nextIndex); 
 						go (-1); 
+					} 
+				} else if (swipeDelta == 0) {
+					ViewParent parent = getParent (); 
+					if (parent instanceof ScaleDetectorContainer) { 
+						((ScaleDetectorContainer) parent).checkClick (); 
 					} 
 				} else { 
 					swipeDelta = (swipeDelta > 0 ? 1 : -1) * MIN_DELTA_TO_SWIPE * 0.9f; 

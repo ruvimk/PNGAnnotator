@@ -324,7 +324,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 //		if (!isScaleEvent) mScaleGestureDetector.onTouchEvent (event); // Just let the detector know about this touch ... 
 //		else getParent ().requestDisallowInterceptTouchEvent (true); 
 		// The scale detector will set isScaleEvent, we will set it, if we detect a scale. 
-		return (/*isScaleEvent || */(canSwipe (delta) //&& 
+		return (/*isScaleEvent || */(event.getAction () != MotionEvent.ACTION_DOWN && 
+											 canSwipe (delta) //&& 
 											 /*Math.abs (delta) > 0.25f * (horizontal ? x - firstInterceptX : y - firstInterceptY)*/ /*&& 
 											 (Math.abs (delta) >= MIN_DELTA_TO_SWIPE || 
 											 Math.sqrt ((x - firstInterceptX) * (x - firstInterceptX) + 

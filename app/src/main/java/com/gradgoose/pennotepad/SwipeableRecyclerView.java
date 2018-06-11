@@ -292,8 +292,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 		for (int i = 0; i < viewGroup.getChildCount (); i++) { 
 			View child = viewGroup.getChildAt (i); 
 			if (child instanceof ViewGroup) { 
-				if (checkClick (globalX, globalY, (ViewGroup) child)) 
+				if (checkClick (globalX, globalY, (ViewGroup) child)) { 
+					child.performClick (); 
 					return true; 
+				} 
 			} else { 
 				synchronized (checkBounds) { 
 					child.getGlobalVisibleRect (checkBounds); 

@@ -1485,7 +1485,7 @@ public class NoteActivity extends Activity {
 				mNoteOverviewLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 
 						initialScrollItemSpace); 
 				animatingZoomLeave = false; // Cancel any zoom animations. 
-				mScalePageContainer.setScale (1, 1, 0, 0); // Reset scale. 
+				mScalePageContainer.setScale (); // Reset scale. 
 				if (!mDoNotResetInitialScrollYet) 
 					resetInitialScroll (); 
 			} 

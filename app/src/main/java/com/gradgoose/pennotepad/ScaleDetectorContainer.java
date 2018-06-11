@@ -523,6 +523,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 			} 
 		} 
 	}; 
+	void setScale () { 
+		
+		setScale (currentScale, currentScale, nowPivotX, nowPivotY); 
+	} 
 	void setScale (float scale) { 
 		setScale (scale, scale, 0, 0); 
 	} 

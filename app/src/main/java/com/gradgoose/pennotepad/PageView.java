@@ -924,9 +924,7 @@ public class PageView extends ImageView {
 			prevTool = mTool; 
 		} 
 		// Now draw our annotation edits that the user made: 
-		float brushScale = mBitmapNaturalWidth != 0 ? 
-								   (float) canvas.getWidth () / mBitmapNaturalWidth 
-								   : paperGenerator.getScaleFactor (canvas.getWidth ()); 
+		float brushScale = paperGenerator.getScaleFactor (canvas.getWidth ()); 
 		float minSpan = optimization_minStrokeSpan * getWidth (); 
 		if (edit.value != null) synchronized (edit) { 
 			if (minSpan != 0) { 
@@ -970,8 +968,10 @@ public class PageView extends ImageView {
 		// Finally, draw the currently being written path: 
 		strokePaint.setColor (mNowErasing || mNowWhiting ? getContext ().getResources () 
 													.getColor (R.color.colorEraser) : mColor); 
-		strokePaint.setStrokeWidth (Math.max (PaperGenerator.getPxPerMm (mBitmapNaturalWidth, 
-				mBitmapNaturalHeight) * mBrush * brushScale, 1f)); // Just cap this to 1+, for simple one-liner code. 
+		float strokeWidth = mBrush * brushScale; 
+		if (strokeWidth < 1f) 
+			strokeWidth = 0f; 
+		strokePaint.setStrokeWidth (strokeWidth); // Just cap this to 1+, for simple one-liner code. 
 		canvas.drawLines (tmpPoints, 0, tmpPointCount, strokePaint); 
 		// Draw a border around this view: 
 		borderPaint.setStrokeWidth (2 * borderWidth); 

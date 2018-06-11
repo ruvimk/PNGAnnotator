@@ -1142,10 +1142,6 @@ public class NoteActivity extends Activity {
 		// Notes: 
 		setNotesLayoutManager (!firstTimeLoading); 
 		mScalePageContainer.setZoomedInScale (prefs.getFloat ("zoomed-in-scale", 2)); 
-		if (prefs.getBoolean ("zoomed-in-flag", false)) { 
-			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale); 
-			mScalePageContainer.setPivot (0, mRvSubfolderBrowser.getHeight ()); 
-		} 
 		// Update the views for the tool initially selected: 
 		hand.findViewById (R.id.flEraser).setBackgroundResource (currentTool == TOOL_NONE ? 
 																		 R.drawable.black_border : 0); 
@@ -1175,6 +1171,15 @@ public class NoteActivity extends Activity {
 		ViewGroup.LayoutParams lpNote = mScalePageContainer.getLayoutParams (); 
 		FrameLayout.LayoutParams lpNoteFL = (FrameLayout.LayoutParams) lpNote; 
 		lpNoteFL.topMargin = canEdit () ? getResources ().getDimensionPixelOffset (R.dimen.pen_options_height) : 0; 
+	} 
+	void updateZoomedInPivot () { 
+		if (prefs.getBoolean ("zoomed-in-flag", false)) { 
+			float sizeFactor = mRvBigPages.getWidth (); 
+			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale, 
+					mScalePageContainer.zoomedInScale, 
+					sizeFactor * prefs.getFloat ("zoom-pivot-x", 0), 
+					sizeFactor * prefs.getFloat ("zoom-pivot-y", mRvSubfolderBrowser.getHeight ())); 
+		} 
 	} 
 	void initUserInterface () { 
 		ViewGroup vgRoot = (ViewGroup) findViewById (R.id.vMainRoot); 
@@ -1264,10 +1269,25 @@ public class NoteActivity extends Activity {
 			} 
 			@Override public void onZoomChanged (float scale) { 
 				if (scale != 1f) { 
+					float sizeFactor = mRvBigPages.getWidth (); 
+					if (sizeFactor == 0) 
+						return; // Just a safe-guard. 
 					prefs.edit ().putFloat ("zoomed-in-scale", scale) 
-							.putBoolean ("zoomed-in-flag", true).apply (); 
+							.putBoolean ("zoomed-in-flag", true) 
+							.putFloat ("zoom-pivot-x", mScalePageContainer.nowPivotX / sizeFactor) 
+							.putFloat ("zoom-pivot-y", mScalePageContainer.nowPivotY / sizeFactor) 
+							.apply (); 
 					mScalePageContainer.setZoomedInScale (scale); 
 				} else prefs.edit ().putBoolean ("zoomed-in-flag", false).apply (); 
+			} 
+			@Override public void onPivotChanged (float pivotX, float pivotY) { 
+				float sizeFactor = mRvBigPages.getWidth (); 
+				if (sizeFactor == 0) 
+					return; // Just a safe-guard.  
+				prefs.edit () 
+						.putFloat ("zoom-pivot-x", pivotX / sizeFactor) 
+						.putFloat ("zoom-pivot-y", pivotY / sizeFactor) 
+						.apply (); 
 			} 
 		}); 
 		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
@@ -1490,6 +1510,7 @@ public class NoteActivity extends Activity {
 					resetInitialScroll (); 
 			} 
 			mStillWaitingToScroll = false; 
+			updateZoomedInPivot (); 
 			// Remove the extra layout overhead by removing this listener: 
 			if (Build.VERSION.SDK_INT >= 16) 
 				mRvBigPages.getViewTreeObserver ().removeOnGlobalLayoutListener (this); 

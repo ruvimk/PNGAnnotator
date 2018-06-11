@@ -47,6 +47,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 		void onZoomLeave (float pivotX, float pivotY); 
 		void onVerticalPanState (boolean panning); 
 		void onZoomChanged (float nowScale); 
+		void onPivotChanged (float pivotX, float pivotY); 
 	} 
 	float xp0 = 0; 
 	float yp0 = 0; 
@@ -539,9 +540,13 @@ public class ScaleDetectorContainer extends FrameLayout {
 			child.setPivotX (clamp (pivotX, 0, getWidth ())); 
 			child.setPivotY (clamp (pivotY, 0, getHeight ())); 
 		} 
+		boolean pivotChanged = nowPivotX != pivotX || nowPivotY != pivotY; 
 		nowPivotX = pivotX; 
 		nowPivotY = pivotY; 
 		currentScale = scaleX; 
+		OnScaleDone listener = onScaleDone; 
+		if (pivotChanged && listener != null) 
+			listener.onPivotChanged (nowPivotX, nowPivotY); 
 	} 
 	void setPivot (float pivotX, float pivotY) { 
 		setScale (currentScale, currentScale, pivotX, pivotY); 

@@ -3,6 +3,7 @@ package com.gradgoose.pennotepad;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -268,6 +269,18 @@ public class SwipeableRecyclerView extends RecyclerView {
 					ViewParent parent = getParent (); 
 					if (parent instanceof ScaleDetectorContainer) { 
 						((ScaleDetectorContainer) parent).checkClick (); 
+					} 
+					// Click the view? 
+					Rect me = new Rect (); 
+					Rect bounds = new Rect (); 
+					getGlobalVisibleRect (me); 
+					for (int i = 0; i < getChildCount (); i++) { 
+						View child = getChildAt (i); 
+						child.getGlobalVisibleRect (bounds); 
+						if (!bounds.contains ((int) x + me.left, (int) y + me.top)) 
+							continue; 
+						child.performClick (); 
+						break; 
 					} 
 				} else { 
 					swipeDelta = (swipeDelta > 0 ? 1 : -1) * MIN_DELTA_TO_SWIPE * 0.9f; 

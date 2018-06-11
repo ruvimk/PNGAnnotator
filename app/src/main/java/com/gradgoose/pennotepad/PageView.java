@@ -130,9 +130,7 @@ public class PageView extends ImageView {
 						// Convert the strokes into these little edits of ours: 
 						boolean hasErase = false; 
 						boolean isEraser = mTool == NoteActivity.TOOL_ERASER; 
-						float brushScale = mBitmapNaturalWidth != 0 ? 
-												   edit.value.windowWidth / mBitmapNaturalWidth 
-												   : paperGenerator.getScaleFactor ((int) edit.value.windowWidth); 
+						float brushScale = paperGenerator.getBrushScale ((int) edit.value.windowWidth); 
 						synchronized (edit) { 
 							int oldSize = edit.value.mEdits.size (); 
 							for (WriteDetector.Stroke stroke : params) { 
@@ -152,10 +150,7 @@ public class PageView extends ImageView {
 								} else { 
 									PngEdit.LittleEdit littleEdit = new PngEdit.LittleEdit (); 
 									littleEdit.color = mColor; 
-									littleEdit.brushWidth = mBrush * PaperGenerator.getPxPerMm ( 
-											mBitmapNaturalWidth, 
-											mBitmapNaturalHeight 
-									); 
+									littleEdit.brushWidth = mBrush * brushScale; 
 									if (stroke.count () == 1) { 
 										littleEdit.points = new float [8]; 
 										float centerX = stroke.getX (0); 
@@ -924,9 +919,9 @@ public class PageView extends ImageView {
 			prevTool = mTool; 
 		} 
 		// Now draw our annotation edits that the user made: 
-		float brushScale = paperGenerator.getScaleFactor (canvas.getWidth ()); 
 		float minSpan = optimization_minStrokeSpan * getWidth (); 
 		if (edit.value != null) synchronized (edit) { 
+			float brushScale = (float) getWidth () / edit.value.windowWidth; 
 			if (minSpan != 0) { 
 				for (PngEdit.LittleEdit e : edit.value.mEdits) { 
 					if (e.points.length < 8) continue; 
@@ -968,7 +963,7 @@ public class PageView extends ImageView {
 		// Finally, draw the currently being written path: 
 		strokePaint.setColor (mNowErasing || mNowWhiting ? getContext ().getResources () 
 													.getColor (R.color.colorEraser) : mColor); 
-		float strokeWidth = mBrush * brushScale; 
+		float strokeWidth = mBrush * paperGenerator.getBrushScale (getWidth ()); 
 		if (strokeWidth < 1f) 
 			strokeWidth = 0f; 
 		strokePaint.setStrokeWidth (strokeWidth); // Just cap this to 1+, for simple one-liner code. 

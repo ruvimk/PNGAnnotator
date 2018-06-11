@@ -199,4 +199,7 @@ public class PaperGenerator {
 		int pxPaperW = (int) (mPaperW * mDPI); 
 		return (float) width / pxPaperW; 
 	} 
+	float getBrushScale (int width) { 
+		return getScaleFactor (width) * mDPI / 25.4f; 
+	} 
 } 

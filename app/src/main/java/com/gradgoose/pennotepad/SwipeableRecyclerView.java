@@ -272,16 +272,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 					} 
 					// Click the view? 
 					Rect me = new Rect (); 
-					Rect bounds = new Rect (); 
 					getGlobalVisibleRect (me); 
-					for (int i = 0; i < getChildCount (); i++) { 
-						View child = getChildAt (i); 
-						child.getGlobalVisibleRect (bounds); 
-						if (!bounds.contains ((int) x + me.left, (int) y + me.top)) 
-							continue; 
-						child.performClick (); 
-						break; 
-					} 
+					checkClick ((int) x + me.left, (int) y + me.top, this); 
 				} else { 
 					swipeDelta = (swipeDelta > 0 ? 1 : -1) * MIN_DELTA_TO_SWIPE * 0.9f; 
 				} 
@@ -294,6 +286,25 @@ public class SwipeableRecyclerView extends RecyclerView {
 			getParent ().requestDisallowInterceptTouchEvent (event.getPointerCount () == 1); 
 			return true; 
 		} else return super.onTouchEvent (event); 
+	} 
+	static final Rect checkBounds = new Rect (); 
+	static boolean checkClick (int globalX, int globalY, ViewGroup viewGroup) { 
+		for (int i = 0; i < viewGroup.getChildCount (); i++) { 
+			View child = viewGroup.getChildAt (i); 
+			if (child instanceof ViewGroup) { 
+				if (checkClick (globalX, globalY, (ViewGroup) child)) 
+					return true; 
+			} else { 
+				synchronized (checkBounds) { 
+					child.getGlobalVisibleRect (checkBounds); 
+					if (!checkBounds.contains (globalX, globalY)) 
+						continue; 
+					child.performClick (); 
+					return true; 
+				} 
+			} 
+		} 
+		return false; 
 	} 
 	float firstInterceptX = 0; 
 	float firstInterceptY = 0; 

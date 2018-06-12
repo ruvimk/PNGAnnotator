@@ -1248,9 +1248,34 @@ public class NoteActivity extends Activity {
 				} 
 				return false; 
 			} 
-			@Override public boolean onUriLinkClicked (String linkURI) { 
+			@Override public boolean onUriLinkClicked (final String linkURI) { 
 				Log.i (TAG, "Uri link: " + linkURI); 
-				return false; 
+				if (linkURI.startsWith ("mailto:")) { 
+					// For mailto links, just open the mail app ... 
+					// (no need to ask for confirmation from the user) 
+					Intent emailIntent = new Intent (Intent.ACTION_SENDTO, Uri.parse (linkURI)); 
+					startActivity (Intent.createChooser (emailIntent, getString (R.string.title_send_email))); 
+					return true; 
+				} 
+				new AlertDialog.Builder (NoteActivity.this) 
+						.setTitle (R.string.title_open_link) 
+						.setMessage (getString (R.string.msg_open_link) 
+								.replace ("[url]", linkURI) 
+								.replace ("[br]", "\n") 
+						) 
+						.setPositiveButton (R.string.label_ok, new DialogInterface.OnClickListener () { 
+							@Override public void onClick (DialogInterface dialogInterface, int i) { 
+								Intent openIntent = new Intent (Intent.ACTION_VIEW, Uri.parse (linkURI)); 
+								startActivity (openIntent); 
+							} 
+						}) 
+						.setNegativeButton (R.string.label_cancel, new DialogInterface.OnClickListener () { 
+							@Override public void onClick (DialogInterface dialogInterface, int i) { 
+								
+							} 
+						}) 
+						.show (); 
+				return true; 
 			} 
 		}); 
 		mNotesAdapter.mErrorCallback = new PageView.ErrorCallback () { 

@@ -638,10 +638,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					putX = Math.min (0, putX); 
 					putY = Math.min (0, putY); 
 						Log.i (TAG, "Rendering area {" + putX + ", " + putY + ", " + putWidth + ", " + putHeight + "}"); 
-						pageView.lastRenderX = putX; 
-						pageView.lastRenderY = putY; 
-						pageView.lastRenderW = putWidth; 
-						pageView.lastRenderH = putHeight; 
 						Bitmap bmp = null; 
 						synchronized (pageView.mBackgroundBmpMutex) { 
 							if (pageView.mBackgroundBitmap != null) { 
@@ -664,6 +660,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 							} 
 						} 
 						if (bmp != null) { 
+							pageView.lastRenderX = putX; 
+							pageView.lastRenderY = putY; 
+							pageView.lastRenderW = putWidth; 
+							pageView.lastRenderH = putHeight; 
 							pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, putX, putY, putWidth, putHeight); 
 							pageView.mBackgroundBitmap = bmp; 
 							pageView.mBitmapNaturalWidth = loadWidth; 

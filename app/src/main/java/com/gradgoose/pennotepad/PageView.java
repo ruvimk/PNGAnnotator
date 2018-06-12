@@ -141,10 +141,7 @@ public class PageView extends ImageView {
 										path[2 * i + 0] = stroke.getX (i); 
 										path[2 * i + 1] = stroke.getY (i); 
 									} 
-									float polygons [] [] = PngEdit.convertPathToPolygons (path, mBrush * PaperGenerator.getPxPerMm ( 
-											mBitmapNaturalWidth, 
-											mBitmapNaturalHeight 
-									) / 2 * brushScale); 
+									float polygons [] [] = PngEdit.convertPathToPolygons (path, mBrush / 2 * brushScale); 
 									edit.value.erase (polygons); 
 									debug_polygons = polygons; 
 								} else { 

@@ -1163,6 +1163,7 @@ public class NoteActivity extends Activity {
 									   : prefs.getFloat ("write-width", 1.0f); 
 		mNotesAdapter.mTool = currentTool; 
 		mNotesAdapter.mColor = currentColor; 
+		mNotesAdapter.mColorMode = prefs.getInt ("color-mode", 0); 
 		mNotesAdapter.notifyDataSetChanged (); 
 		// Set the brush width text: 
 		updateBrushWidthTextShowing (); 

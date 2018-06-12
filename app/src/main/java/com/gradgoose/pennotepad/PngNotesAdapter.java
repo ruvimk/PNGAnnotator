@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -52,6 +53,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	
 	boolean mPenMode = false; 
 	boolean mToolMode = false; 
+	
+	int mColorMode = 0; 
 	
 	int mTool = 0; 
 	int mColor = Color.BLACK; 
@@ -420,6 +423,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			} 
 		} 
 	} 
+	private final float [] DARK_MODE = {
+											   -1f, 0, 0, 0, 255, // red 
+											   0, -1f, 0, 0, 255, // green 
+											   0, 0, -1f, 0, 255, // blue 
+											   0, 0, 0, 1f, 0 // alpha 
+	};
 	public class Holder extends RecyclerView.ViewHolder { 
 		final PageView pageView; 
 		final TextView titleView; 
@@ -511,6 +520,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			pageView.mTool = mTool; 
 			pageView.mColor = mColor; 
 			pageView.mBrush = mBrush; 
+			if (mColorMode > 0) { 
+				pageView.setColorFilter (new ColorMatrixColorFilter (DARK_MODE)); 
+			} else pageView.setColorFilter (null); 
 			if (mIsPDF) pageView.mSizeChangeCallback = new PageView.SizeChanged () { 
 				@Override public void onSizeChanged () { 
 //					renderPage (pageIndex, 0, 0, 0, 0, 1, true); 

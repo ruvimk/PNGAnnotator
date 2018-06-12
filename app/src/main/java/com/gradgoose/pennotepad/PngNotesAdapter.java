@@ -56,7 +56,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
 	
-	SelectionManager selectionManager = null; 
+	final SelectionManager selectionManager; 
 	
 	int touchSlop; 
 	int longPressTimeout; 
@@ -275,9 +275,25 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	}; 
 	
 	public PngNotesAdapter (Context context, Vector<File> browsingDir, 
-							FileListCache.OnFilesChangedListener onFilesChangedListener) { 
+							FileListCache.OnFilesChangedListener onFilesChangedListener, 
+							SelectionManager selMgr) { 
 		super (); 
 		mContext = context; 
+		selectionManager = selMgr; 
+		selectionManager.selectionListeners.add (new SelectionManager.SelectionListener () { 
+			@Override public void onSelectionBegin () { 
+				notifyDataSetChanged (); 
+			} 
+			@Override public void onSelectionChange () { 
+				notifyDataSetChanged (); 
+			} 
+			@Override public void onSelectionEnd () { 
+				notifyDataSetChanged (); 
+			} 
+			@Override public void onSelectionFilesChanged () { 
+				reloadList (); 
+			} 
+		}); 
 		ViewConfiguration viewConf = ViewConfiguration.get (context); 
 		touchSlop = viewConf.getScaledTouchSlop (); 
 		longPressTimeout = ViewConfiguration.getLongPressTimeout (); 

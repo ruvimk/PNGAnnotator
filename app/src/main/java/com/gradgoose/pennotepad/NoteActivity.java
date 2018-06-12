@@ -198,6 +198,22 @@ public class NoteActivity extends Activity {
 			uiZoomPivotX = savedInstanceState.containsKey ("zoom-pivot-x") ? savedInstanceState.getFloat ("zoom-pivot-x") : 0; 
 			uiZoomPivotY = savedInstanceState.containsKey ("zoom-pivot-y") ? savedInstanceState.getFloat ("zoom-pivot-y") : 0; 
 		} 
+		// Selection listener: 
+		selectionManager.selectionListeners.add (new SelectionManager.SelectionListener () { 
+			@Override public void onSelectionBegin () { 
+				
+			} 
+			@Override public void onSelectionChange () { 
+				
+			} 
+			@Override public void onSelectionEnd () { 
+				
+			} 
+			@Override public void onSelectionFilesChanged () { 
+				updateUserInterface (); 
+				updateMenuItems (); 
+			} 
+		}); 
 		// Get the folder where digital camera images are stored: 
 		mDCIM = Environment.getExternalStoragePublicDirectory ( 
 				Environment.DIRECTORY_DCIM 
@@ -522,7 +538,7 @@ public class NoteActivity extends Activity {
 			case R.id.menu_action_paste: 
 				if (mSubfoldersAdapter != null && mSubfoldersAdapter.mBrowsingFolder != null && 
 							mSubfoldersAdapter.mBrowsingFolder.size () > 0) 
-								SelectionManager.pasteFiles (mSubfoldersAdapter.mBrowsingFolder.elementAt (0), this); 
+								selectionManager.paste (mSubfoldersAdapter.mBrowsingFolder.elementAt (0)); 
 				break; 
 			case R.id.menu_action_export_pages: 
 				exportPages (); 
@@ -744,6 +760,9 @@ public class NoteActivity extends Activity {
 													 if (wasEmpty)
 														 activity.mNotesAdapter.setHeaderItemViews ( 
 														 		new View [] {activity.mRvSubfolderBrowser}); 
+												 	 // Notify everyone: 
+													 for (SelectionManager.SelectionListener listener : activity.selectionManager.selectionListeners) 
+														 listener.onSelectionFilesChanged (); 
 													 // Now open the new folder. 
 													 Intent intent = new Intent (activity, 
 																						NoteActivity.class); 
@@ -778,8 +797,9 @@ public class NoteActivity extends Activity {
 												 editor.apply (); 
 												 if (success) { 
 													 // Renamed. 
-													 activity.mSubfoldersAdapter.reloadList ();
-													 activity.mNotesAdapter.reloadList (); 
+													 // Notify everyone: 
+													 for (SelectionManager.SelectionListener listener : activity.selectionManager.selectionListeners) 
+														 listener.onSelectionFilesChanged (); 
 												 } else { 
 													 // Try rename again? 
 													 userRenameFile (activity, oldName,
@@ -863,9 +883,9 @@ public class NoteActivity extends Activity {
 								mDeleteInProgress = false; 
 								runOnUiThread (new Runnable () { 
 									@Override public void run () { 
-										// Reload file lists: 
-										mSubfoldersAdapter.reloadList (); 
-										mNotesAdapter.reloadList (); 
+										// Notify everyone about the change: 
+										for (SelectionManager.SelectionListener listener : selectionManager.selectionListeners) 
+											listener.onSelectionFilesChanged (); 
 										// Display status message: 
 										Toast.makeText (NoteActivity.this, 
 												getString (R.string.msg_files_deleted) 
@@ -1034,7 +1054,7 @@ public class NoteActivity extends Activity {
 //					} else pbMainProgress.setProgress (current * 100 / mTotal); 
 //				} 
 //			} 
-//		}).execute (mNotesAdapter.mList); 
+//		}).execute (mNotesAdapter.mSubfolderList); 
 		PdfMaker maker = new PdfMaker (this); 
 		try { 
 			File pdf = new File (mPictures, mBrowsingFolders.elementAt (0).getName () + ".pdf"); 
@@ -1237,8 +1257,7 @@ public class NoteActivity extends Activity {
 				.inflate (R.layout.subfolder_browser, 
 						vgRoot, 
 						false); 
-		mSubfoldersAdapter = new SubfoldersAdapter (this, mBrowsingFolders, mAdditionalDirsToShow); 
-		mSubfoldersAdapter.selectionManager = selectionManager; 
+		mSubfoldersAdapter = new SubfoldersAdapter (this, mBrowsingFolders, mAdditionalDirsToShow, selectionManager); 
 		mSubfoldersAdapter.mFolderClickListener = new SubfoldersAdapter.OnFolderClickListener () { 
 			@Override public boolean onFolderClick (File folderClicked) { 
 				if (folderClicked.equals (mAllPictures)) { 
@@ -1272,8 +1291,8 @@ public class NoteActivity extends Activity {
 															if (!mStillWaitingToScroll) 
 																resetInitialScroll (); 
 														} 
-													}); 
-		mNotesAdapter.selectionManager = selectionManager; 
+													}, 
+													selectionManager); 
 		mNotesAdapter.setNoteInteractListener (new PngNotesAdapter.OnNoteInteractListener () { 
 			@Override public void onNotePageClicked (File itemFile, int listPosition) { 
 				if (prefs.getBoolean ("notes-overview", false)) { 

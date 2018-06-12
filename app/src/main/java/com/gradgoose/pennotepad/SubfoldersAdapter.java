@@ -3,10 +3,8 @@ package com.gradgoose.pennotepad;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,14 +17,11 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -44,7 +39,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	
 	final String picturesFolderName; 
 	
-	SelectionManager selectionManager = null; 
+	final SelectionManager selectionManager; 
 	
 	File [] additionalDirsToShow = new File [0]; 
 	
@@ -81,6 +76,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			index++; 
 		} 
 		Arrays.sort (list, mFileComparator); 
+		selectionManager.mSubfolderList = list; 
 		mList = list; 
 	} 
 	
@@ -108,9 +104,24 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		loadIds (mList); 
 	} 
 	
-	public SubfoldersAdapter (Context context, Vector<File> browsingDir, @Nullable File [] additionalFoldersToShow) { 
+	public SubfoldersAdapter (Context context, Vector<File> browsingDir, @Nullable File [] additionalFoldersToShow, SelectionManager selMgr) { 
 		super (); 
 		mContext = context; 
+		selectionManager = selMgr; 
+		selectionManager.selectionListeners.add (new SelectionManager.SelectionListener () { 
+			@Override public void onSelectionBegin () { 
+				notifyDataSetChanged (); 
+			} 
+			@Override public void onSelectionChange () { 
+				notifyDataSetChanged (); 
+			} 
+			@Override public void onSelectionEnd () { 
+				notifyDataSetChanged (); 
+			} 
+			@Override public void onSelectionFilesChanged () { 
+				reloadList (); 
+			} 
+		}); 
 		touchSlop = ViewConfiguration.get (context).getScaledTouchSlop (); 
 		mBrowsingFolder = browsingDir; 
 		if (additionalFoldersToShow != null) 
@@ -189,109 +200,6 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	OnFolderClickListener mFolderClickListener = null; 
 	
-	Vector<Vector<File>> getSelectedFiles () { 
-		Vector<Vector<File>> result = new Vector<> (mSelection.size ()); 
-		for (String targetName : mSelection) { 
-			for (File[] files : mList) { 
-				if (!files[0].getName ().equals (targetName)) 
-					continue; 
-				Vector<File> item = new Vector<> (files.length); 
-				for (File f : files) 
-					item.add (f); 
-				result.add (item); 
-				break; 
-			} 
-		} 
-		return result; 
-	} 
-	
-	ActionMode mActionMode = null; 
-	boolean mActionModeActive = false; 
-	final Vector<String> mSelection = new Vector<> (); 
-	MyActionModeCallback mActionModeCallback = new MyActionModeCallback (); 
-	class MyActionModeCallback implements ActionMode.Callback { 
-		MenuItem mMenuRename = null; 
-		MenuItem mMenuCut = null; 
-		public void updateMenuVisibility () { 
-			if (mMenuRename != null) mMenuRename.setVisible (mSelection.size () == 1); 
-			if (mMenuCut != null) mMenuCut.setVisible (!hasNonOwnedFolders ()); 
-		} 
-		Vector<Vector<File>> lastCalculatedSelected = null; 
-		public boolean hasNonOwnedFolders () { 
-			Vector<Vector<File>> selected = getSelectedFiles (); 
-			if (selected.size () < 1) return false; 
-			boolean hasNonOwnedFolders = false; 
-			for (Vector<File> files : selected) { 
-				for (File file : files) { 
-					if (!file.isDirectory ()) continue; 
-					if (SelectionManager.isOwnedByMe (file)) continue; 
-					// Otherwise, not owned by me. 
-					hasNonOwnedFolders = true; 
-					break; 
-				} 
-				if (hasNonOwnedFolders) break; 
-			} 
-			lastCalculatedSelected = selected; 
-			return hasNonOwnedFolders; 
-		} 
-		@Override public boolean onCreateActionMode (ActionMode actionMode, Menu menu) {
-			MenuInflater inflater = actionMode.getMenuInflater (); 
-			inflater.inflate (R.menu.folder_menu, menu); 
-			mActionModeActive = true; 
-			return true; 
-		} 
-		@Override public boolean onPrepareActionMode (ActionMode actionMode, Menu menu) { 
-			mMenuRename = menu.findItem (R.id.action_rename); 
-			mMenuCut = menu.findItem (R.id.action_cut); 
-			updateMenuVisibility (); 
-			return true; 
-		} 
-		@Override public boolean onActionItemClicked (ActionMode actionMode, MenuItem menuItem) { 
-			boolean hasNonOwned = hasNonOwnedFolders (); 
-			Vector<Vector<File>> selected = lastCalculatedSelected != null ? lastCalculatedSelected : getSelectedFiles (); 
-			if (selected.size () < 1) return false; 
-			switch (menuItem.getItemId ()) { 
-				case R.id.action_cut: 
-					if (hasNonOwned) return false; 
-					SelectionManager.cutFiles (selected); 
-					if (mContext instanceof NoteActivity) 
-						((NoteActivity) mContext).updateMenuItems (); 
-					mActionMode.finish (); 
-					return true; 
-				case R.id.action_delete: 
-					if (mContext instanceof NoteActivity) 
-						if (((NoteActivity) mContext).userDeleteFiles (selected)) 
-							mActionMode.finish (); 
-					return true; 
-				case R.id.action_rename: 
-					Vector<File> oldName = selected.elementAt (0); 
-					if (mContext instanceof NoteActivity) 
-						NoteActivity.userRenameFile ((NoteActivity) mContext, 
-								oldName, ""); 
-					mActionMode.finish (); 
-					return true; 
-			} 
-			return false; 
-		} 
-		@Override public void onDestroyActionMode (ActionMode actionMode) { 
-			mActionModeActive = false; 
-			mSelection.clear (); 
-			notifyDataSetChanged (); 
-		} 
-	}; 
-	void selectFile (String file) { 
-		mSelection.add (file); 
-	} 
-	void deselectFile (String file) { 
-		mSelection.remove (file); 
-	} 
-	boolean isFileSelected (String file) { 
-		for (String f : mSelection) 
-			if (f.equals (file)) 
-				return true; 
-		return false; 
-	} 
-	
 	public class Holder extends RecyclerView.ViewHolder { 
 		final ImageView iconView; 
 		final ImageView cutIcon; 
@@ -299,30 +207,26 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		final CheckBox checkboxView; 
 		View.OnClickListener mToggleSelectedItemOnclick = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
-				if (!mActionModeActive) return; // Do nothing if not in select mode. 
+				if (!selectionManager.mActionModeActive) return; // Do nothing if not in select mode. 
 				Object itemObject = itemView.getTag (R.id.item_file); 
 				File itemFile = itemObject instanceof File ? (File) itemObject : null; 
 				if (itemFile == null) return; 
 				if (getAdditionalDirToShow (itemFile) != null) return; // Cannot select one of these. 
-				if (isFileSelected (itemFile.getName ())) deselectFile (itemFile.getName ()); 
-				else selectFile (itemFile.getName ()); 
-				if (mSelection.isEmpty ()) { 
-					mActionMode.finish (); 
-					mActionMode = null; 
+				if (selectionManager.isFileSelected (itemFile.getName ())) selectionManager.deselectFile (itemFile.getName ()); 
+				else selectionManager.selectFile (itemFile.getName ()); 
+				if (selectionManager.mSelection.isEmpty ()) {
+					selectionManager.finishSelection (); 
 				} 
-				mActionModeCallback.updateMenuVisibility (); 
-				notifyDataSetChanged (); 
 			} 
 		}; 
 		View.OnLongClickListener mOnLongClick = new View.OnLongClickListener () { 
 			@Override public boolean onLongClick (View view) { 
-				if (mActionModeActive) return false; 
+				if (selectionManager.mActionModeActive) return false; 
 				Object itemObject = itemView.getTag (R.id.item_file); 
 				File itemFile = itemObject instanceof File ? (File) itemObject : null; 
 				if (getAdditionalDirToShow (itemFile) != null) return false; // Cannot select one of these. 
-				if (itemFile != null) selectFile (itemFile.getName ()); 
-				mActionMode = ((Activity) mContext).startActionMode (mActionModeCallback); 
-				notifyDataSetChanged (); 
+				if (itemFile != null) selectionManager.selectFile (itemFile.getName ()); 
+				selectionManager.startActionMode (); 
 				return true; 
 			} 
 		}; 
@@ -344,14 +248,14 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			itemView.setTag (R.id.item_file, itemFile); 
 			ViewGroup.LayoutParams lp = itemView.getLayoutParams (); 
 			lp.width = matchParentWidth ? ViewGroup.LayoutParams.MATCH_PARENT : ViewGroup.LayoutParams.WRAP_CONTENT; 
-			boolean showNameView = additionalFile == null && mActionModeActive; 
+			boolean showNameView = additionalFile == null && selectionManager.mActionModeActive; 
 			nameView.setVisibility (showNameView ? View.GONE : View.VISIBLE); 
 			checkboxView.setVisibility (showNameView ? View.VISIBLE : View.GONE); 
 			cutIcon.setVisibility (additionalFile == null && SelectionManager.PRIVATE_CLIPBOARD.contains (itemPath) ? View.VISIBLE : View.GONE); 
 			nameView.setText (itemFile.getName ()); 
 			checkboxView.setText (itemFile.getName ()); 
-			checkboxView.setChecked (isFileSelected (itemFile.getName ())); 
-			itemView.setOnClickListener (mActionModeActive ? mToggleSelectedItemOnclick : mOpenSubfolderOnclick); 
+			checkboxView.setChecked (selectionManager.isFileSelected (itemFile.getName ())); 
+			itemView.setOnClickListener (selectionManager.mActionModeActive ? mToggleSelectedItemOnclick : mOpenSubfolderOnclick); 
 			itemView.setOnTouchListener (mOnTouchListener); 
 		} 
 	} 
@@ -385,7 +289,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	
 	@Override public int getItemCount () { 
-//		Log.i (TAG, "getItemCount (): returning " + (mList.length + additionalDirsToShow.length)); 
+//		Log.i (TAG, "getItemCount (): returning " + (mSubfolderList.length + additionalDirsToShow.length)); 
 		return mList.length + additionalDirsToShow.length; 
 	} 
 	

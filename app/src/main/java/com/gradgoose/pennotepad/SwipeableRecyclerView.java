@@ -216,7 +216,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 				Log.d (TAG, "First coordinate: " + coordinate); 
 				stillSwiping = true; 
 				stillAnimating = false; 
-				firstDelta = swipeDelta = (horizontal ? firstInterceptX - firstX : firstInterceptY - firstY); // Initial delta ... 
+				firstDelta = swipeDelta = (horizontal ? firstInterceptY - firstY : firstInterceptX - firstX); // Initial delta ... 
 				if (canSwipe (swipeDelta)) { 
 					updateSwipePosition (); 
 				} 

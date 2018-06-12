@@ -637,7 +637,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					} 
 					putX = Math.min (0, putX); 
 					putY = Math.min (0, putY); 
-					if (targetWidth != 0) { 
 						Log.i (TAG, "Rendering area {" + putX + ", " + putY + ", " + putWidth + ", " + putHeight + "}"); 
 						pageView.lastRenderX = putX; 
 						pageView.lastRenderY = putY; 
@@ -671,17 +670,15 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 							pageView.mBitmapNaturalHeight = naturalHeight; 
 							pageView.mBitmapLoadHeight = loadHeight; 
 						} 
-					} else { 
-						pageView.lastRenderX = 0; 
-						pageView.lastRenderY = 0; 
-						pageView.lastRenderW = 0; 
-						pageView.lastRenderH = 0; 
-					} 
 				} 
 			} else { 
 				if (pageView.mBackgroundBitmap != null) { 
 					pageView.mBackgroundBitmap.recycle (); 
 					pageView.mBackgroundBitmap = null; 
+					pageView.lastRenderX = 0; 
+					pageView.lastRenderY = 0; 
+					pageView.lastRenderW = 0; 
+					pageView.lastRenderH = 0; 
 				} 
 			} 
 			final boolean finalNeedLayout = needLayout; 

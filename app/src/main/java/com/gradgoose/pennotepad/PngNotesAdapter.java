@@ -2,6 +2,7 @@ package com.gradgoose.pennotepad;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,7 +14,10 @@ import android.os.ParcelFileDescriptor;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
@@ -51,6 +55,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	final Context mContext; 
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
+	
+	SelectionManager selectionManager = null; 
 	
 	int touchSlop; 
 	int longPressTimeout; 
@@ -436,6 +442,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 											   0, 0, -1f, 0, 255, // blue 
 											   0, 0, 0, 1f, 0 // alpha 
 	};
+	
 	public class Holder extends RecyclerView.ViewHolder { 
 		final PageView pageView; 
 		final TextView titleView; 

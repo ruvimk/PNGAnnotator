@@ -39,8 +39,6 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Vector;
 
-import static com.gradgoose.pennotepad.SubfoldersAdapter.isOwnedByMe;
-
 public class NoteActivity extends Activity { 
 	static final String TAG = "NoteActivity"; 
 	
@@ -145,6 +143,8 @@ public class NoteActivity extends Activity {
 	SharedPreferences leftOff = null; 
 	SharedPreferences recents = null; 
 	
+	final SelectionManager selectionManager = new SelectionManager (this); 
+	
 	Vector<String> recentFolders = null; 
 	
 	static final int TOOL_NONE = 0; 
@@ -177,9 +177,9 @@ public class NoteActivity extends Activity {
 		prefs = getSharedPreferences (PREFS_NAME, MODE_PRIVATE); 
 		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
 		recents = getSharedPreferences (RECENTS_NAME, MODE_PRIVATE); 
-		SubfoldersAdapter.OWNED_FOLDERS = getSharedPreferences (OWNED_FOLDERS_NAME, MODE_PRIVATE); 
-		SubfoldersAdapter.HIDDEN_FOLDERS = getSharedPreferences (HIDDEN_FOLDERS_NAME, MODE_PRIVATE); 
-		SubfoldersAdapter.PRIVATE_CLIPBOARD = getSharedPreferences (PRIVATE_CLIPBOARD_NAME, MODE_PRIVATE); 
+		SelectionManager.OWNED_FOLDERS = getSharedPreferences (OWNED_FOLDERS_NAME, MODE_PRIVATE);
+		SelectionManager.HIDDEN_FOLDERS = getSharedPreferences (HIDDEN_FOLDERS_NAME, MODE_PRIVATE); 
+		SelectionManager.PRIVATE_CLIPBOARD = getSharedPreferences (PRIVATE_CLIPBOARD_NAME, MODE_PRIVATE); 
 		PageView.mMd5Cache = getSharedPreferences (MD5_CACHE_NAME, MODE_PRIVATE); 
 		String recentText; 
 		recentFolders = new Vector<> (10); // Can change 10 to something else later. From settings, eg. 
@@ -464,7 +464,7 @@ public class NoteActivity extends Activity {
 		mMenuGoToPage.setVisible (hasImages || isPDF); 
 		mMenuToggleOverview.setVisible (canShowAsGrid ()); 
 		mMenuShowPageNav.setVisible (hasImages || isPDF); 
-		mMenuPaste.setVisible (SubfoldersAdapter.hasClipboardItems ()); 
+		mMenuPaste.setVisible (SelectionManager.hasClipboardItems ()); 
 //		mMenuRecents.setVisible (recentFolders.size () > 1 && hasImages); 
 		mMenuToggleOverview.setChecked (prefs.getBoolean ("notes-overview", false)); 
 		mMenuShowPageNav.setChecked (isPageNavShowing ()); 
@@ -522,7 +522,7 @@ public class NoteActivity extends Activity {
 			case R.id.menu_action_paste: 
 				if (mSubfoldersAdapter != null && mSubfoldersAdapter.mBrowsingFolder != null && 
 							mSubfoldersAdapter.mBrowsingFolder.size () > 0) 
-								SubfoldersAdapter.pasteFiles (mSubfoldersAdapter.mBrowsingFolder.elementAt (0), this); 
+								SelectionManager.pasteFiles (mSubfoldersAdapter.mBrowsingFolder.elementAt (0), this); 
 				break; 
 			case R.id.menu_action_export_pages: 
 				exportPages (); 
@@ -731,12 +731,12 @@ public class NoteActivity extends Activity {
 											 if (oldName == null) { 
 												 File nowFile = new File (activity.mBrowsingFolders.elementAt (0), nowName); 
 												 if (nowFile.mkdirs ()) {
-													 SubfoldersAdapter.OWNED_FOLDERS.edit ().putBoolean (nowFile.getPath (), true).apply (); 
-												 	if (SubfoldersAdapter.HIDDEN_FOLDERS.contains (nowFile.getPath ())) { 
+													 SelectionManager.OWNED_FOLDERS.edit ().putBoolean (nowFile.getPath (), true).apply (); 
+												 	if (SelectionManager.HIDDEN_FOLDERS.contains (nowFile.getPath ())) { 
 												 		// In case there is a folder like that on the hidden list, 
 														// the user has manually deleted the folder using a file manager, 
 														// and then is trying to create a folder with the same path here. 
-												 		SubfoldersAdapter.HIDDEN_FOLDERS.edit ().remove (nowFile.getPath ()).apply (); 
+												 		SelectionManager.HIDDEN_FOLDERS.edit ().remove (nowFile.getPath ()).apply (); 
 													} 
 													 // Success. Add the subfolders view if it wasn't there yet 
 													 // (we don't add it in the initialization procedure if it 
@@ -760,13 +760,13 @@ public class NoteActivity extends Activity {
 															 activity.getString (R.string.msg_could_not_new_folder)); 
 												 } 
 											 } else { 
-											 	 SharedPreferences.Editor editor = SubfoldersAdapter.OWNED_FOLDERS.edit (); 
+											 	 SharedPreferences.Editor editor = SelectionManager.OWNED_FOLDERS.edit (); 
 												 for (File oldFile : oldName) { 
 													 File nowFile = new File (oldFile.getParentFile (), 
 																					 nowName); 
 													 if (oldFile.renameTo (nowFile)) { 
 														 success &= true; 
-														 boolean isOwnedByMe = SubfoldersAdapter.OWNED_FOLDERS.contains (oldFile.getPath ()); 
+														 boolean isOwnedByMe = SelectionManager.OWNED_FOLDERS.contains (oldFile.getPath ()); 
 														 if (isOwnedByMe) { 
 															 editor.remove (oldFile.getPath ()); 
 															 editor.putBoolean (nowFile.getPath (), true); 
@@ -814,7 +814,7 @@ public class NoteActivity extends Activity {
 		// First count how many of these we own, and how many we don't own. 
 		for (Vector<File> files : folders) { 
 			for (File file : files) { 
-				if (isOwnedByMe (file)) 
+				if (SelectionManager.isOwnedByMe (file)) 
 					ownedCount++; 
 				else otherCount++; 
 			} 
@@ -852,7 +852,7 @@ public class NoteActivity extends Activity {
 							SharedPreferences.Editor editor = null; 
 							@Override public void run () { 
 								// Task: delete all the folders, except hide the ones that we don't own. 
-								if (sOther != 0) editor = SubfoldersAdapter.HIDDEN_FOLDERS.edit (); 
+								if (sOther != 0) editor = SelectionManager.HIDDEN_FOLDERS.edit (); 
 								for (Vector<File> files : folders) 
 									for (File f : files) 
 										delete (f, true); 
@@ -881,10 +881,10 @@ public class NoteActivity extends Activity {
 								boolean success = true; 
 								totalCount++; 
 								if (file.isDirectory ()) { 
-									if (checkOwnership && !isOwnedByMe (file)) { 
+									if (checkOwnership && !SelectionManager.isOwnedByMe (file)) { 
 										if (editor == null) { 
 											// This is a separate thread, so commit () should do just fine, as opposed to apply (). 
-											SubfoldersAdapter.HIDDEN_FOLDERS.edit ().putBoolean (file.getPath (), true).commit (); 
+											SelectionManager.HIDDEN_FOLDERS.edit ().putBoolean (file.getPath (), true).commit (); 
 										} else editor.putBoolean (file.getPath (), true); 
 									} else { 
 										File list[] = file.listFiles (); 
@@ -1238,6 +1238,7 @@ public class NoteActivity extends Activity {
 						vgRoot, 
 						false); 
 		mSubfoldersAdapter = new SubfoldersAdapter (this, mBrowsingFolders, mAdditionalDirsToShow); 
+		mSubfoldersAdapter.selectionManager = selectionManager; 
 		mSubfoldersAdapter.mFolderClickListener = new SubfoldersAdapter.OnFolderClickListener () { 
 			@Override public boolean onFolderClick (File folderClicked) { 
 				if (folderClicked.equals (mAllPictures)) { 
@@ -1272,6 +1273,7 @@ public class NoteActivity extends Activity {
 																resetInitialScroll (); 
 														} 
 													}); 
+		mNotesAdapter.selectionManager = selectionManager; 
 		mNotesAdapter.setNoteInteractListener (new PngNotesAdapter.OnNoteInteractListener () { 
 			@Override public void onNotePageClicked (File itemFile, int listPosition) { 
 				if (prefs.getBoolean ("notes-overview", false)) { 

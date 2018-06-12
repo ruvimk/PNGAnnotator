@@ -91,7 +91,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 			@Override public void run () { 
 				// Grab the subfolders: 
 				mParentSubfolders = 
-						FileListCache.getFileLists (SubfoldersAdapter.mFilterJustFolders, 
+						FileListCache.getFileLists (SelectionManager.mFilterJustFolders, 
 						mParentFolder); 
 				// Sort it, so that it's in order: 
 				Arrays.sort (mParentSubfolders, SubfoldersAdapter.mFileComparator); 

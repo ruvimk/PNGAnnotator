@@ -883,8 +883,8 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		bmpSource.top = 0; 
 		synchronized (mBackgroundBmpMutex) { 
 			if (mBackgroundBitmap != null && lastRenderW > 0 && lastRenderH > 0) { 
-				bmpSource.right = w; 
-				bmpSource.bottom = h; 
+				bmpSource.right = mBitmapNaturalWidth; 
+				bmpSource.bottom = mBitmapNaturalWidth * h / w; 
 				bmpDest.left = -lastRenderX * w / lastRenderW; 
 				bmpDest.top = -lastRenderY * h / lastRenderH; 
 				bmpDest.right = bmpDest.left + w * w / lastRenderW; 

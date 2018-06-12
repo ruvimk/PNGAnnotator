@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -170,6 +171,12 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 				if (mFolderClickListener == null || mFolderClickListener.onFolderClick (itemFile)) 
 					openSubfolder (itemFile); 
 			} 
+		} 
+	}; 
+	private View.OnTouchListener mOnTouchListener = new View.OnTouchListener () { 
+		@Override public boolean onTouch (View view, MotionEvent motionEvent) { 
+			view.getParent ().requestDisallowInterceptTouchEvent (true); 
+			return false; 
 		} 
 	}; 
 	
@@ -433,6 +440,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			checkboxView.setText (itemFile.getName ()); 
 			checkboxView.setChecked (isFileSelected (itemFile.getName ())); 
 			itemView.setOnClickListener (mActionModeActive ? mToggleSelectedItemOnclick : mOpenSubfolderOnclick); 
+			itemView.setOnTouchListener (mOnTouchListener); 
 		} 
 	} 
 	

@@ -1188,11 +1188,12 @@ public class NoteActivity extends Activity {
 	} 
 	void updateZoomedInPivot () { 
 		if (uiZoomedInFlag) { 
-			float sizeFactor = mRvBigPages.getWidth (); 
+			float sizeFactorX = mRvBigPages.getWidth (); 
+			float sizeFactorY = mRvBigPages.getHeight (); 
 			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale, 
 					mScalePageContainer.zoomedInScale, 
-					sizeFactor * uiZoomPivotX, 
-					sizeFactor * (uiZoomPivotY != 0 ? uiZoomPivotY : mRvSubfolderBrowser.getHeight ())); 
+					sizeFactorX * uiZoomPivotX, 
+					sizeFactorY * (uiZoomPivotY != 0 ? uiZoomPivotY : mRvSubfolderBrowser.getHeight ())); 
 		} 
 	} 
 	boolean uiZoomedInFlag = false; 
@@ -1320,22 +1321,24 @@ public class NoteActivity extends Activity {
 			} 
 			@Override public void onZoomChanged (float scale) { 
 				if (scale != 1f) { 
-					float sizeFactor = mRvBigPages.getWidth (); 
-					if (sizeFactor == 0) 
+					float sizeFactorX = mRvBigPages.getWidth (); 
+					float sizeFactorY = mRvBigPages.getHeight (); 
+					if (sizeFactorX == 0 || sizeFactorY == 0) 
 						return; // Just a safe-guard. 
 					prefs.edit ().putFloat ("zoomed-in-scale", scale).apply (); 
 					uiZoomedInFlag = true; 
-					uiZoomPivotX = mScalePageContainer.nowPivotX / sizeFactor; 
-					uiZoomPivotY = mScalePageContainer.nowPivotY / sizeFactor; 
+					uiZoomPivotX = mScalePageContainer.nowPivotX / sizeFactorX; 
+					uiZoomPivotY = mScalePageContainer.nowPivotY / sizeFactorY; 
 					mScalePageContainer.setZoomedInScale (scale); 
 				} else uiZoomedInFlag = false; 
 			} 
 			@Override public void onPivotChanged (float pivotX, float pivotY) { 
-				float sizeFactor = mRvBigPages.getWidth (); 
-				if (sizeFactor == 0) 
+				float sizeFactorX = mRvBigPages.getWidth (); 
+				float sizeFactorY = mRvBigPages.getHeight (); 
+				if (sizeFactorX == 0 || sizeFactorY == 0) 
 					return; // Just a safe-guard.  
-				uiZoomPivotX = pivotX; 
-				uiZoomPivotY = pivotY; 
+				uiZoomPivotX = pivotX / sizeFactorX; 
+				uiZoomPivotY = pivotY / sizeFactorY; 
 			} 
 		}); 
 		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 

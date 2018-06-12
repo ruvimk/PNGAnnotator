@@ -585,8 +585,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
 					int srcHeight = pdfiumCore.getPageHeight (pdfDocument, pageIndex); 
 					int targetHeight = targetWidth * srcHeight / srcWidth; 
-					int loadWidth = Math.min (srcWidth, targetWidth); 
-					int naturalHeight = Math.min (srcHeight, targetHeight); 
+					int loadWidth = srcWidth < targetWidth ? srcWidth : targetWidth; 
+					int naturalHeight = srcWidth < targetWidth ? srcHeight : targetHeight; 
 					int otherHeight = loadWidth * rvH / rvW; 
 					int loadHeight = Math.max (naturalHeight, Math.min (otherHeight, naturalHeight * 2)); // The min () is there to prevent a memory-intensive thing  
 					// in the case that it's a PDF with lots of pages whose height << their width. So this serves as a memory cap, sort of, 

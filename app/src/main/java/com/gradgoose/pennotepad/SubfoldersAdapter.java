@@ -14,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
@@ -34,6 +35,8 @@ import java.util.Vector;
 
 public class SubfoldersAdapter extends RecyclerView.Adapter { 
 	static final String TAG = "SubfoldersAdapter"; 
+	
+	final int touchSlop; 
 	
 	final Context mContext; 
 	final Vector<File> mBrowsingFolder; 
@@ -124,6 +127,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	public SubfoldersAdapter (Context context, Vector<File> browsingDir, @Nullable File [] additionalFoldersToShow) { 
 		super (); 
 		mContext = context; 
+		touchSlop = ViewConfiguration.get (context).getScaledTouchSlop (); 
 		mBrowsingFolder = browsingDir; 
 		if (additionalFoldersToShow != null) 
 			additionalDirsToShow = additionalFoldersToShow; 
@@ -174,8 +178,24 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		} 
 	}; 
 	private View.OnTouchListener mOnTouchListener = new View.OnTouchListener () { 
+		float firstX = 0; 
+		float firstY = 0; 
+		boolean noDisallowIntercept = false; 
 		@Override public boolean onTouch (View view, MotionEvent motionEvent) { 
-			view.getParent ().requestDisallowInterceptTouchEvent (true); 
+			float x = motionEvent.getX (); 
+			float y = motionEvent.getY (); 
+			if (motionEvent.getAction () == MotionEvent.ACTION_DOWN) { 
+				firstX = x; 
+				firstY = y; 
+				noDisallowIntercept = false; 
+				view.getParent ().requestDisallowInterceptTouchEvent (true); 
+			} 
+			if (!noDisallowIntercept && Math.sqrt ((x - firstX) * (x - firstX) 
+					+ (y - firstY) * (y - firstY) 
+			) > touchSlop) { 
+				noDisallowIntercept = true; 
+				view.getParent ().requestDisallowInterceptTouchEvent (false); 
+			} 
 			return false; 
 		} 
 	}; 

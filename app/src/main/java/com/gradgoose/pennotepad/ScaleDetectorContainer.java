@@ -240,7 +240,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 	int clickCount = 0; 
 	void checkClick () { 
 		long now = System.currentTimeMillis (); 
-		if (lastClickTime != 0 && now - lastClickTime > 500) 
+		if (lastClickTime != 0 && now - lastClickTime > ViewConfiguration.getDoubleTapTimeout ()) 
 			clickCount = 0; // Not a double-click. 
 		float dx = prevCenterX - orgCenterX; 
 		float dy = prevCenterY - orgCenterY; 

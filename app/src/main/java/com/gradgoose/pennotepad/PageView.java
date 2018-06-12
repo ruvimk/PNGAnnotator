@@ -836,7 +836,8 @@ public class PageView extends ImageView implements TouchInfoSetter {
 	
 	void computePageDrawPosition () { 
 		int w = getWidth (); 
-		int h = Math.max (getHeight (), mBitmapLoadHeight); 
+		int h = mBitmapLoadHeight; 
+		int vh = getHeight (); 
 		if (w == 0 || h == 0) 
 			return; // Do nothing; this view has likely not been laid out yet ... 
 		getGlobalVisibleRect (globalVisible); 
@@ -846,7 +847,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		float bigW = (float) w * totalScale; 
 		float bigH = (float) h * totalScale; 
 		int renderX = -localVisible.left; 
-		int renderY = -localVisible.top; 
+		int renderY = -localVisible.top * h / vh; 
 		int renderW = (int) bigW; 
 		int renderH = (int) bigH; 
 		if (renderX > 0) 

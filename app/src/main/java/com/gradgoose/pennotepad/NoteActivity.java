@@ -376,8 +376,8 @@ public class NoteActivity extends Activity {
 		outState.putFloat ("zoom-pivot-x", uiZoomPivotX); 
 		outState.putFloat ("zoom-pivot-y", uiZoomPivotY); 
 		// Calculate scroll position: 
-		int scrollPosition = getScrollPosition (); 
-		float scrollFraction = getScrollFraction (); 
+		int scrollPosition = getFocusedScrollPosition (); 
+		float scrollFraction = getFocusedScrollFraction (); 
 		outState.putInt (STATE_SCROLL_ITEM, scrollPosition); 
 		outState.putFloat (STATE_SCROLL_FRACTION, scrollFraction); 
 	} 
@@ -389,8 +389,8 @@ public class NoteActivity extends Activity {
 			return; 
 		} 
 		// Calculate scroll position: 
-		int scrollPosition = getScrollPosition (); 
-		float scrollFraction = getScrollFraction (); 
+		int scrollPosition = getFocusedScrollPosition (); 
+		float scrollFraction = getFocusedScrollFraction (); 
 		// Update the "last page, left off" value: 
 		leftOff.edit () 
 				.putInt ("Scroll:" + mBrowsingFolders.elementAt (0).getPath (), scrollPosition) 
@@ -630,6 +630,36 @@ public class NoteActivity extends Activity {
 									 mRvBigPages.getWidth (); 
 		} 
 		return scrollFraction; 
+	} 
+	// Returns the Y position, within the RecyclerView, at the top of the visible rectangle: 
+	float getVisibleCenterY () { 
+		return getVisibleTopY () + 1 / (2 * mScalePageContainer.currentScale); 
+	} 
+	float getVisibleTopY () { 
+		return (1 - 1 / mScalePageContainer.currentScale) * uiZoomPivotY; 
+	} 
+	int getFocusedScrollPosition () { 
+		if (!initReady || mRvBigPages == null) return -1; 
+		int childCount = mRvBigPages.getChildCount (); 
+		int increment = isUsingGrid () ? mOverviewColumnCount : 1; 
+		int position = 0; 
+		int topY = (int) (mRvBigPages.getHeight () * getVisibleTopY ()); 
+		for (int i = 0; i < childCount; i++) { 
+			View child = mRvBigPages.getChildAt (i); 
+			int candidateTop = child.getTop (); 
+			if (candidateTop > topY) 
+				break; 
+			position = i; 
+		} 
+		return position - position % increment; 
+	} 
+	float getFocusedScrollFraction () { 
+		int position = getFocusedScrollPosition (); 
+		return position < 0 ? -1 : 
+					   (mRvBigPages.getChildAt (position) != null ? 
+								(float) mRvBigPages.getChildAt (position).getTop () / mRvBigPages.getWidth () 
+								- getVisibleTopY () 
+								: 0); 
 	} 
 	
 	int getPageIndex () { 
@@ -1189,7 +1219,7 @@ public class NoteActivity extends Activity {
 	void updateZoomedInPivot () { 
 		if (uiZoomedInFlag) { 
 			float sizeFactorX = mRvBigPages.getWidth (); 
-			float sizeFactorY = mRvBigPages.getHeight (); 
+			float sizeFactorY = 0; //mRvBigPages.getHeight (); 
 			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale, 
 					mScalePageContainer.zoomedInScale, 
 					sizeFactorX * uiZoomPivotX, 
@@ -1519,8 +1549,8 @@ public class NoteActivity extends Activity {
 		int scrollPosition = initialScrollItemPosition; 
 		float scrollFraction = initialScrollFraction; 
 		if (recalculateScrollValues) { 
-			scrollPosition = getScrollPosition (); 
-			scrollFraction = getScrollFraction (); 
+			scrollPosition = getFocusedScrollPosition (); 
+			scrollFraction = getFocusedScrollFraction (); 
 		} 
 		// Change the layout manager: 
 		boolean useGrid = isUsingGrid (); 

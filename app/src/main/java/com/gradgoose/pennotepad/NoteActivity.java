@@ -1282,7 +1282,11 @@ public class NoteActivity extends Activity {
 		}); 
 		mNotesAdapter.mErrorCallback = new PageView.ErrorCallback () { 
 			@Override public void onBitmapOutOfMemory () { 
-				Toast.makeText (NoteActivity.this, R.string.title_out_of_mem, Toast.LENGTH_SHORT).show (); 
+				runOnUiThread (new Runnable () { 
+					@Override public void run () { 
+						Toast.makeText (NoteActivity.this, R.string.title_out_of_mem, Toast.LENGTH_SHORT).show (); 
+					} 
+				}); 
 //				if (!mAlreadyHandling_OutOfMem) { 
 //					mHandler.postDelayed (mRunUiThreadReloadAll, 500); 
 //					mAlreadyHandling_OutOfMem = true; 

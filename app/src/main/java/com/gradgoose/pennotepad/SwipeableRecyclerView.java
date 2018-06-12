@@ -1,8 +1,6 @@
 package com.gradgoose.pennotepad;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Rect;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,10 +10,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
@@ -267,6 +263,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 					} 
 				} else if (swipeDelta == 0) {
 					Log.i (TAG, "MotionEvent: swipeDelta = 0; "); 
+					checkGlobalClick (x, y); 
 				} else { 
 					swipeDelta = (swipeDelta > 0 ? 1 : -1) * MIN_DELTA_TO_SWIPE * 0.9f; 
 				} 
@@ -280,7 +277,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 			return true; 
 		} else return super.onTouchEvent (event); 
 	} 
-	static final Rect checkBounds = new Rect (); 
+	static final Rect checkBoundsG = new Rect (); 
+	static final Rect checkBoundsL = new Rect (); 
 	static boolean checkClick (int globalX, int globalY, ViewGroup viewGroup) { 
 		for (int i = 0; i < viewGroup.getChildCount (); i++) { 
 			View child = viewGroup.getChildAt (i); 
@@ -290,10 +288,15 @@ public class SwipeableRecyclerView extends RecyclerView {
 					return true; 
 				} 
 			} else { 
-				synchronized (checkBounds) { 
-					child.getGlobalVisibleRect (checkBounds); 
-					if (!checkBounds.contains (globalX, globalY)) 
+				synchronized (checkBoundsG) { 
+					child.getGlobalVisibleRect (checkBoundsG); 
+					if (!checkBoundsG.contains (globalX, globalY)) 
 						continue; 
+					child.getLocalVisibleRect (checkBoundsL); 
+					int left = checkBoundsG.left - checkBoundsL.left; 
+					int top = checkBoundsG.top - checkBoundsL.top; 
+					if (child instanceof TouchInfoSetter) 
+						((TouchInfoSetter) child).setLastTouchedPoint (globalX - left, globalY - top); 
 					child.performClick (); 
 					return true; 
 				} 
@@ -304,6 +307,15 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float firstInterceptX = 0; 
 	float firstInterceptY = 0; 
 	boolean isScaleEvent = false; 
+	void checkGlobalClick (float x, float y) { 
+		Log.i (TAG, "checkGlobalClick (" + x + ", " + y + ")"); 
+		Rect meG = new Rect (); 
+		Rect meL = new Rect (); 
+		getGlobalVisibleRect (meG); 
+		int left = meG.left - meL.left; 
+		int top = meG.top - meL.top; 
+		checkClick ((int) x + left, (int) y + top, this); 
+	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (!allowTouch) return false; 
 		float x = event.getX (); 
@@ -319,10 +331,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 //				if (parent instanceof ScaleDetectorContainer) { 
 //					((ScaleDetectorContainer) parent).checkClick (); 
 //				} 
-				// Click the view? 
-				Rect me = new Rect (); 
-				getGlobalVisibleRect (me); 
-				checkClick ((int) x + me.left, (int) y + me.top, this); 
+				checkGlobalClick (x, y); 
 			} 
 		} 
 		boolean horizontal = isHorizontalOrientation (); 

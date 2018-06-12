@@ -436,9 +436,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		final View tileContainer; 
 		final View.OnClickListener onClickListener = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
-				if (mAllowLinks && clickLink (pageView.itemPage, 
-						pageView.getWidth (), pageView.getHeight (), 
-						pageView.lastTouchedX, pageView.lastTouchedY)) { 
+				if (mAllowLinks && clickLink (pageView.itemPage, pageView)) { 
 					Log.i (TAG, "clickLink () returned 'true';"); 
 					return; 
 				} 
@@ -536,6 +534,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		int downscalePutY (int putY, int targetHeight, int wideScaleParameter) { 
 			return (putY - targetHeight / 2) / wideScaleParameter + targetHeight / 2; 
+		} 
+		boolean clickLink (int pageIndex, View view) { 
+			return view instanceof TouchInfoSetter && clickLink (pageIndex, 
+					view.getWidth (), view.getHeight (), 
+					((TouchInfoSetter) view).getLastTouchedX (), 
+					((TouchInfoSetter) view).getLastTouchedY ()); 
 		} 
 		synchronized boolean clickLink (int pageIndex, int viewWidth, int viewHeight, float touchX, float touchY) { 
 			if (mIsPDF && pdfDocument != null) synchronized (pdfiumCore) { 

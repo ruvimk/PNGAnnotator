@@ -40,7 +40,7 @@ import java.io.IOException;
  * Created by Ruvim Kondratyev on 9/4/2017.
  */
 
-public class PageView extends ImageView { 
+public class PageView extends ImageView implements TouchInfoSetter { 
 	static final String TAG = "PageView"; 
 	static final int VIEW_LARGE = 0; 
 	static final int VIEW_SMALL = 1; 
@@ -750,9 +750,15 @@ public class PageView extends ImageView {
 	
 	float lastTouchedX = 0; 
 	float lastTouchedY = 0; 
+	@Override public void setLastTouchedPoint (float x, float y) { 
+		lastTouchedX = x; 
+		lastTouchedY = y; 
+	} 
+	@Override public float getLastTouchedX () { return lastTouchedX; } 
+	@Override public float getLastTouchedY () { return lastTouchedY; } 
+	
 	@Override public boolean onTouchEvent (MotionEvent event) { 
-		lastTouchedX = event.getX (); 
-		lastTouchedY = event.getY (); 
+		setLastTouchedPoint (event.getX (), event.getY ()); 
 		int [] locationScreen = new int [2]; 
 		int [] locationWindow = new int [2];
 		Rect visible = new Rect (); 

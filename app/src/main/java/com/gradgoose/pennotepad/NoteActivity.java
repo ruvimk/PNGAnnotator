@@ -445,6 +445,9 @@ public class NoteActivity extends Activity {
 	protected boolean canShowAsGrid () { 
 		return initReady && (hasImages () || mNotesAdapter.mIsPDF); 
 	} 
+	protected boolean isUsingGrid () { 
+		return canShowAsGrid () && prefs.getBoolean ("notes-overview", false); 
+	} 
 	void updateMenuItems () { 
 		if (!initReady || mMenuGoToPage == null) return; // Return if these have not yet been initialized. 
 		boolean hasImages = hasImages (); 
@@ -1238,6 +1241,11 @@ public class NoteActivity extends Activity {
 				return false; 
 			} 
 			@Override public boolean onPageLinkClicked (int pageIndex) { 
+				if (!isUsingGrid ()) { 
+					int headerViewCount = mNotesAdapter != null ? mNotesAdapter.countHeaderViews () : 0; 
+					scrollToItem (pageIndex + headerViewCount); 
+					return true; 
+				} 
 				return false; 
 			} 
 			@Override public boolean onUriLinkClicked (String linkURI) { 
@@ -1472,7 +1480,7 @@ public class NoteActivity extends Activity {
 			scrollFraction = getScrollFraction (); 
 		} 
 		// Change the layout manager: 
-		boolean useGrid = canShowAsGrid () && prefs.getBoolean ("notes-overview", false); 
+		boolean useGrid = isUsingGrid (); 
 		mScalePageContainer.allowZoomOut = !useGrid; // Allow zoom-out leave gesture if we're in full-page view. 
 		mNotesAdapter.setViewMode (useGrid ? PageView.VIEW_SMALL : PageView.VIEW_LARGE); 
 		mRvBigPages.setLayoutManager (useGrid ? mNoteOverviewLayoutManager : mNotesLayoutManager); 

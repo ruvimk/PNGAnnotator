@@ -15,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -50,6 +51,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	final Context mContext; 
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
+	
+	int touchSlop; 
+	int longPressTimeout; 
 	
 	boolean mPenMode = false; 
 	boolean mToolMode = false; 
@@ -268,6 +272,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 							FileListCache.OnFilesChangedListener onFilesChangedListener) { 
 		super (); 
 		mContext = context; 
+		ViewConfiguration viewConf = ViewConfiguration.get (context); 
+		touchSlop = viewConf.getScaledTouchSlop (); 
+		longPressTimeout = ViewConfiguration.getLongPressTimeout (); 
 		mBrowsingFolder = browsingDir; 
 		mOnFilesChangedListener = onFilesChangedListener; 
 		mIsPDF = browsingDir.elementAt (0).getName ().toLowerCase ().endsWith (".pdf"); 

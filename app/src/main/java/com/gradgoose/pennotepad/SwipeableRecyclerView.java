@@ -266,14 +266,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 						go (-1); 
 					} 
 				} else if (swipeDelta == 0) {
-					ViewParent parent = getParent (); 
-					if (parent instanceof ScaleDetectorContainer) { 
-						((ScaleDetectorContainer) parent).checkClick (); 
-					} 
-					// Click the view? 
-					Rect me = new Rect (); 
-					getGlobalVisibleRect (me); 
-					checkClick ((int) x + me.left, (int) y + me.top, this); 
+					Log.i (TAG, "MotionEvent: swipeDelta = 0; "); 
 				} else { 
 					swipeDelta = (swipeDelta > 0 ? 1 : -1) * MIN_DELTA_TO_SWIPE * 0.9f; 
 				} 
@@ -320,6 +313,17 @@ public class SwipeableRecyclerView extends RecyclerView {
 			firstInterceptY = y; 
 			swipeDelta = 0; 
 			firstDelta = 0; 
+		} else if (event.getAction () == MotionEvent.ACTION_UP) { 
+			if (swipeDelta == 0) { 
+				ViewParent parent = getParent (); 
+				if (parent instanceof ScaleDetectorContainer) { 
+					((ScaleDetectorContainer) parent).checkClick (); 
+				} 
+				// Click the view? 
+				Rect me = new Rect (); 
+				getGlobalVisibleRect (me); 
+				checkClick ((int) x + me.left, (int) y + me.top, this); 
+			} 
 		} 
 		boolean horizontal = isHorizontalOrientation (); 
 		float delta = horizontal ? firstInterceptY - y : firstInterceptX - x; 

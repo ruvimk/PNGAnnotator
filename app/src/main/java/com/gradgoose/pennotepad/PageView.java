@@ -870,6 +870,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		super.onDraw (canvas); 
 		int w = getWidth (); 
 		int h = lastRenderW != 0 ? w * lastRenderH / lastRenderW : getHeight (); 
+		int vh = getHeight (); 
 		float totalScale = getScaleFactor (); 
 //		bmpDest.left = localVisible.left / totalScale; 
 //		bmpDest.top = localVisible.top / totalScale; 
@@ -886,9 +887,9 @@ public class PageView extends ImageView implements TouchInfoSetter {
 				bmpSource.right = mBitmapNaturalWidth; 
 				bmpSource.bottom = mBitmapNaturalWidth * h / w; 
 				bmpDest.left = -lastRenderX * w / lastRenderW; 
-				bmpDest.top = -lastRenderY * h / lastRenderH; 
+				bmpDest.top = -lastRenderY * vh / lastRenderH; 
 				bmpDest.right = bmpDest.left + w * w / lastRenderW; 
-				bmpDest.bottom = bmpDest.top + h * h / lastRenderH; 
+				bmpDest.bottom = bmpDest.top + vh * h / lastRenderH; 
 //				bmpDest.left = localVisible.left / totalScale; 
 //				bmpDest.top = localVisible.top / totalScale; 
 //				bmpDest.right = bmpDest.left + w / totalScale; 

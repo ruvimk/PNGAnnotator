@@ -858,12 +858,12 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			renderY = 0; 
 		else if (renderY < h - bigH) 
 			renderY = (int) (h - bigH); 
-		if (renderX != lastRenderX || renderY != lastRenderY || renderW != lastRenderW || renderH != lastRenderH) { 
+//		if (renderX != lastRenderX || renderY != lastRenderY || renderW != lastRenderW || renderH != lastRenderH) { 
 			if (redrawRequestListener != null) { 
 				redrawRequestListener.requestRedrawPagePDF (this, itemFile, itemPage, 
 						renderX, renderY, renderW, renderH, WIDE_SCALE_BUFFER_PARAMETER, true); 
 			} 
-		} 
+//		} 
 	} 
 	
 	@Override public void onDraw (Canvas canvas) { 

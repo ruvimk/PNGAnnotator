@@ -571,6 +571,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		} 
 		synchronized void renderPage (int pageIndex, int putX, int putY, int putWidth, int putHeight, 
 									  int wideScaleParameter, boolean skipRenderIfSamePutParams) { 
+			boolean needLayout = false; 
 			if (mIsPDF && pdfDocument != null) { 
 				synchronized (pdfiumCore) { 
 					pdfiumCore.openPage (pdfDocument, pageIndex); 
@@ -590,6 +591,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					int loadHeight = Math.max (naturalHeight, Math.min (otherHeight, naturalHeight * 2)); // The min () is there to prevent a memory-intensive thing  
 					// in the case that it's a PDF with lots of pages whose height << their width. So this serves as a memory cap, sort of, 
 					// limiting usage to twice the size of the screen. 
+					needLayout = pageView.mBitmapNaturalWidth * naturalHeight != 
+												 loadWidth * pageView.mBitmapNaturalHeight; 
 					pageView.mBitmapNaturalWidth = loadWidth; 
 					pageView.mBitmapNaturalHeight = naturalHeight; 
 					pageView.mBitmapLoadHeight = loadHeight; 
@@ -681,9 +684,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 					pageView.mBackgroundBitmap = null; 
 				} 
 			} 
+			final boolean finalNeedLayout = needLayout; 
 			((Activity) mContext).runOnUiThread (new Runnable () { 
 				@Override public void run () { 
-					if (pageView.getWidth () * pageView.lastRenderH != pageView.lastRenderW * pageView.getHeight ()) 
+					if (finalNeedLayout) 
 						pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the render's. 
 					pageView.invalidate (); 
 				} 

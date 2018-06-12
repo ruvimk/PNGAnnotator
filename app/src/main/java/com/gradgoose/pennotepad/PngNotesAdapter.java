@@ -475,7 +475,15 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		}; 
 		final View.OnLongClickListener onLongClickListener = new View.OnLongClickListener () { 
 			@Override public boolean onLongClick (View view) { 
-				return mOnNoteInteractListener != null && mOnNoteInteractListener.onNotePageLongClicked (mItemFile, mListPosition); 
+				if (mOnNoteInteractListener != null && mOnNoteInteractListener.onNotePageLongClicked (mItemFile, mListPosition)) 
+					return true; 
+				// Select either just the file, or the file + page #, if it's a PDF: 
+				if (mIsPDF) 
+					selectionManager.selectFile (mItemFile.getAbsolutePath () + ":" + mListPosition); 
+				else selectionManager.selectFile (mItemFile.getAbsolutePath ()); 
+				// Show the menu, etc., to select more files: 
+				selectionManager.startActionMode (); 
+				return true; 
 			} 
 		}; 
 		File mItemFile; 

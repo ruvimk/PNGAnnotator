@@ -192,6 +192,12 @@ public class NoteActivity extends Activity {
 		// Grab the editing state: 
 		currentTool = prefs.getInt ("tool", currentTool); 
 		currentColor = prefs.getInt ("color", currentColor); 
+		// Zoom state: 
+		if (savedInstanceState != null) { 
+			uiZoomedInFlag = savedInstanceState.containsKey ("zoomed-in-flag") && savedInstanceState.getBoolean ("zoomed-in-flag"); 
+			uiZoomPivotX = savedInstanceState.containsKey ("zoom-pivot-x") ? savedInstanceState.getFloat ("zoom-pivot-x") : 0; 
+			uiZoomPivotY = savedInstanceState.containsKey ("zoom-pivot-y") ? savedInstanceState.getFloat ("zoom-pivot-y") : 0; 
+		} 
 		// Get the folder where digital camera images are stored: 
 		mDCIM = Environment.getExternalStoragePublicDirectory ( 
 				Environment.DIRECTORY_DCIM 
@@ -366,6 +372,9 @@ public class NoteActivity extends Activity {
 		for (int i = 0; i < mBrowsingFolders.size (); i++) 
 			paths[i] = mBrowsingFolders.elementAt (i).getAbsolutePath (); 
 		outState.putStringArray (STATE_BROWSING_PATH, paths);  
+		outState.putBoolean ("zoomed-in-flag", uiZoomedInFlag); 
+		outState.putFloat ("zoom-pivot-x", uiZoomPivotX); 
+		outState.putFloat ("zoom-pivot-y", uiZoomPivotY); 
 		// Calculate scroll position: 
 		int scrollPosition = getScrollPosition (); 
 		float scrollFraction = getScrollFraction (); 
@@ -1178,14 +1187,17 @@ public class NoteActivity extends Activity {
 		lpNoteFL.topMargin = canEdit () ? getResources ().getDimensionPixelOffset (R.dimen.pen_options_height) : 0; 
 	} 
 	void updateZoomedInPivot () { 
-		if (prefs.getBoolean ("zoomed-in-flag", false)) { 
+		if (uiZoomedInFlag) { 
 			float sizeFactor = mRvBigPages.getWidth (); 
 			mScalePageContainer.setScale (mScalePageContainer.zoomedInScale, 
 					mScalePageContainer.zoomedInScale, 
-					sizeFactor * prefs.getFloat ("zoom-pivot-x", 0), 
-					sizeFactor * prefs.getFloat ("zoom-pivot-y", mRvSubfolderBrowser.getHeight ())); 
+					sizeFactor * uiZoomPivotX, 
+					sizeFactor * (uiZoomPivotY != 0 ? uiZoomPivotY : mRvSubfolderBrowser.getHeight ())); 
 		} 
 	} 
+	boolean uiZoomedInFlag = false; 
+	float uiZoomPivotX = 0; 
+	float uiZoomPivotY = 0; 
 	void initUserInterface () { 
 		ViewGroup vgRoot = (ViewGroup) findViewById (R.id.vMainRoot); 
 		mScalePageContainer = findViewById (R.id.flScaleDetectorContainer); 
@@ -1311,22 +1323,19 @@ public class NoteActivity extends Activity {
 					float sizeFactor = mRvBigPages.getWidth (); 
 					if (sizeFactor == 0) 
 						return; // Just a safe-guard. 
-					prefs.edit ().putFloat ("zoomed-in-scale", scale) 
-							.putBoolean ("zoomed-in-flag", true) 
-							.putFloat ("zoom-pivot-x", mScalePageContainer.nowPivotX / sizeFactor) 
-							.putFloat ("zoom-pivot-y", mScalePageContainer.nowPivotY / sizeFactor) 
-							.apply (); 
+					prefs.edit ().putFloat ("zoomed-in-scale", scale).apply (); 
+					uiZoomedInFlag = true; 
+					uiZoomPivotX = mScalePageContainer.nowPivotX / sizeFactor; 
+					uiZoomPivotY = mScalePageContainer.nowPivotY / sizeFactor; 
 					mScalePageContainer.setZoomedInScale (scale); 
-				} else prefs.edit ().putBoolean ("zoomed-in-flag", false).apply (); 
+				} else uiZoomedInFlag = false; 
 			} 
 			@Override public void onPivotChanged (float pivotX, float pivotY) { 
 				float sizeFactor = mRvBigPages.getWidth (); 
 				if (sizeFactor == 0) 
 					return; // Just a safe-guard.  
-				prefs.edit () 
-						.putFloat ("zoom-pivot-x", pivotX / sizeFactor) 
-						.putFloat ("zoom-pivot-y", pivotY / sizeFactor) 
-						.apply (); 
+				uiZoomPivotX = pivotX; 
+				uiZoomPivotY = pivotY; 
 			} 
 		}); 
 		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 

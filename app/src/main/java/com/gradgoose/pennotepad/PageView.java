@@ -628,6 +628,9 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		// If no need to reload anything else, then exit now: 
 		if (!needReload) 
 			return; 
+		// Take care of PDF redrawing: 
+		lastRenderW = lastRenderH = 0; 
+		computePageDrawPosition (); 
 		// Now load our edits for this picture: 
 		if (oldFile == null || !oldFile.equals (itemFile) || oldPage != itemPage) { 
 			final File targetFile = file; 

@@ -443,7 +443,7 @@ public class NoteActivity extends Activity {
 		return initReady && (mNotesAdapter != null ? mNotesAdapter.mIsPDF : mBrowsingFolders.elementAt (0).getName ().toLowerCase ().endsWith (".pdf")); 
 	} 
 	protected boolean canShowAsGrid () { 
-		return initReady && (hasImages () || mNotesAdapter.mIsPDF); 
+		return initReady && mNotesAdapter != null && (hasImages () || mNotesAdapter.mIsPDF); 
 	} 
 	protected boolean isUsingGrid () { 
 		return canShowAsGrid () && prefs.getBoolean ("notes-overview", false); 

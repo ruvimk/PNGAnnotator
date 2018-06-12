@@ -315,10 +315,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 			firstDelta = 0; 
 		} else if (event.getAction () == MotionEvent.ACTION_UP) { 
 			if (swipeDelta == 0) { 
-				ViewParent parent = getParent (); 
-				if (parent instanceof ScaleDetectorContainer) { 
-					((ScaleDetectorContainer) parent).checkClick (); 
-				} 
+//				ViewParent parent = getParent (); 
+//				if (parent instanceof ScaleDetectorContainer) { 
+//					((ScaleDetectorContainer) parent).checkClick (); 
+//				} 
 				// Click the view? 
 				Rect me = new Rect (); 
 				getGlobalVisibleRect (me); 

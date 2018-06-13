@@ -50,6 +50,8 @@
 	
 	<string name="label_page_up">Page Up</string> 
 	<string name="label_page_down">Page Down</string> 
+	<string name="label_move_up">MOVE\nUP</string>
+	<string name="label_move_down">MOVE\nDOWN</string>
 	
 	<string name="msg_load_error">Error loading picture</string> 
 	<string name="msg_create_home_folder_error">Error creating Notes folder</string> 

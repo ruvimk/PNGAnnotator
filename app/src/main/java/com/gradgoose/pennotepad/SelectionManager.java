@@ -92,9 +92,11 @@ public class SelectionManager {
 	class NotesActionModeCallback implements ActionMode.Callback { 
 		MenuItem mMenuRename = null; 
 		MenuItem mMenuCut = null; 
+		MenuItem mMenuDelete = null; 
 		public void updateMenuVisibility () { 
 			if (mMenuRename != null) mMenuRename.setVisible (mSelection.size () == 1); 
-			if (mMenuCut != null) mMenuCut.setVisible (!hasNonOwnedFolders ()); 
+			if (mMenuCut != null) mMenuCut.setVisible (!hasNonOwnedFolders () && !hasPdfPages ()); 
+			if (mMenuDelete != null) mMenuDelete.setVisible (!hasPdfPages ()); 
 		} 
 		Vector<FileEntry> lastCalculatedSelected = null; 
 		public boolean hasNonOwnedFolders () { 
@@ -115,6 +117,15 @@ public class SelectionManager {
 			lastCalculatedSelected = selected; 
 			return hasNonOwnedFolders; 
 		} 
+		boolean hasPdfPages () { 
+			Vector<FileEntry> selected = getSelectedFiles (); 
+			if (selected.size () < 1) return false; 
+			for (FileEntry entry : selected) { 
+				if (entry.isMultipage) 
+					return true; 
+			} 
+			return false; 
+		} 
 		@Override public boolean onCreateActionMode (ActionMode actionMode, Menu menu) { 
 			MenuInflater inflater = actionMode.getMenuInflater (); 
 			inflater.inflate (R.menu.folder_menu, menu); 
@@ -126,6 +137,7 @@ public class SelectionManager {
 		@Override public boolean onPrepareActionMode (ActionMode actionMode, Menu menu) { 
 			mMenuRename = menu.findItem (R.id.action_rename); 
 			mMenuCut = menu.findItem (R.id.action_cut); 
+			mMenuDelete = menu.findItem (R.id.action_delete); 
 			updateMenuVisibility (); 
 			return true; 
 		} 

@@ -144,6 +144,7 @@ public class NoteActivity extends Activity {
 	SharedPreferences recents = null; 
 	
 	final SelectionManager selectionManager = new SelectionManager (this); 
+	final CustomEditDialog customEditDialog = new CustomEditDialog (this); 
 	
 	Vector<String> recentFolders = null; 
 	
@@ -979,69 +980,64 @@ public class NoteActivity extends Activity {
 		return true; 
 	} 
 	void userSelectPage () { 
-		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_number, 
-				(ViewGroup) findViewById (R.id.vMainRoot), false); 
 		String currentPage = String.valueOf (getPageIndex () + 1); 
-		editText.setText (currentPage); 
-		editText.setSelection (0, currentPage.length ()); 
-		AlertDialog dialog = new AlertDialog.Builder (this) 
-									 .setTitle (R.string.title_goto_page) 
-									 .setMessage (getString (R.string.msg_goto_page) 
-											 .replace ("[current]", currentPage) 
-											 .replace ("[total]", 
-													 String.valueOf (mNotesAdapter.countImages ())) 
-									 ) 
-									 .setView (editText) 
-									 .setPositiveButton (R.string.label_ok, new DialogInterface.OnClickListener () {
-										 @Override public void onClick (DialogInterface dialogInterface, int i) {
-											 int number; 
-											 try { 
-												 number = Integer.valueOf (editText.getText ().toString ()); 
-											 } catch (NumberFormatException err) { 
-												 return; 
-											 } 
-											 scrollToItem (number - 1 + 
-											 mNotesAdapter.countHeaderViews ()); 
-										 }
-									 }) 
-									 .setNegativeButton (R.string.label_cancel, null) 
-									 .create (); 
-		dialog.show (); 
+		customEditDialog.showDialog (getString (R.string.title_goto_page), 
+				getString (R.string.msg_goto_page) 
+						.replace ("[current]", currentPage) 
+						.replace ("[total]", 
+								String.valueOf (mNotesAdapter.countImages ())), 
+				currentPage, 
+				CustomEditDialog.INPUT_NUMBER, 
+				getString (R.string.label_ok), 
+				getString (R.string.label_cancel), 
+				new Runnable () { 
+					@Override public void run () { 
+						int number; 
+						try { 
+							number = Integer.valueOf (customEditDialog.userResponse); 
+						} catch (NumberFormatException err) { 
+							return; 
+						} 
+						scrollToItem (number - 1 + 
+											  mNotesAdapter.countHeaderViews ()); 
+					} 
+				}, 
+				null, 
+				null 
+		); 
 	} 
 	void userChangeBrushWidth () { 
 		if (!initReady) return; 
-		final EditText editText = (EditText) getLayoutInflater ().inflate (R.layout.edit_float, 
-				(ViewGroup) findViewById (R.id.vMainRoot), false); 
 		String currentWidth = String.valueOf (mNotesAdapter.mBrush); 
-		editText.setText (currentWidth); 
-		editText.setSelection (0, currentWidth.length ()); 
-		AlertDialog dialog = new AlertDialog.Builder (this) 
-									 .setTitle (R.string.title_brush_width)
-									 .setMessage (R.string.msg_brush_width) 
-									 .setView (editText) 
-									 .setPositiveButton (R.string.label_ok, new DialogInterface.OnClickListener () {
-										 @Override public void onClick (DialogInterface dialogInterface, int i) {
-											 float number; 
-											 try { 
-												 number = Float.valueOf (editText.getText ().toString ()); 
-											 } catch (NumberFormatException err) { 
-												 return; 
-											 } 
-											 // Send this to the notes adapter: 
-											 mNotesAdapter.mBrush = number; 
-											 mNotesAdapter.notifyDataSetChanged (); 
-											 // Update the view: 
-											 updateBrushWidthTextShowing (); 
-											 // Save this in the quick-preferences: 
-											 prefs.edit ().putFloat ( 
-											 		currentTool == TOOL_ERASER || currentTool == TOOL_WHITEOUT ? 
-															"erase-width" : "write-width" 
-											 		, number).apply (); 
-										 }
-									 }) 
-									 .setNegativeButton (R.string.label_cancel, null) 
-									 .create (); 
-		dialog.show (); 
+		customEditDialog.showDialog (getString (R.string.title_brush_width), 
+				getString (R.string.msg_brush_width), 
+				currentWidth, 
+				CustomEditDialog.INPUT_FLOAT, 
+				getString (R.string.label_ok), 
+				getString (R.string.label_cancel), 
+				new Runnable () { 
+					@Override public void run () { 
+						float number; 
+						try { 
+							number = Float.valueOf (customEditDialog.userResponse); 
+						} catch (NumberFormatException err) { 
+							return; 
+						} 
+						// Send this to the notes adapter: 
+						mNotesAdapter.mBrush = number; 
+						mNotesAdapter.notifyDataSetChanged (); 
+						// Update the view: 
+						updateBrushWidthTextShowing (); 
+						// Save this in the quick-preferences: 
+						prefs.edit ().putFloat ( 
+								currentTool == TOOL_ERASER || currentTool == TOOL_WHITEOUT ? 
+										"erase-width" : "write-width" 
+								, number).apply (); 
+					} 
+				}, 
+				null, 
+				null 
+		); 
 	} 
 	
 	void viewTimeLog () { 

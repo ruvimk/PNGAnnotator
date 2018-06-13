@@ -40,4 +40,16 @@
 		android:text="TITLE"
 		/>
 	
+	<CheckBox
+		android:id="@+id/cbSelect"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content" 
+		android:paddingTop="10dp"
+		android:paddingBottom="10dp"
+		android:text="@string/label_select"
+		android:layout_gravity="bottom|center_horizontal"
+		android:gravity="center"
+		android:background="#ddf"
+		/>
+	
 </FrameLayout>

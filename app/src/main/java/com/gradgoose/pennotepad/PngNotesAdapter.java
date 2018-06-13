@@ -18,9 +18,11 @@ import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -464,6 +466,40 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		final TextView titleView; 
 		final TextView topRightView; 
 		final View tileContainer; 
+		final CheckBox cbSelect; 
+		final View.OnTouchListener checkboxTouchListener = new View.OnTouchListener () { 
+			float firstX = 0; 
+			float firstY = 0; 
+			boolean noDisallowIntercept = false; 
+			@Override public boolean onTouch (View view, MotionEvent motionEvent) { 
+				float x = motionEvent.getX (); 
+				float y = motionEvent.getY (); 
+				if (motionEvent.getAction () == MotionEvent.ACTION_DOWN) { 
+					firstX = x; 
+					firstY = y; 
+					noDisallowIntercept = false; 
+					view.getParent ().requestDisallowInterceptTouchEvent (true); 
+				} 
+				if (!noDisallowIntercept && Math.sqrt ((x - firstX) * (x - firstX) 
+															   + (y - firstY) * (y - firstY) 
+				) > touchSlop) { 
+					noDisallowIntercept = true; 
+					view.getParent ().requestDisallowInterceptTouchEvent (false); 
+				} 
+				return false; 
+			} 
+		}; 
+		final View.OnClickListener onToggleSelectClick = new View.OnClickListener () { 
+			@Override public void onClick (View view) { 
+				cbSelect.setChecked (!cbSelect.isChecked ()); 
+				String fileString = getFileString (); 
+				if (selectionManager.isFileSelected (fileString)) 
+					selectionManager.deselectFile (fileString); 
+				else selectionManager.selectFile (fileString); 
+				if (selectionManager.mSelection.isEmpty ()) 
+					selectionManager.finishSelection (); 
+			} 
+		}; 
 		final View.OnClickListener onClickListener = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				if (mAllowLinks && clickLink (pageView.itemPage, pageView)) { 
@@ -477,15 +513,20 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			@Override public boolean onLongClick (View view) { 
 				if (mOnNoteInteractListener != null && mOnNoteInteractListener.onNotePageLongClicked (mItemFile, mListPosition)) 
 					return true; 
-				// Select either just the file, or the file + page #, if it's a PDF: 
-				if (mIsPDF) 
-					selectionManager.selectFile (mItemFile.getAbsolutePath () + ":" + mListPosition); 
-				else selectionManager.selectFile (mItemFile.getAbsolutePath ()); 
+				// Select file: 
+				selectionManager.selectFile (getFileString ()); 
 				// Show the menu, etc., to select more files: 
 				selectionManager.startActionMode (); 
 				return true; 
 			} 
 		}; 
+		String getFileString () { 
+			File file = mItemFile; 
+			if (file == null) 
+				return ""; 
+			return mIsPDF ? file.getAbsolutePath () + ":" + mListPosition :
+						   file.getAbsolutePath (); 
+		} 
 		File mItemFile; 
 		int mListPosition; 
 		final RedrawParams mRedrawParams = new RedrawParams (this); 
@@ -527,6 +568,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			titleView = root.findViewById (R.id.tvPageTitle); 
 			topRightView = root.findViewById (R.id.tvTopRightCornerText); 
 			tileContainer = root.findViewById (R.id.flPageTile); 
+			cbSelect = root.findViewById (R.id.cbSelect); 
 			mAllPageViews.add (pageView); 
 			synchronized (mAllRedrawParams) { 
 				mAllRedrawParams.add (mRedrawParams); 
@@ -538,6 +580,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			titleView.setText (itemFile.getName ()); 
 			topRightView.setText (pageNumberLabel); 
 			topRightView.setVisibility (pageNumberLabel.isEmpty () ? View.GONE : View.VISIBLE); 
+			cbSelect.setVisibility (selectionManager.mActionModeActive ? View.VISIBLE : View.GONE); 
+			cbSelect.setChecked (selectionManager.isFileSelected (getFileString ())); 
+			cbSelect.setOnTouchListener (checkboxTouchListener); 
+			cbSelect.setOnClickListener (onToggleSelectClick); 
 			mItemFile = itemFile; 
 			mListPosition = positionInList; 
 			pageView.setOnClickListener (onClickListener); 

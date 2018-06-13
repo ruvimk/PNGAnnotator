@@ -45,6 +45,7 @@
 	<string name="label_new_folder">Untitled</string> 
 	<string name="label_brush_width">[width] mm</string> 
 	<string name="label_pg_of">%d of %d</string> 
+	<string name="label_select">select</string> 
 	
 	<string name="label_page_up">Page Up</string> 
 	<string name="label_page_down">Page Down</string> 

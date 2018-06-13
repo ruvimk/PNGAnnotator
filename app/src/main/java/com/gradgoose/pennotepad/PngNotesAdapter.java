@@ -467,6 +467,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		final TextView topRightView; 
 		final View tileContainer; 
 		final CheckBox cbSelect; 
+		final View ivCutIcon; 
 		final View.OnTouchListener checkboxTouchListener = new View.OnTouchListener () { 
 			float firstX = 0; 
 			float firstY = 0; 
@@ -569,6 +570,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			topRightView = root.findViewById (R.id.tvTopRightCornerText); 
 			tileContainer = root.findViewById (R.id.flPageTile); 
 			cbSelect = root.findViewById (R.id.cbSelect); 
+			ivCutIcon = root.findViewById (R.id.ivCutIcon); 
 			mAllPageViews.add (pageView); 
 			synchronized (mAllRedrawParams) { 
 				mAllRedrawParams.add (mRedrawParams); 
@@ -581,9 +583,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			topRightView.setText (pageNumberLabel); 
 			topRightView.setVisibility (pageNumberLabel.isEmpty () ? View.GONE : View.VISIBLE); 
 			cbSelect.setVisibility (selectionManager.mActionModeActive ? View.VISIBLE : View.GONE); 
-			cbSelect.setChecked (selectionManager.isFileSelected (getFileString ())); 
+			String fileString = getFileString (); 
+			cbSelect.setChecked (selectionManager.isFileSelected (fileString)); 
 			cbSelect.setOnTouchListener (checkboxTouchListener); 
 			cbSelect.setOnClickListener (onToggleSelectClick); 
+			ivCutIcon.setVisibility (SelectionManager.isCut (fileString) ? View.VISIBLE : View.GONE); 
 			mItemFile = itemFile; 
 			mListPosition = positionInList; 
 			pageView.setOnClickListener (onClickListener); 

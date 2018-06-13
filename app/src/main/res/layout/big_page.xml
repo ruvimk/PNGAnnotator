@@ -40,6 +40,15 @@
 		android:text="TITLE"
 		/>
 	
+	<ImageView
+		android:id="@+id/ivCutIcon"
+		android:layout_width="40dp"
+		android:layout_height="40dp"
+		android:src="@drawable/ic_content_cut_black_24dp"
+		android:layout_gravity="center"
+		android:paddingTop="4dp"
+		/> 
+	
 	<CheckBox
 		android:id="@+id/cbSelect"
 		android:layout_width="match_parent"

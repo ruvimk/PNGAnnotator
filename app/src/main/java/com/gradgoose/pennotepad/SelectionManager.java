@@ -174,6 +174,16 @@ public class SelectionManager {
 	} 
 	
 	
+	static boolean isCut (String file) { 
+		return PRIVATE_CLIPBOARD.contains (file) && PRIVATE_CLIPBOARD.getString (file, "").equals ("cut"); 
+	} 
+	static boolean isCopy (String file) { 
+		return PRIVATE_CLIPBOARD.contains (file) && PRIVATE_CLIPBOARD.getString (file, "").equals ("copy"); 
+	} 
+	static String getClipboardItemType (String file) { 
+		return PRIVATE_CLIPBOARD.contains (file) ? PRIVATE_CLIPBOARD.getString (file, "") : ""; 
+	} 
+	
 	static FileFilter mFilterJustFolders = new FileFilter () {
 		@Override public boolean accept (File file) { 
 			if (HIDDEN_FOLDERS != null && HIDDEN_FOLDERS.contains (file.getPath ())) 

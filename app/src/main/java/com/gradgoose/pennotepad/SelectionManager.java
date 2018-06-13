@@ -146,6 +146,12 @@ public class SelectionManager {
 			Vector<FileEntry> selected = lastCalculatedSelected != null ? lastCalculatedSelected : getSelectedFiles (); 
 			if (selected.size () < 1) return false; 
 			switch (menuItem.getItemId ()) { 
+				case R.id.action_copy: 
+					SelectionManager.copyFiles (selected); 
+					for (SelectionListener listener : selectionListeners) 
+						listener.onSelectionEnd (); 
+					mActionMode.finish (); 
+					return true; 
 				case R.id.action_cut: 
 					if (hasNonOwned) return false; 
 					SelectionManager.cutFiles (selected); 
@@ -265,6 +271,24 @@ public class SelectionManager {
 			} 
 			editor.apply (); 
 		} 
+	} 
+	static void copyFiles (Vector<FileEntry> files) { 
+		// TODO: Build a list of all the files to copy. 
+		synchronized (CLIPBOARD_MUTEX) { 
+			SharedPreferences.Editor editor = PRIVATE_CLIPBOARD.edit ().clear (); 
+			for (FileEntry entry : files) { 
+				if (entry.files != null) 
+					for (File f : entry.files) 
+						editor.putString (f.getPath (), "copy"); 
+				if (entry.singleFile != null) { 
+					if (entry.isMultipage) { 
+						// TODO: Export the page to its own .apg file, and copy that file here. 
+					} else editor.putString (entry.singleFile.getPath (), "copy"); 
+				} 
+			} 
+			editor.apply (); 
+		} 
+		// TODO: Copy to the Android clipboard too. 
 	} 
 	static boolean hasClipboardItems () {
 		return PRIVATE_CLIPBOARD.getAll ().size () > 0;

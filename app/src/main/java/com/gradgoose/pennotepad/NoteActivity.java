@@ -713,6 +713,15 @@ public class NoteActivity extends Activity {
 //	void userSelectAnnotateOptions () { 
 //		
 //	} 
+	static String [] splitFileName (String filename) { 
+		int lastDot = filename.lastIndexOf ('.'); 
+		if (lastDot > 0) { 
+			return new String [] { 
+					filename.substring (0, lastDot), 
+					filename.substring (lastDot) 
+			}; 
+		} else return new String [] { filename, "" }; 
+	} 
 	static void userRenameFile (final NoteActivity activity, final @Nullable SelectionManager.FileEntry oldName, String userMessage) { 
 		if (!activity.initReady) return; 
 		final EditText editText = (EditText) activity.getLayoutInflater ().inflate (R.layout.edit_file_name, 
@@ -733,8 +742,15 @@ public class NoteActivity extends Activity {
 				currentName = baseTitle + " (" + folderNumber + ")"; 
 			} 
 		} 
-		editText.setText (currentName); 
-		editText.setSelection (0, currentName.length ()); 
+		String displayName = currentName; 
+		final String fileExtension; 
+		if (!oldName.isDirectory ()) { 
+			String [] parts = splitFileName (currentName); 
+			displayName = parts[0]; 
+			fileExtension = parts[1]; 
+		} else fileExtension = ""; 
+		editText.setText (displayName); 
+		editText.setSelection (0, displayName.length ()); 
 		AlertDialog dialog = new AlertDialog.Builder (activity) 
 									 .setTitle ( 
 									 		oldName == null ? R.string.title_new_folder : 
@@ -788,7 +804,7 @@ public class NoteActivity extends Activity {
 											 	 SharedPreferences.Editor editor = SelectionManager.OWNED_FOLDERS.edit (); 
 												 if (oldName.files != null) for (File oldFile : oldName.files) { 
 													 File nowFile = new File (oldFile.getParentFile (), 
-																					 nowName); 
+																					 nowName + fileExtension); 
 													 if (oldFile.renameTo (nowFile)) { 
 														 success &= true; 
 														 boolean isOwnedByMe = SelectionManager.OWNED_FOLDERS.contains (oldFile.getPath ()); 
@@ -802,7 +818,7 @@ public class NoteActivity extends Activity {
 												 } 
 												 if (oldName.singleFile != null) { 
 												 	File nowFile = new File (oldName.singleFile.getParentFile (), 
-															nowName); 
+															nowName + fileExtension); 
 												 	if (oldName.singleFile.renameTo (nowFile)) { 
 												 		success &= true; 
 												 		boolean isOwnedByMe = SelectionManager.OWNED_FOLDERS.contains (oldName.singleFile.getPath ()); 

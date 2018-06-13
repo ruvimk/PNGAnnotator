@@ -34,6 +34,7 @@
 			android:paddingBottom="@dimen/pg_up_down_btn_size"
 			/>
 		<LinearLayout
+			android:id="@+id/llRearrangeContainer"
 			android:layout_width="wrap_content"
 			android:layout_height="match_parent"
 			android:orientation="vertical"
@@ -43,6 +44,7 @@
 			android:layout_marginBottom="80dp"
 			>
 			<TextView
+				android:id="@+id/tvRearrangeTitle"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content" 
 				android:layout_gravity="center" 
@@ -50,6 +52,7 @@
 				android:textSize="20sp"
 				/>
 			<Button
+				android:id="@+id/btnRearrangeMoveUp"
 				android:layout_width="wrap_content"
 				android:layout_height="0dp" 
 				android:layout_weight="1"
@@ -57,6 +60,7 @@
 				android:drawableTop="@drawable/ic_big_arrow_up"
 				/>
 			<Button
+				android:id="@+id/btnRearrangeMoveDown"
 				android:layout_width="wrap_content"
 				android:layout_height="0dp"
 				android:layout_weight="1"

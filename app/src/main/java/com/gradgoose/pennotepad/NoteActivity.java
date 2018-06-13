@@ -146,6 +146,8 @@ public class NoteActivity extends Activity {
 	final SelectionManager selectionManager = new SelectionManager (this); 
 	final CustomEditDialog customEditDialog = new CustomEditDialog (this); 
 	
+	RearrangeManager rearrangeManager = null; 
+	
 	Vector<String> recentFolders = null; 
 	
 	static final int TOOL_NONE = 0; 
@@ -1446,6 +1448,7 @@ public class NoteActivity extends Activity {
 		
 		// Image annotation RecyclerView: 
 		mRvBigPages = findViewById (R.id.rvBigPages);
+		rearrangeManager = new RearrangeManager (this, mRvBigPages, findViewById (R.id.llRearrangeContainer)); 
 		mRvBigPages.setParentFolder (mParentFolder, mBrowsingFolders.elementAt (0).getName ()); 
 		mRvBigPages.setAdapter (mNotesAdapter); 
 		mRvBigPages.setSwipeCallback (new SwipeableRecyclerView.SwipeCallback () { 

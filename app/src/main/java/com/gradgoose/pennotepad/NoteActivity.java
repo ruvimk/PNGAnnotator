@@ -713,12 +713,18 @@ public class NoteActivity extends Activity {
 //	void userSelectAnnotateOptions () { 
 //		
 //	} 
-	static void userRenameFile (final NoteActivity activity, final @Nullable Vector<File> oldName, String userMessage) { 
+	static void userRenameFile (final NoteActivity activity, final @Nullable SelectionManager.FileEntry oldName, String userMessage) { 
 		if (!activity.initReady) return; 
 		final EditText editText = (EditText) activity.getLayoutInflater ().inflate (R.layout.edit_file_name, 
 				(ViewGroup) activity.findViewById (R.id.vMainRoot), false); 
-		String currentName; 
-		if (oldName == null) { 
+		String currentName = ""; 
+		if (oldName != null) { 
+			if (oldName.files != null && !oldName.files.isEmpty ()) 
+				currentName = oldName.files.elementAt (0).getName (); 
+			else if (oldName.singleFile != null) 
+				currentName = oldName.singleFile.getName (); 
+		} 
+		if (currentName.isEmpty ()) { 
 			String baseTitle = activity.getString (R.string.label_new_folder); 
 			int folderNumber = 1; 
 			currentName = baseTitle; 
@@ -726,13 +732,13 @@ public class NoteActivity extends Activity {
 				folderNumber++; 
 				currentName = baseTitle + " (" + folderNumber + ")"; 
 			} 
-		} else currentName = oldName.elementAt (0).getName (); 
+		} 
 		editText.setText (currentName); 
 		editText.setSelection (0, currentName.length ()); 
 		AlertDialog dialog = new AlertDialog.Builder (activity) 
 									 .setTitle ( 
 									 		oldName == null ? R.string.title_new_folder : 
-													(oldName.elementAt (0).isDirectory () ? 
+													(oldName.isDirectory () ? 
 															 R.string.title_ren_folder : 
 															 R.string.title_ren_file 
 													)
@@ -780,7 +786,7 @@ public class NoteActivity extends Activity {
 												 } 
 											 } else { 
 											 	 SharedPreferences.Editor editor = SelectionManager.OWNED_FOLDERS.edit (); 
-												 for (File oldFile : oldName) { 
+												 if (oldName.files != null) for (File oldFile : oldName.files) { 
 													 File nowFile = new File (oldFile.getParentFile (), 
 																					 nowName); 
 													 if (oldFile.renameTo (nowFile)) { 
@@ -794,6 +800,20 @@ public class NoteActivity extends Activity {
 														 success = false; 
 													 } 
 												 } 
+												 if (oldName.singleFile != null) { 
+												 	File nowFile = new File (oldName.singleFile.getParentFile (), 
+															nowName); 
+												 	if (oldName.singleFile.renameTo (nowFile)) { 
+												 		success &= true; 
+												 		boolean isOwnedByMe = SelectionManager.OWNED_FOLDERS.contains (oldName.singleFile.getPath ()); 
+												 		if (isOwnedByMe) { 
+												 			editor.remove (oldName.singleFile.getPath ()); 
+												 			editor.putBoolean (nowFile.getPath (), true); 
+														} 
+													} else { 
+												 		success = false; 
+													} 
+												 } 
 												 editor.apply (); 
 												 if (success) { 
 													 // Renamed. 
@@ -803,7 +823,7 @@ public class NoteActivity extends Activity {
 												 } else { 
 													 // Try rename again? 
 													 userRenameFile (activity, oldName,
-															 activity.getString (oldName.elementAt (0).isDirectory () ? 
+															 activity.getString (oldName.isDirectory () ? 
 																				R.string.msg_could_not_ren_folder : 
 																				R.string.msg_could_not_ren_file 
 															 ) 
@@ -817,7 +837,7 @@ public class NoteActivity extends Activity {
 		dialog.show (); 
 	} 
 	boolean mDeleteInProgress = false; 
-	boolean userDeleteFiles (final Vector<Vector<File>> folders) { 
+	boolean userDeleteFiles (final Vector<SelectionManager.FileEntry> folders) { 
 		if (!initReady) return false; 
 		if (mDeleteInProgress) { 
 			AlertDialog dialog = new AlertDialog.Builder (this) 
@@ -832,18 +852,20 @@ public class NoteActivity extends Activity {
 		int ownedCount = 0; 
 		int otherCount = 0; 
 		// First count how many of these we own, and how many we don't own. 
-		for (Vector<File> files : folders) { 
-			for (File file : files) { 
+		for (SelectionManager.FileEntry entry : folders) { 
+			if (entry.files != null) for (File file : entry.files) { 
 				if (SelectionManager.isOwnedByMe (file)) 
 					ownedCount++; 
 				else otherCount++; 
 			} 
+			if (entry.singleFile != null && !entry.isMultipage) 
+				ownedCount++; 
 		} 
 		final int sOwned = ownedCount; 
 		final int sOther = otherCount; 
 		// Next, display an appropriate confirmation prompt to the user. 
 		String msg; 
-		if (folders.elementAt (0).elementAt (0).isDirectory ()) { 
+		if (folders.elementAt (0).isDirectory ()) { 
 			msg = ownedCount != 0 && otherCount == 0 ? 
 						  (ownedCount == 1 ? getString (R.string.msg_confirm_delete_owned_folders_s) : 
 								   getString (R.string.msg_confirm_delete_owned_folders)) : 
@@ -873,9 +895,13 @@ public class NoteActivity extends Activity {
 							@Override public void run () { 
 								// Task: delete all the folders, except hide the ones that we don't own. 
 								if (sOther != 0) editor = SelectionManager.HIDDEN_FOLDERS.edit (); 
-								for (Vector<File> files : folders) 
-									for (File f : files) 
-										delete (f, true); 
+								for (SelectionManager.FileEntry entry : folders) { 
+									if (entry.files != null) 
+										for (File f : entry.files) 
+											delete (f, true); 
+									if (entry.singleFile != null && !entry.isMultipage) 
+										delete (entry.singleFile, false); 
+								} 
 								if (editor != null) { 
 									editor.apply (); 
 									editor = null; 

@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.IllegalFormatException;
 import java.util.Map;
 import java.util.Vector;
 
@@ -26,17 +27,59 @@ public class SelectionManager {
 	static SharedPreferences PRIVATE_CLIPBOARD = null; 
 	private static final Object CLIPBOARD_MUTEX = new Object (); 
 	
-	Vector<Vector<File>> getSelectedFiles () { 
-		Vector<Vector<File>> result = new Vector<> (mSelection.size ()); 
+	static class FileEntry { 
+		// Set either 'files' or the 'singleFile'+'pageIndex'; not both. 
+		Vector<File> files = null; 
+		File singleFile = null; 
+		int pageIndex = 0; 
+		boolean isMultipage = false; 
+		boolean isDirectory () { 
+			if (files != null && !files.isEmpty ()) 
+				return files.elementAt (0).isDirectory (); 
+			else return singleFile.isDirectory (); 
+		} 
+	} 
+	
+	Vector<FileEntry> getSelectedFiles () { 
+		Vector<FileEntry> result = new Vector<> (mSelection.size ()); 
 		for (String targetName : mSelection) { 
+			boolean found = false; 
 			for (File [] files : mSubfolderList) { 
 				if (!files[0].getName ().equals (targetName)) 
 					continue; 
 				Vector<File> item = new Vector<> (files.length); 
 				for (File f : files) 
 					item.add (f); 
-				result.add (item); 
+				FileEntry entry = new FileEntry (); 
+				entry.files = item; 
+				result.add (entry); 
+				found = true; 
 				break; 
+			} 
+			if (!found) { 
+				int lastColon = targetName.lastIndexOf (':'); 
+				int pageIndex = 0; 
+				boolean isMultipage = false; 
+				String namePart = targetName; 
+				if (lastColon > 0) { 
+					namePart = targetName.substring (0, lastColon); 
+					try {
+						pageIndex = Integer.parseInt (targetName.substring (lastColon + 1)); 
+						isMultipage = true; 
+					} catch (NumberFormatException err) { 
+						// Can't grab page number part. Maybe just the filename has a colon in it? 
+						namePart = targetName; 
+						pageIndex = 0; 
+					} 
+				} 
+				File file = new File (namePart); 
+				if (!file.exists ()) 
+					continue; 
+				FileEntry entry = new FileEntry (); 
+				entry.singleFile = file; 
+				entry.pageIndex = pageIndex; 
+				entry.isMultipage = isMultipage; 
+				result.add (entry); 
 			} 
 		} 
 		return result; 
@@ -53,13 +96,14 @@ public class SelectionManager {
 			if (mMenuRename != null) mMenuRename.setVisible (mSelection.size () == 1); 
 			if (mMenuCut != null) mMenuCut.setVisible (!hasNonOwnedFolders ()); 
 		} 
-		Vector<Vector<File>> lastCalculatedSelected = null; 
+		Vector<FileEntry> lastCalculatedSelected = null; 
 		public boolean hasNonOwnedFolders () { 
-			Vector<Vector<File>> selected = getSelectedFiles (); 
+			Vector<FileEntry> selected = getSelectedFiles (); 
 			if (selected.size () < 1) return false; 
 			boolean hasNonOwnedFolders = false; 
-			for (Vector<File> files : selected) { 
-				for (File file : files) { 
+			for (FileEntry entry : selected) { 
+				Vector<File> files = entry.files; 
+				if (files != null) for (File file : files) { 
 					if (!file.isDirectory ()) continue; 
 					if (SelectionManager.isOwnedByMe (file)) continue; 
 					// Otherwise, not owned by me. 
@@ -87,7 +131,7 @@ public class SelectionManager {
 		} 
 		@Override public boolean onActionItemClicked (ActionMode actionMode, MenuItem menuItem) { 
 			boolean hasNonOwned = hasNonOwnedFolders (); 
-			Vector<Vector<File>> selected = lastCalculatedSelected != null ? lastCalculatedSelected : getSelectedFiles (); 
+			Vector<FileEntry> selected = lastCalculatedSelected != null ? lastCalculatedSelected : getSelectedFiles (); 
 			if (selected.size () < 1) return false; 
 			switch (menuItem.getItemId ()) { 
 				case R.id.action_cut: 
@@ -103,7 +147,7 @@ public class SelectionManager {
 							mActionMode.finish (); 
 					return true; 
 				case R.id.action_rename: 
-					Vector<File> oldName = selected.elementAt (0); 
+					FileEntry oldName = selected.elementAt (0); 
 					if (mContext instanceof NoteActivity) 
 						NoteActivity.userRenameFile ((NoteActivity) mContext, 
 								oldName, ""); 
@@ -197,12 +241,16 @@ public class SelectionManager {
 		return file != null && (OWNED_FOLDERS.contains (file.getPath ()) || isOwnedByMe (file.getParentFile ())); 
 	} 
 	
-	static void cutFiles (Vector<Vector<File>> files) { 
+	static void cutFiles (Vector<FileEntry> files) { 
 		synchronized (CLIPBOARD_MUTEX) { 
 			SharedPreferences.Editor editor = PRIVATE_CLIPBOARD.edit ().clear (); 
-			for (Vector<File> fs : files) 
-				for (File f : fs) 
-					editor.putString (f.getPath (), "cut"); 
+			for (FileEntry entry : files) { 
+				if (entry.files != null) 
+					for (File f : entry.files) 
+						editor.putString (f.getPath (), "cut"); 
+				if (entry.singleFile != null && !entry.isMultipage) 
+					editor.putString (entry.singleFile.getPath (), "cut"); 
+			} 
 			editor.apply (); 
 		} 
 	} 

@@ -251,7 +251,7 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 			boolean showNameView = additionalFile == null && selectionManager.mActionModeActive; 
 			nameView.setVisibility (showNameView ? View.GONE : View.VISIBLE); 
 			checkboxView.setVisibility (showNameView ? View.VISIBLE : View.GONE); 
-			cutIcon.setVisibility (additionalFile == null && SelectionManager.PRIVATE_CLIPBOARD.contains (itemPath) ? View.VISIBLE : View.GONE); 
+			cutIcon.setVisibility (additionalFile == null && SelectionManager.isCut (itemPath) ? View.VISIBLE : View.GONE); 
 			nameView.setText (itemFile.getName ()); 
 			checkboxView.setText (itemFile.getName ()); 
 			checkboxView.setChecked (selectionManager.isFileSelected (itemFile.getName ())); 

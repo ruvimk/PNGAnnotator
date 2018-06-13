@@ -699,6 +699,7 @@ public class NoteActivity extends Activity {
 		mRvBigPages.getViewTreeObserver ().addOnGlobalLayoutListener (mOnGlobalLayout); 
 		mNotesAdapter.notifyDataSetChanged (); 
 		mNotesAdapter.forceRedrawAll (); 
+		rearrangeManager.update (); 
 	} 
 	int getScrollSpace () { 
 		if (!initReady) return 0; 
@@ -1276,6 +1277,7 @@ public class NoteActivity extends Activity {
 		ViewGroup.LayoutParams lpNote = mScalePageContainer.getLayoutParams (); 
 		FrameLayout.LayoutParams lpNoteFL = (FrameLayout.LayoutParams) lpNote; 
 		lpNoteFL.topMargin = canEdit () ? getResources ().getDimensionPixelOffset (R.dimen.pen_options_height) : 0; 
+		rearrangeManager.update (); 
 	} 
 	void updateZoomedInPivot () { 
 		if (uiZoomedInFlag) { 
@@ -1457,6 +1459,11 @@ public class NoteActivity extends Activity {
 			} 
 			@Override public boolean canSwipe (int direction) { 
 				return direction <= 0 && canGoBack () && mScalePageContainer.currentScale == 1; 
+			} 
+		}); 
+		mRvBigPages.setScrollCallback (new SwipeableRecyclerView.ScrollCallback () { 
+			@Override public void onScrollRecyclerView (int dx, int dy) { 
+				rearrangeManager.update (); 
 			} 
 		}); 
 		// Put it into the list only if it's not empty (to avoid a scroll bar problem): 

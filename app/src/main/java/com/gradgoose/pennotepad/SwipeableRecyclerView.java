@@ -35,9 +35,16 @@ public class SwipeableRecyclerView extends RecyclerView {
 		void swipeComplete (int direction); 
 		boolean canSwipe (int direction); 
 	} 
+	public interface ScrollCallback { 
+		void onScrollRecyclerView (int dx, int dy); 
+	} 
 	SwipeCallback mCallback = null; 
+	ScrollCallback mScrollCallback = null; 
 	void setSwipeCallback (SwipeCallback callback) { 
 		mCallback = callback; 
+	} 
+	void setScrollCallback (ScrollCallback callback) { 
+		mScrollCallback = callback; 
 	} 
 	
 //	ScaleGestureDetector mScaleGestureDetector = null; 
@@ -80,6 +87,16 @@ public class SwipeableRecyclerView extends RecyclerView {
 //				isScaleEvent = false; 
 //			} 
 //		}); 
+		addOnScrollListener (new OnScrollListener () { 
+			@Override public void onScrollStateChanged (RecyclerView recyclerView, int newState) { 
+				super.onScrollStateChanged (recyclerView, newState); 
+			} 
+			@Override public void onScrolled (RecyclerView recyclerView, int dx, int dy) { 
+				super.onScrolled (recyclerView, dx, dy); 
+				if (mScrollCallback != null) 
+					mScrollCallback.onScrollRecyclerView (dx, dy); 
+			} 
+		}); 
 	} 
 	public void setParentFolder (Vector<File> browsingParentFolder, String nowBrowsingFolderName) { 
 		mParentFolder = browsingParentFolder; 

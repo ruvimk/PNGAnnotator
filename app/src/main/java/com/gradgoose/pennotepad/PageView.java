@@ -60,6 +60,8 @@ public class PageView extends ImageView implements TouchInfoSetter {
 	File itemFile = null; 
 	int itemPage = 0; 
 	
+	int tintColor = Color.TRANSPARENT; 
+	
 	final EditHolder edit = new EditHolder (); 
 	final PngEdit.Cache strokeCache = new PngEdit.Cache (); 
 	
@@ -67,6 +69,12 @@ public class PageView extends ImageView implements TouchInfoSetter {
 	
 	static class EditHolder { 
 		PngEdit value = null; 
+	} 
+	
+	public void setTintColor (int color) { 
+		if (color == tintColor) return; 
+		tintColor = color; 
+		invalidate (); 
 	} 
 	
 	RequestRedraw redrawRequestListener = null; 
@@ -985,6 +993,10 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		// Draw a border around this view: 
 		borderPaint.setStrokeWidth (2 * borderWidth); 
 		canvas.drawRect (0, 0, getWidth (), getHeight (), borderPaint); 
+		// Tint color: 
+		if (tintColor != Color.TRANSPARENT) { 
+			canvas.drawColor (tintColor); 
+		} 
 	} 
 	
 } 

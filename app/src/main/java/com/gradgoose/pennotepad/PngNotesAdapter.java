@@ -597,7 +597,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			topRightView.setVisibility (pageNumberLabel.isEmpty () ? View.GONE : View.VISIBLE); 
 			cbSelect.setVisibility (selectionManager.mActionModeActive ? View.VISIBLE : View.GONE); 
 			String fileString = getFileString (); 
-			cbSelect.setChecked (selectionManager.isFileSelected (fileString)); 
+			boolean fileSelected = selectionManager.isFileSelected (fileString); 
+			cbSelect.setChecked (fileSelected); 
 			cbSelect.setOnTouchListener (checkboxTouchListener); 
 			cbSelect.setOnClickListener (onToggleSelectClick); 
 			ivCutIcon.setVisibility (SelectionManager.isCut (fileString) ? View.VISIBLE : View.GONE); 
@@ -622,6 +623,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			if (mColorMode > 0) { 
 				pageView.setColorFilter (new ColorMatrixColorFilter (DARK_MODE)); 
 			} else pageView.setColorFilter (null); 
+			pageView.setTintColor (fileSelected ? Color.argb (128, 200, 200, 255) : Color.TRANSPARENT); 
 			if (mIsPDF) pageView.mSizeChangeCallback = new PageView.SizeChanged () { 
 				@Override public void onSizeChanged () { 
 //					renderPage (pageIndex, 0, 0, 0, 0, 1, true); 

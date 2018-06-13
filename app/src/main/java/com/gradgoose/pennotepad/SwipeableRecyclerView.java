@@ -263,7 +263,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 					} 
 				} else if (swipeDelta == 0) {
 					Log.i (TAG, "MotionEvent: swipeDelta = 0; "); 
-					checkGlobalClick (x, y); 
+					checkGlobalClick (x, y, event.getToolType (0)); 
 				} else { 
 					swipeDelta = (swipeDelta > 0 ? 1 : -1) * MIN_DELTA_TO_SWIPE * 0.9f; 
 				} 
@@ -279,11 +279,11 @@ public class SwipeableRecyclerView extends RecyclerView {
 	} 
 	static final Rect checkBoundsG = new Rect (); 
 	static final Rect checkBoundsL = new Rect (); 
-	static boolean checkClick (int globalX, int globalY, ViewGroup viewGroup) { 
+	static boolean checkClick (int globalX, int globalY, int toolType, ViewGroup viewGroup) { 
 		for (int i = 0; i < viewGroup.getChildCount (); i++) { 
 			View child = viewGroup.getChildAt (i); 
 			if (child instanceof ViewGroup) { 
-				if (checkClick (globalX, globalY, (ViewGroup) child)) { 
+				if (checkClick (globalX, globalY, toolType, (ViewGroup) child)) { 
 					child.performClick (); 
 					return true; 
 				} 
@@ -295,8 +295,11 @@ public class SwipeableRecyclerView extends RecyclerView {
 					child.getLocalVisibleRect (checkBoundsL); 
 					int left = checkBoundsG.left - checkBoundsL.left; 
 					int top = checkBoundsG.top - checkBoundsL.top; 
-					if (child instanceof TouchInfoSetter) 
-						((TouchInfoSetter) child).setLastTouchedPoint (globalX - left, globalY - top); 
+					if (child instanceof TouchInfoSetter) { 
+						TouchInfoSetter infoSetter = (TouchInfoSetter) child; 
+						infoSetter.setLastTouchedPoint (globalX - left, globalY - top); 
+						infoSetter.setLastTouchedToolType (toolType); 
+					} 
 					child.performClick (); 
 					return true; 
 				} 
@@ -307,14 +310,14 @@ public class SwipeableRecyclerView extends RecyclerView {
 	float firstInterceptX = 0; 
 	float firstInterceptY = 0; 
 	boolean isScaleEvent = false; 
-	void checkGlobalClick (float x, float y) { 
+	void checkGlobalClick (float x, float y, int toolType) { 
 		Log.i (TAG, "checkGlobalClick (" + x + ", " + y + ")"); 
 		Rect meG = new Rect (); 
 		Rect meL = new Rect (); 
 		getGlobalVisibleRect (meG); 
 		int left = meG.left - meL.left; 
 		int top = meG.top - meL.top; 
-		checkClick ((int) x + left, (int) y + top, this); 
+		checkClick ((int) x + left, (int) y + top, toolType, this); 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (!allowTouch) return false; 
@@ -331,7 +334,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 //				if (parent instanceof ScaleDetectorContainer) { 
 //					((ScaleDetectorContainer) parent).checkClick (); 
 //				} 
-				checkGlobalClick (x, y); 
+				checkGlobalClick (x, y, event.getToolType (0)); 
 			} 
 		} 
 		boolean horizontal = isHorizontalOrientation (); 

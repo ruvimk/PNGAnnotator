@@ -802,9 +802,10 @@ public class NoteActivity extends Activity {
 												 } 
 											 } else { 
 											 	 SharedPreferences.Editor editor = SelectionManager.OWNED_FOLDERS.edit (); 
+												 String suffix = nowName.endsWith (fileExtension) ? "" : fileExtension; 
 												 if (oldName.files != null) for (File oldFile : oldName.files) { 
 													 File nowFile = new File (oldFile.getParentFile (), 
-																					 nowName + fileExtension); 
+																					 nowName + suffix); 
 													 if (oldFile.renameTo (nowFile)) { 
 														 success &= true; 
 														 boolean isOwnedByMe = SelectionManager.OWNED_FOLDERS.contains (oldFile.getPath ()); 
@@ -818,7 +819,7 @@ public class NoteActivity extends Activity {
 												 } 
 												 if (oldName.singleFile != null) { 
 												 	File nowFile = new File (oldName.singleFile.getParentFile (), 
-															nowName + fileExtension); 
+															nowName + suffix); 
 												 	if (oldName.singleFile.renameTo (nowFile)) { 
 												 		success &= true; 
 												 		boolean isOwnedByMe = SelectionManager.OWNED_FOLDERS.contains (oldName.singleFile.getPath ()); 

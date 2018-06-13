@@ -21,6 +21,7 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:layout_marginTop="@dimen/pen_options_height"
+		android:layout_marginBottom="0dp"
 		>
 		<com.gradgoose.pennotepad.SwipeableRecyclerView
 			android:id="@+id/rvBigPages"
@@ -32,6 +33,37 @@
 			android:background="#eee"
 			android:paddingBottom="@dimen/pg_up_down_btn_size"
 			/>
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="match_parent"
+			android:orientation="vertical"
+			android:layout_gravity="end|top"
+			android:background="#eef"
+			android:layout_marginTop="40dp"
+			android:layout_marginBottom="80dp"
+			>
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content" 
+				android:layout_gravity="center" 
+				android:text="1 item"
+				android:textSize="20sp"
+				/>
+			<Button
+				android:layout_width="wrap_content"
+				android:layout_height="0dp" 
+				android:layout_weight="1"
+				android:text="MOVE\nUP"
+				android:drawableTop="@drawable/ic_big_arrow_up"
+				/>
+			<Button
+				android:layout_width="wrap_content"
+				android:layout_height="0dp"
+				android:layout_weight="1"
+				android:text="MOVE\nDOWN"
+				android:drawableBottom="@drawable/ic_big_arrow_down"
+				/>
+		</LinearLayout>
 	</com.gradgoose.pennotepad.ScaleDetectorContainer> 
 	<ImageView
 		android:id="@+id/ivGoPageUp"

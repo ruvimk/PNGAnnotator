@@ -512,6 +512,19 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		}; 
 		final View.OnLongClickListener onLongClickListener = new View.OnLongClickListener () { 
 			@Override public boolean onLongClick (View view) { 
+				// Exit if it's a pen that's selected and (we're not in pen mode or it's not a finger that did the touch ...): 
+				int toolType = pageView.getLastTouchedToolType (); 
+				boolean toolMode = pageView.mToolMode; 
+				boolean penMode = pageView.mWriteDetector.isInPenMode (); 
+				boolean isFinger = toolType == MotionEvent.TOOL_TYPE_FINGER || 
+										   toolType == MotionEvent.TOOL_TYPE_MOUSE || 
+										   toolType == MotionEvent.TOOL_TYPE_UNKNOWN; 
+				if ((toolMode && !penMode) || // Condition 1: Using a tool with a finger. E.g., writing with a finger. 
+							(toolMode && !isFinger) // Condition 2: Using a tool with a PEN (not finger), in pen mode. 
+						) { 
+					return false; 
+				} 
+				// Exit if the note interact listener chooses to consume the event: 
 				if (mOnNoteInteractListener != null && mOnNoteInteractListener.onNotePageLongClicked (mItemFile, mListPosition)) 
 					return true; 
 				// Select file: 

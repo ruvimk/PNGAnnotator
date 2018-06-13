@@ -30,6 +30,7 @@
 			android:scrollbars="vertical|horizontal"
 			android:animateLayoutChanges="false"
 			android:background="#eee"
+			android:paddingBottom="@dimen/pg_up_down_btn_size"
 			/>
 	</com.gradgoose.pennotepad.ScaleDetectorContainer> 
 	<ImageView

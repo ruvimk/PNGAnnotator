@@ -663,12 +663,13 @@ public class NoteActivity extends Activity {
 		int increment = isUsingGrid () ? mOverviewColumnCount : 1; 
 		int position = 0; 
 		int topY = (int) (mRvBigPages.getHeight () * getVisibleTopY ()); 
+		RecyclerView.LayoutManager lm = mRvBigPages.getLayoutManager (); 
 		for (int i = 0; i < childCount; i++) { 
 			View child = mRvBigPages.getChildAt (i); 
 			int candidateTop = child.getTop (); 
 			if (candidateTop > topY) 
 				break; 
-			position = i; 
+			position = lm.getPosition (child); 
 		} 
 		return position - position % increment; 
 	} 

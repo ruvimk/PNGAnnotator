@@ -1443,7 +1443,7 @@ public class NoteActivity extends Activity {
 				uiZoomPivotY = pivotY / sizeFactorY; 
 			} 
 		}); 
-		mSubfoldersLinearLayoutManager = new LinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
+		mSubfoldersLinearLayoutManager = new MyLinearLayoutManager (this, LinearLayoutManager.HORIZONTAL, false); 
 		mSubfoldersGridLayoutManager = new GridLayoutManager (this, 3, LinearLayoutManager.VERTICAL, false); 
 		mRvSubfolderBrowser.setAdapter (mSubfoldersAdapter); 
 		
@@ -1659,6 +1659,8 @@ public class NoteActivity extends Activity {
 				// Scroll to the initial scroll position, and forget the scroll position (so we 
 				// don't mess up and reuse it when the user doesn't want us to): 
 				int initialScrollItemSpace = (int) (mRvBigPages.getWidth () * initialScrollFraction); 
+				Log.i (TAG, "onGlobalLayout (); scrollToPositionWithOffset (" + initialScrollItemPosition + ", " + 
+					initialScrollItemSpace + ")"); 
 				mNotesLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 
 						initialScrollItemSpace); 
 				mNoteOverviewLayoutManager.scrollToPositionWithOffset (initialScrollItemPosition, 

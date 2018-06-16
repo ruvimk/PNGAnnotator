@@ -662,21 +662,22 @@ public class NoteActivity extends Activity {
 	} 
 	int getFocusedScrollPosition () { 
 		if (!initReady || mRvBigPages == null || mRvBigPages.getChildCount () < 1) return -1; 
-		int childCount = mRvBigPages.getChildCount (); 
-		int increment = isUsingGrid () ? mOverviewColumnCount : 1; 
-		int position = 0; 
-		int bottomY = (int) (mRvBigPages.getHeight () * getVisibleBottomY ()); 
-		int prevCandidateTop = mRvBigPages.getChildAt (0).getTop (); 
-		RecyclerView.LayoutManager lm = mRvBigPages.getLayoutManager (); 
-		for (int i = 0; i < childCount; i++) { 
-			View child = mRvBigPages.getChildAt (i); 
-			int candidateTop = child.getTop (); 
-			if (candidateTop > bottomY || Math.abs (candidateTop) > Math.abs (prevCandidateTop)) 
-				break; 
-			position = lm.getPosition (child); 
-			prevCandidateTop = candidateTop; 
-		} 
-		return position - position % increment; 
+		return mNotesLayoutManager.findFirstVisibleItemPosition (); 
+//		int childCount = mRvBigPages.getChildCount (); 
+//		int increment = isUsingGrid () ? mOverviewColumnCount : 1; 
+//		int position = 0; 
+//		int bottomY = (int) (mRvBigPages.getHeight () * getVisibleBottomY ()); 
+//		int prevCandidateTop = mRvBigPages.getChildAt (0).getTop (); 
+//		RecyclerView.LayoutManager lm = mRvBigPages.getLayoutManager (); 
+//		for (int i = 0; i < childCount; i++) { 
+//			View child = mRvBigPages.getChildAt (i); 
+//			int candidateTop = child.getTop (); 
+//			if (candidateTop > bottomY || Math.abs (candidateTop) > Math.abs (prevCandidateTop)) 
+//				break; 
+//			position = lm.getPosition (child); 
+//			prevCandidateTop = candidateTop; 
+//		} 
+//		return position - position % increment; 
 	} 
 	float getFocusedScrollFraction () { 
 		int position = getFocusedScrollPosition (); 

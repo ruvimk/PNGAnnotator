@@ -658,7 +658,7 @@ public class NoteActivity extends Activity {
 		return (1 - 1 / mScalePageContainer.currentScale) * uiZoomPivotY; 
 	} 
 	int getFocusedScrollPosition () { 
-		if (!initReady || mRvBigPages == null) return -1; 
+		if (!initReady || mRvBigPages == null || mRvBigPages.getChildCount () < 1) return -1; 
 		int childCount = mRvBigPages.getChildCount (); 
 		int increment = isUsingGrid () ? mOverviewColumnCount : 1; 
 		int position = 0; 
@@ -675,10 +675,10 @@ public class NoteActivity extends Activity {
 	} 
 	float getFocusedScrollFraction () { 
 		int position = getFocusedScrollPosition (); 
+		if (position < 0) return -1; 
 		RecyclerView.LayoutManager lm = mRvBigPages.getLayoutManager (); 
 		View viewByPosition = lm.findViewByPosition (position); 
-		return position < 0 ? -1 : 
-					   (viewByPosition != null ? 
+		return (viewByPosition != null ? 
 								(float) viewByPosition.getTop () / mRvBigPages.getWidth () 
 								- getVisibleTopY () 
 								: 0); 

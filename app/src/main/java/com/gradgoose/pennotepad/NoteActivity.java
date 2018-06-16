@@ -1175,7 +1175,7 @@ public class NoteActivity extends Activity {
 		if (!initReady) return; 
 		notesZoomPivotX = startPivotX; 
 		notesZoomPivotY = startPivotY; 
-		targetZoomPivotX = (float) (getScrollPosition () % mOverviewColumnCount) * mScalePageContainer.getWidth () / mOverviewColumnCount + 
+		targetZoomPivotX = (float) (getFocusedScrollPosition () % mOverviewColumnCount) * mScalePageContainer.getWidth () / mOverviewColumnCount + 
 								   (float) mScalePageContainer.getWidth () / (2 * mOverviewColumnCount); 
 		targetZoomPivotY = startPivotY; 
 		initialScrollFraction = targetZoomPivotY / (float) mScalePageContainer.getWidth (); 
@@ -1406,7 +1406,7 @@ public class NoteActivity extends Activity {
 		}; 
 		mScalePageContainer.setOnScaleDoneListener (new ScaleDetectorContainer.OnScaleDone () { 
 			@Override public void onZoomLeave (float pivotX, float pivotY) { 
-				initialScrollItemPosition = getScrollPosition (); 
+				initialScrollItemPosition = getFocusedScrollPosition (); 
 				prefs.edit ().putBoolean ("notes-overview", true).apply (); 
 				animateZoomLeave (pivotX, pivotY); 
 			} 

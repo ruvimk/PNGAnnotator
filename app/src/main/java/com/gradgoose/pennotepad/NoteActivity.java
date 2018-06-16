@@ -675,9 +675,11 @@ public class NoteActivity extends Activity {
 	} 
 	float getFocusedScrollFraction () { 
 		int position = getFocusedScrollPosition (); 
+		RecyclerView.LayoutManager lm = mRvBigPages.getLayoutManager (); 
+		View viewByPosition = lm.findViewByPosition (position); 
 		return position < 0 ? -1 : 
-					   (mRvBigPages.getChildAt (position) != null ? 
-								(float) mRvBigPages.getChildAt (position).getTop () / mRvBigPages.getWidth () 
+					   (viewByPosition != null ? 
+								(float) viewByPosition.getTop () / mRvBigPages.getWidth () 
 								- getVisibleTopY () 
 								: 0); 
 	} 

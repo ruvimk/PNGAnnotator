@@ -283,7 +283,7 @@ public class ScaleDetectorContainer extends FrameLayout {
 		setPivot (needPivotX, needPivotY); 
 		if ((needPivotY > getHeight () || needPivotY < 0) && getChildCount () > 0) { 
 			int direction = offsetY < 0 ? -1 : +1; 
-			boolean canScroll = _childrenCanScrollVertically (direction); 
+			boolean canScroll = canScrollVertically (-direction); 
 			if (canScroll) { 
 				float h = (needPivotY > 0 ? needPivotY - getHeight () : needPivotY) * (currentScale - 1); 
 //				int sY = h * (offsetY < 0 ? -1 : +1); 

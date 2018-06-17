@@ -93,6 +93,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	final PdfiumCore pdfiumCore; 
 	PdfDocument pdfDocument = null; 
 	int mPdfPageCount = 0; 
+	int mPdfPageSizes [] = new int [0]; 
 	
 	RecyclerView mAttachedRecyclerView = null; 
 	@Override public void onAttachedToRecyclerView (RecyclerView recyclerView) { 
@@ -199,8 +200,16 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			Log.e (TAG, "Error finding PDF document. " + err.toString ()); 
 		} 
 		if (fd != null) try { 
-			pdfDocument = pdfiumCore.newDocument (fd); 
-			mPdfPageCount = pdfiumCore.getPageCount (pdfDocument); 
+			synchronized (pdfiumCore) { 
+				pdfDocument = pdfiumCore.newDocument (fd); 
+				mPdfPageCount = pdfiumCore.getPageCount (pdfDocument); 
+				mPdfPageSizes = new int [2 * mPdfPageCount]; 
+				for (int i = 0; i < mPdfPageCount; i++) { 
+					pdfiumCore.openPage (pdfDocument, i); 
+					mPdfPageSizes[2 * i + 0] = pdfiumCore.getPageWidth (pdfDocument, i); 
+					mPdfPageSizes[2 * i + 1] = pdfiumCore.getPageHeight (pdfDocument, i); 
+				} 
+			} 
 		} catch (IOException err) { 
 			Log.e (TAG, "Error opening PDF document. " + err.toString ()); 
 		} 
@@ -574,6 +583,12 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 				mRedrawParams.pageView = pageView; 
 				mRedrawParams.file = null; 
 				mRedrawParams.dirty = true; 
+			} 
+			@Override public int getPageWidth (int page) { 
+				return page < mPdfPageCount ? mPdfPageSizes[2 * page + 0] : 0; 
+			} 
+			@Override public int getPageHeight (int page) { 
+				return page < mPdfPageCount ? mPdfPageSizes[2 * page + 1] : 0; 
 			} 
 		}; 
 		public Holder (View root) { 

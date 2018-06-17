@@ -85,6 +85,8 @@ public class PageView extends ImageView implements TouchInfoSetter {
 								   int wideScaleParameter, boolean skipDrawingIfPutParametersTheSame); 
 		void requestRedrawImage (File imageFile, PageView view); 
 		void requestClearImage (PageView view); 
+		int getPageWidth (int page); 
+		int getPageHeight (int page); 
 	} 
 	
 	public interface ErrorCallback { 
@@ -630,6 +632,10 @@ public class PageView extends ImageView implements TouchInfoSetter {
 				needRotateAngle = 0; 
 			} 
 			// We set natural width and height for the annotated page case after we load the edits. 
+		} else if (isPDF) { 
+			// Let's load the PDF page size for now ... 
+			mBitmapNaturalWidth = redrawRequestListener.getPageWidth (page); 
+			mBitmapNaturalHeight = redrawRequestListener.getPageHeight (page); 
 		} 
 		// Load the image with the Glide library: 
 		loadGlideImage (file); 

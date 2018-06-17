@@ -470,6 +470,29 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 											   0, 0, 0, 1f, 0 // alpha 
 	};
 	
+	final View.OnTouchListener generalTouchListener = new View.OnTouchListener () { 
+		float firstX = 0; 
+		float firstY = 0; 
+		boolean noDisallowIntercept = false; 
+		@Override public boolean onTouch (View view, MotionEvent motionEvent) { 
+			float x = motionEvent.getX (); 
+			float y = motionEvent.getY (); 
+			if (motionEvent.getAction () == MotionEvent.ACTION_DOWN) { 
+				firstX = x; 
+				firstY = y; 
+				noDisallowIntercept = false; 
+				view.getParent ().requestDisallowInterceptTouchEvent (true); 
+			} 
+			if (!noDisallowIntercept && Math.sqrt ((x - firstX) * (x - firstX) 
+														   + (y - firstY) * (y - firstY) 
+			) > touchSlop) { 
+				noDisallowIntercept = true; 
+				view.getParent ().requestDisallowInterceptTouchEvent (false); 
+			} 
+			return false; 
+		} 
+	}; 
+	
 	public class Holder extends RecyclerView.ViewHolder { 
 		final PageView pageView; 
 		final TextView titleView; 
@@ -621,6 +644,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			mListPosition = positionInList; 
 			pageView.setOnClickListener (onClickListener); 
 			pageView.setOnLongClickListener (onLongClickListener); 
+			pageView.setOnTouchListener (generalTouchListener); 
 //			tileContainer.setBackgroundResource (mUsePictureFrameBackground ? android.R.drawable.picture_frame : 0); 
 //			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 

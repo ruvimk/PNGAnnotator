@@ -2,7 +2,6 @@ package com.gradgoose.pennotepad;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -14,16 +13,12 @@ import android.os.ParcelFileDescriptor;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.ActionMode;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -51,7 +46,7 @@ import java.util.Vector;
  * Created by Ruvim Kondratyev on 9/4/2017.
  */
 
-public class PngNotesAdapter extends RecyclerView.Adapter { 
+public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSetter { 
 	static final String TAG = "PngNotesAdapter"; 
 	
 	final Context mContext; 
@@ -99,6 +94,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 	@Override public void onAttachedToRecyclerView (RecyclerView recyclerView) { 
 		super.onAttachedToRecyclerView (recyclerView); 
 		mAttachedRecyclerView = recyclerView; 
+		recyclerView.setOnTouchListener (recyclerViewTouchListener); 
 	} 
 	
 	void setViewMode (int mode) { 
@@ -470,24 +466,50 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 											   0, 0, 0, 1f, 0 // alpha 
 	};
 	
-	final View.OnTouchListener generalTouchListener = new View.OnTouchListener () { 
+	boolean mTouchMoved = false; 
+	float lastTouchedX = 0; 
+	float lastTouchedY = 0; 
+	int lastTouchedTool = 0; 
+	public void setLastTouchedPoint (float x, float y) { 
+		lastTouchedX = x; 
+		lastTouchedY = y; 
+	} 
+	public void setTouchMoved (boolean touchMoved) { 
+		mTouchMoved = touchMoved; 
+	} 
+	public float getLastTouchedX () { 
+		return lastTouchedX; 
+	} 
+	public float getLastTouchedY () { 
+		return lastTouchedY; 
+	} 
+	public void setLastTouchedToolType (int type) { 
+		lastTouchedTool = type; 
+	} 
+	public int getLastTouchedToolType () { 
+		return lastTouchedTool; 
+	} 
+	public boolean hasTouchMoved () { 
+		return mTouchMoved; 
+	} 
+	final View.OnTouchListener recyclerViewTouchListener = new View.OnTouchListener () { 
 		float firstX = 0; 
 		float firstY = 0; 
 		boolean noDisallowIntercept = false; 
 		@Override public boolean onTouch (View view, MotionEvent motionEvent) { 
 			float x = motionEvent.getX (); 
 			float y = motionEvent.getY (); 
+			setLastTouchedPoint (x, y); 
+			setLastTouchedToolType (motionEvent.getToolType (0)); 
 			if (motionEvent.getAction () == MotionEvent.ACTION_DOWN) { 
 				firstX = x; 
 				firstY = y; 
-				noDisallowIntercept = false; 
-				view.getParent ().requestDisallowInterceptTouchEvent (true); 
+				setTouchMoved (false); 
 			} 
 			if (!noDisallowIntercept && Math.sqrt ((x - firstX) * (x - firstX) 
 														   + (y - firstY) * (y - firstY) 
 			) > touchSlop) { 
-				noDisallowIntercept = true; 
-				view.getParent ().requestDisallowInterceptTouchEvent (false); 
+				setTouchMoved (true); 
 			} 
 			return false; 
 		} 
@@ -535,6 +557,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		}; 
 		final View.OnClickListener onClickListener = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
+				if (mTouchMoved) 
+					return; 
 				if (mAllowLinks && clickLink (pageView.itemPage, pageView)) { 
 					Log.i (TAG, "clickLink () returned 'true';"); 
 					return; 
@@ -544,6 +568,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 		}; 
 		final View.OnLongClickListener onLongClickListener = new View.OnLongClickListener () { 
 			@Override public boolean onLongClick (View view) { 
+				// Exit if the finger hasn't been all in one place the whole time: 
+				if (mTouchMoved) 
+					return false; 
 				// Exit if it's a pen that's selected and (we're not in pen mode or it's not a finger that did the touch ...): 
 				int toolType = pageView.getLastTouchedToolType (); 
 				boolean toolMode = pageView.mToolMode; 
@@ -644,7 +671,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter {
 			mListPosition = positionInList; 
 			pageView.setOnClickListener (onClickListener); 
 			pageView.setOnLongClickListener (onLongClickListener); 
-			pageView.setOnTouchListener (generalTouchListener); 
+			pageView.setOnTouchListener (recyclerViewTouchListener); 
 //			tileContainer.setBackgroundResource (mUsePictureFrameBackground ? android.R.drawable.picture_frame : 0); 
 //			if (!mUsePictureFrameBackground) tileContainer.setPadding (0, 0, 0, 0); 
 			pageView.mErrorCallback = mErrorCallback; 

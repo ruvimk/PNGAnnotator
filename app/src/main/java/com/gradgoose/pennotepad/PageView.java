@@ -765,6 +765,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		}).start (); 
 	} 
 	
+	boolean mTouchMoved = false; 
 	float lastTouchedX = 0; 
 	float lastTouchedY = 0; 
 	int lastTouchedToolType = 0; 
@@ -778,6 +779,12 @@ public class PageView extends ImageView implements TouchInfoSetter {
 	@Override public float getLastTouchedX () { return lastTouchedX; } 
 	@Override public float getLastTouchedY () { return lastTouchedY; } 
 	@Override public int getLastTouchedToolType () { return lastTouchedToolType; } 
+	@Override public void setTouchMoved (boolean touchMoved) { 
+		mTouchMoved = touchMoved; 
+	} 
+	@Override public boolean hasTouchMoved () { 
+		return mTouchMoved; 
+	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 
 		setLastTouchedPoint (event.getX (), event.getY ()); 

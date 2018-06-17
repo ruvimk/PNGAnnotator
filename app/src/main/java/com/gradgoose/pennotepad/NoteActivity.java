@@ -1345,6 +1345,7 @@ public class NoteActivity extends Activity {
 														} 
 													}, 
 													selectionManager); 
+		mSubfoldersAdapter.mAdditionalTouchInfo = mNotesAdapter; 
 		mNotesAdapter.setNoteInteractListener (new PngNotesAdapter.OnNoteInteractListener () { 
 			@Override public void onNotePageClicked (File itemFile, int listPosition) { 
 				if (prefs.getBoolean ("notes-overview", false)) { 

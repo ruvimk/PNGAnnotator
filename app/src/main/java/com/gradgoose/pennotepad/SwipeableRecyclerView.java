@@ -11,6 +11,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -23,13 +24,15 @@ import java.util.Vector;
  * Created by Ruvim Kondratyev on 9/16/2017.
  */
 
-public class SwipeableRecyclerView extends RecyclerView { 
+public class SwipeableRecyclerView extends RecyclerView implements TouchInfoSetter { 
 	static final String TAG = "SwipeRV"; 
 	
 	float decayRate = 0.05f; 
 	long timestep = 20; 
 	
 	final float MAX_DISPLACEMENT_FOR_CLICK; 
+	
+	final int touchSlop; 
 	
 	public interface SwipeCallback { 
 		void swipeComplete (int direction); 
@@ -64,6 +67,8 @@ public class SwipeableRecyclerView extends RecyclerView {
 				metrics)); 
 		MAX_DISPLACEMENT_FOR_CLICK = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.5f, 
 				metrics); 
+		ViewConfiguration viewConf = ViewConfiguration.get (context); 
+		touchSlop = viewConf.getScaledTouchSlop (); 
 //		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
 //			float prevScale = 1; 
 //			@Override public boolean onScale (ScaleGestureDetector scaleGestureDetector) { 
@@ -183,6 +188,56 @@ public class SwipeableRecyclerView extends RecyclerView {
 		requestLayout (); 
 		invalidate (); 
 	} 
+	
+	boolean mTouchMoved = false; 
+	float lastTouchedX = 0; 
+	float lastTouchedY = 0; 
+	int lastTouchedTool = 0; 
+	public void setLastTouchedPoint (float x, float y) { 
+		lastTouchedX = x; 
+		lastTouchedY = y; 
+	} 
+	public void setTouchMoved (boolean touchMoved) { 
+		mTouchMoved = touchMoved; 
+	} 
+	public float getLastTouchedX () { 
+		return lastTouchedX; 
+	} 
+	public float getLastTouchedY () { 
+		return lastTouchedY; 
+	} 
+	public void setLastTouchedToolType (int type) { 
+		lastTouchedTool = type; 
+	} 
+	public int getLastTouchedToolType () { 
+		return lastTouchedTool; 
+	} 
+	public boolean hasTouchMoved () { 
+		return mTouchMoved; 
+	} 
+	final View.OnTouchListener touchInfoChecker = new View.OnTouchListener () { 
+		float firstX = 0; 
+		float firstY = 0; 
+		boolean noDisallowIntercept = false; 
+		@Override public boolean onTouch (View view, MotionEvent motionEvent) { 
+			float x = motionEvent.getX (); 
+			float y = motionEvent.getY (); 
+			setLastTouchedPoint (x, y); 
+			setLastTouchedToolType (motionEvent.getToolType (0)); 
+			if (motionEvent.getAction () == MotionEvent.ACTION_DOWN) { 
+				firstX = x; 
+				firstY = y; 
+				setTouchMoved (false); 
+			} 
+			if (!noDisallowIntercept && Math.sqrt ((x - firstX) * (x - firstX) 
+														   + (y - firstY) * (y - firstY) 
+			) > touchSlop) { 
+				setTouchMoved (true); 
+			} 
+			return false; 
+		} 
+	}; 
+	
 	// Touch override: 
 	boolean allowTouch = true; 
 	// Touch event data: 
@@ -208,6 +263,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 	@Override public boolean onTouchEvent (MotionEvent event) { 
 //		if (isScaleEvent) mScaleGestureDetector.onTouchEvent (event); 
 		if (!allowTouch) return false; 
+		touchInfoChecker.onTouch (this, event); 
 		if (event.getAction () == MotionEvent.ACTION_UP) isScaleEvent = false; 
 		if (handleTouch ()) { 
 			if (isScaleEvent) { 
@@ -329,6 +385,10 @@ public class SwipeableRecyclerView extends RecyclerView {
 	boolean isScaleEvent = false; 
 	void checkGlobalClick (float x, float y, int toolType) { 
 		Log.i (TAG, "checkGlobalClick (" + x + ", " + y + ")"); 
+		if (hasTouchMoved ()) { 
+			Log.i (TAG, "Touch has moved since ACTION_DOWN; skipping click checking ..."); 
+			return; 
+		} 
 		Rect meG = new Rect (); 
 		Rect meL = new Rect (); 
 		getGlobalVisibleRect (meG); 
@@ -338,6 +398,7 @@ public class SwipeableRecyclerView extends RecyclerView {
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 
 		if (!allowTouch) return false; 
+		touchInfoChecker.onTouch (this, event); 
 		float x = event.getX (); 
 		float y = event.getY (); 
 		if (event.getAction () == MotionEvent.ACTION_DOWN) { 

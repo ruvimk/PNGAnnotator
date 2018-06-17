@@ -164,8 +164,6 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 	} 
 	private View.OnClickListener mOpenSubfolderOnclick = new View.OnClickListener () { 
 		@Override public void onClick (View view) { 
-			if (mAdditionalTouchInfo != null && mAdditionalTouchInfo.hasTouchMoved ()) 
-				return; // Do nothing if we have just been scrolling or something ... not the click we want to catch. 
 			Object tag = view.getTag (R.id.item_file); 
 			if (tag != null && tag instanceof File) { 
 				File itemFile = (File) tag; 
@@ -212,8 +210,6 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		View.OnClickListener mToggleSelectedItemOnclick = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
 				if (!selectionManager.mActionModeActive) return; // Do nothing if not in select mode. 
-				if (mAdditionalTouchInfo != null && mAdditionalTouchInfo.hasTouchMoved ()) 
-					return; // Do nothing if the finger has moved while clicking - it's not really the click we want to catch for this. 
 				Object itemObject = itemView.getTag (R.id.item_file); 
 				File itemFile = itemObject instanceof File ? (File) itemObject : null; 
 				if (itemFile == null) return; 
@@ -228,8 +224,6 @@ public class SubfoldersAdapter extends RecyclerView.Adapter {
 		View.OnLongClickListener mOnLongClick = new View.OnLongClickListener () { 
 			@Override public boolean onLongClick (View view) { 
 				if (selectionManager.mActionModeActive) return false; 
-				if (mAdditionalTouchInfo != null && mAdditionalTouchInfo.hasTouchMoved ()) 
-					return false; // Do nothing if the touch has been moving ... not the click we want to catch. 
 				Object itemObject = itemView.getTag (R.id.item_file); 
 				File itemFile = itemObject instanceof File ? (File) itemObject : null; 
 				if (getAdditionalDirToShow (itemFile) != null) return false; // Cannot select one of these. 

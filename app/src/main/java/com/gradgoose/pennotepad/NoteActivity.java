@@ -1115,7 +1115,8 @@ public class NoteActivity extends Activity {
 			File pdf = new File (pictures, mBrowsingFolders.elementAt (0).getName () + ".pdf"); 
 			maker.render (mNotesAdapter.mList, pdf); 
 			Uri uri = FileProvider.getUriForFile (NoteActivity.this, "com.gradgoose.pennotepad.exportsprovider", pdf); 
-			Intent share = new Intent (Intent.ACTION_SEND, uri); 
+			Intent share = new Intent (Intent.ACTION_SEND); 
+			share.putExtra (Intent.EXTRA_STREAM, uri); 
 			share.setType ("application/pdf"); 
 			if (pdf.exists ()) 
 				startActivity (Intent.createChooser (share, "Share PDF")); 

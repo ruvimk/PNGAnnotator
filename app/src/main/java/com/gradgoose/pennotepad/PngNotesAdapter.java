@@ -563,6 +563,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 					Log.i (TAG, "clickLink () returned 'true';"); 
 					return; 
 				} 
+				if (selectionManager.mActionModeActive) { 
+					// Just toggle-select the page, and go on ... 
+					onToggleSelectClick.onClick (view); 
+					return; 
+				} 
 				if (mOnNoteInteractListener != null) mOnNoteInteractListener.onNotePageClicked (mItemFile, mListPosition); 
 			} 
 		}; 

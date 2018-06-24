@@ -131,16 +131,16 @@ public class PdfMaker {
 		StringBuilder sbStrokes = new StringBuilder (); 
 		sbStrokes.append ("1 j 1 J"); // Round cap, round join. 
 		for (PngEdit.LittleEdit e : edit.mEdits) { 
-			sbStrokes.append (' '); 
-			sbStrokes.append (e.points[0]); 
-			sbStrokes.append (' '); 
-			sbStrokes.append (edit.windowHeight - e.points[1]); 
-			sbStrokes.append (" m"); 
-			for (int j = 2; j < e.points.length; j += 4) { 
+			for (int j = 0; j < e.points.length; j += 4) { 
 				sbStrokes.append (' '); 
 				sbStrokes.append (e.points[j + 0]); 
 				sbStrokes.append (' '); 
 				sbStrokes.append (edit.windowHeight - e.points[j + 1]); 
+				sbStrokes.append (" m"); 
+				sbStrokes.append (' '); 
+				sbStrokes.append (e.points[j + 2]); 
+				sbStrokes.append (' '); 
+				sbStrokes.append (edit.windowHeight - e.points[j + 3]); 
 				sbStrokes.append (" l"); 
 			} 
 			sbStrokes.append (' '); 

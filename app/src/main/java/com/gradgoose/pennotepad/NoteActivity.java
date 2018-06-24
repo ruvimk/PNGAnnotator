@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -1107,10 +1108,14 @@ public class NoteActivity extends Activity {
 //			} 
 //		}).execute (mNotesAdapter.mSubfolderList); 
 		PdfMaker maker = new PdfMaker (this); 
+		File cacheDir = getCacheDir (); 
+		File pictures = new File (cacheDir, "Exports"); 
+		pictures.mkdir (); 
 		try { 
-			File pdf = new File (mPictures, mBrowsingFolders.elementAt (0).getName () + ".pdf"); 
+			File pdf = new File (pictures, mBrowsingFolders.elementAt (0).getName () + ".pdf"); 
 			maker.render (mNotesAdapter.mList, pdf); 
-			Intent share = new Intent (Intent.ACTION_SEND, Uri.fromFile (pdf)); 
+			Uri uri = FileProvider.getUriForFile (NoteActivity.this, "com.gradgoose.pennotepad.exportsprovider", pdf); 
+			Intent share = new Intent (Intent.ACTION_SEND, uri); 
 			share.setType ("application/pdf"); 
 			if (pdf.exists ()) 
 				startActivity (Intent.createChooser (share, "Share PDF")); 

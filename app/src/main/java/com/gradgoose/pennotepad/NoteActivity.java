@@ -757,7 +757,7 @@ public class NoteActivity extends Activity {
 		} 
 		String displayName = currentName; 
 		final String fileExtension; 
-		if (!oldName.isDirectory ()) { 
+		if (oldName != null && !oldName.isDirectory ()) { 
 			String [] parts = splitFileName (currentName); 
 			displayName = parts[0]; 
 			fileExtension = parts[1]; 

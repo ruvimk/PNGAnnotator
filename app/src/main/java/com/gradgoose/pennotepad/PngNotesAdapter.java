@@ -557,8 +557,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 		}; 
 		final View.OnClickListener onClickListener = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
-				if (mTouchMoved) 
-					return; 
 				if (mAllowLinks && clickLink (pageView.itemPage, pageView)) { 
 					Log.i (TAG, "clickLink () returned 'true';"); 
 					return; 
@@ -573,9 +571,6 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 		}; 
 		final View.OnLongClickListener onLongClickListener = new View.OnLongClickListener () { 
 			@Override public boolean onLongClick (View view) { 
-				// Exit if the finger hasn't been all in one place the whole time: 
-				if (mTouchMoved) 
-					return false; 
 				// Exit if it's a pen that's selected and (we're not in pen mode or it's not a finger that did the touch ...): 
 				int toolType = pageView.getLastTouchedToolType (); 
 				boolean toolMode = pageView.mToolMode; 

@@ -143,6 +143,7 @@ public class PdfMaker {
 				sbStrokes.append (edit.windowHeight - e.points[j + 1]); 
 				sbStrokes.append (" l"); 
 			} 
+			sbStrokes.append (' '); 
 			sbStrokes.append (String.valueOf (e.brushWidth)); 
 			sbStrokes.append (" w "); // Stroke-width. 
 			sbStrokes.append (makePdfColor (e.color)); 

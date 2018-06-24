@@ -586,8 +586,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 				// Exit if the note interact listener chooses to consume the event: 
 				if (mOnNoteInteractListener != null && mOnNoteInteractListener.onNotePageLongClicked (mItemFile, mListPosition)) 
 					return true; 
-				// Select file: 
-				selectionManager.selectFile (getFileString ()); 
+				// Ruvim commented out the following line of code because it's already done in onClick just above this: 
+//				// Select file: 
+//				selectionManager.selectFile (getFileString ()); 
 				// Show the menu, etc., to select more files: 
 				selectionManager.startActionMode (); 
 				return true; 

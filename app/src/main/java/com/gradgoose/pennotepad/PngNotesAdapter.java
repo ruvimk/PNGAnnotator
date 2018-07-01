@@ -89,6 +89,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 	PdfDocument pdfDocument = null; 
 	int mPdfPageCount = 0; 
 	int mPdfPageSizes [] = new int [0]; 
+	int mPdfAvailableSizes = 0; 
+	
+	static final int AVAILABLE_SIZES_FILL_INCREMENT = 16; 
 	
 	RecyclerView mAttachedRecyclerView = null; 
 	@Override public void onAttachedToRecyclerView (RecyclerView recyclerView) { 
@@ -199,12 +202,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 			synchronized (pdfiumCore) { 
 				pdfDocument = pdfiumCore.newDocument (fd); 
 				mPdfPageCount = pdfiumCore.getPageCount (pdfDocument); 
+				mPdfAvailableSizes = 0; 
 				mPdfPageSizes = new int [2 * mPdfPageCount]; 
-				for (int i = 0; i < mPdfPageCount; i++) { 
-					pdfiumCore.openPage (pdfDocument, i); 
-					mPdfPageSizes[2 * i + 0] = pdfiumCore.getPageWidth (pdfDocument, i); 
-					mPdfPageSizes[2 * i + 1] = pdfiumCore.getPageHeight (pdfDocument, i); 
-				} 
+//				for (int i = 0; i < mPdfPageCount; i++) { 
+//					pdfiumCore.openPage (pdfDocument, i); 
+//					mPdfPageSizes[2 * i + 0] = pdfiumCore.getPageWidth (pdfDocument, i); 
+//					mPdfPageSizes[2 * i + 1] = pdfiumCore.getPageHeight (pdfDocument, i); 
+//				} 
 			} 
 		} catch (IOException err) { 
 			Log.e (TAG, "Error opening PDF document. " + err.toString ()); 
@@ -329,8 +333,20 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 	private Thread mRedrawCode = new Thread () { 
 		@Override public void run () { 
 			boolean hasDirty; 
+			setPriority (NORM_PRIORITY - 1); // Drawing the bitmaps is not as high-priority as getting page sizes. 
 			while (mActivityRunning) { 
 				hasDirty = false; 
+				if (mPdfAvailableSizes < mPdfPageCount) { 
+					synchronized (pdfiumCore) { 
+						int i = mPdfAvailableSizes; 
+						for (; i < mPdfAvailableSizes + AVAILABLE_SIZES_FILL_INCREMENT && i < mPdfPageCount; i++) { 
+							pdfiumCore.openPage (pdfDocument, i); 
+							mPdfPageSizes[2 * i + 0] = pdfiumCore.getPageWidth (pdfDocument, i); 
+							mPdfPageSizes[2 * i + 1] = pdfiumCore.getPageHeight (pdfDocument, i); 
+						} 
+						mPdfAvailableSizes = i; 
+					} 
+				} 
 				int cnt = mAllRedrawParams.size (); 
 				for (int i = 0; i < cnt; i++) { 
 					final RedrawParams params = mAllRedrawParams.elementAt (i); 
@@ -636,10 +652,22 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 				mRedrawParams.dirty = true; 
 			} 
 			@Override public int getPageWidth (int page) { 
-				return page < mPdfPageCount ? mPdfPageSizes[2 * page + 0] : 0; 
+				if (page < mPdfAvailableSizes) 
+					return mPdfPageSizes[2 * page + 0]; 
+				if (page < mPdfPageCount) synchronized (pdfiumCore) { 
+					pdfiumCore.openPage (pdfDocument, page); 
+					return pdfiumCore.getPageWidth (pdfDocument, page); 
+				} else return 0; 
+//				return page < mPdfPageCount ? mPdfPageSizes[2 * page + 0] : 0; 
 			} 
 			@Override public int getPageHeight (int page) { 
-				return page < mPdfPageCount ? mPdfPageSizes[2 * page + 1] : 0; 
+				if (page < mPdfAvailableSizes) 
+					return mPdfPageSizes[2 * page + 1]; 
+				if (page < mPdfPageCount) synchronized (pdfiumCore) { 
+					pdfiumCore.openPage (pdfDocument, page); 
+					return pdfiumCore.getPageHeight (pdfDocument, page); 
+				} else return 0; 
+//				return page < mPdfPageCount ? mPdfPageSizes[2 * page + 1] : 0; 
 			} 
 		}; 
 		public Holder (View root) { 

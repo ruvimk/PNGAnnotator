@@ -126,6 +126,15 @@ public class PngEdit {
 	} 
 	public static float [] [] convertPathToPolygons (float path [], float strokeRadius) { 
 		if (path.length < 2) return new float [0] []; 
+		if (path.length == 2) { 
+			float polygons [] [] = new float [1] []; 
+			float polygon [] = polygons[0] = new float [2 * CIRCLE_SEGMENT_COUNT]; 
+			for (int i = 0; i < CIRCLE_SEGMENT_COUNT; i++) { 
+				polygon[2 * i + 0] = (float) (strokeRadius * Math.sin (2f * i / CIRCLE_SEGMENT_COUNT * Math.PI)) + path[0]; 
+				polygon[2 * i + 1] = (float) (strokeRadius * Math.cos (2f * i / CIRCLE_SEGMENT_COUNT * Math.PI)) + path[1]; 
+			} 
+			return polygons; 
+		} 
 		float polygons [] [] = new float [path.length / 2 - 1] []; 
 		float sparePolygon [] = new float [2 * CIRCLE_SEGMENT_COUNT]; 
 		for (int segment = 1; 2 * segment < path.length; segment++) { 

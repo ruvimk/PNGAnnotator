@@ -125,8 +125,77 @@ public class PageView extends ImageView implements TouchInfoSetter {
 	
 	float debug_polygons [] [] = null; 
 	
+	boolean isToolEraser () { 
+		return mTool == NoteActivity.TOOL_ERASER; 
+	} 
+	
 	int executingPushes = 0; // To have some sort of synchronization between pushStrokes (); 
 		class MyWork { 
+			int prevPointCount = 0; 
+			void eraseBegin () {
+				prevPointCount = 0; 
+			} 
+			void eraseNext (WriteDetector.Stroke stroke) { 
+				if (isToolEraser ()) {
+					float brushScale = paperGenerator.getBrushScale ((int) edit.value.windowWidth); 
+					int pointCount = stroke.count ();
+					int prevCount = Math.max (0, prevPointCount - 1); 
+					float path [] = new float [2 * (pointCount - prevCount)];
+					for (int i = 0; i < pointCount - prevCount; i++) {
+						path[2 * i + 0] = stroke.getX (i + prevCount); 
+						path[2 * i + 1] = stroke.getY (i + prevCount); 
+					}
+					float polygons [] [] = PngEdit.convertPathToPolygons (path, mBrush / 2 * brushScale);
+					edit.value.erase (polygons); 
+					debug_polygons = polygons;
+					prevPointCount = pointCount; 
+				} 
+			} 
+			void eraseDone () {
+				boolean isEraser = isToolEraser (); 
+				if (!isEraser) return; 
+				synchronized (edit) {
+					int oldSize = edit.value.mEdits.size (); 
+					try {
+						// TODO:  IF we end up doing non-append operations 
+						// to the LittleEdit list, then we should set 
+						// edit.value.useDifferentialSave = false 
+						// to RE-SAVE the whole file rather than 
+						// just appending the last edits. 
+						// SAME applies to UNDO operations, etc., 
+						// whenever we're NOT simply appending. 
+						boolean needResize = (int) (edit.value.windowWidth * 100 / edit.value.windowHeight) !=
+													 getWidth () * 100 / getHeight () ||
+													 (edit.value.srcPageWidth * 100 / edit.value.srcPageHeight) !=
+															 getWidth () * 100 / getHeight ();
+						if (needResize) {
+							float w = edit.value.windowWidth;
+							float h = w * getHeight () / getWidth ();
+							edit.value.setWindowSize (w, h);
+							edit.value.setImageSize (w, h);
+							edit.value.srcPageWidth = (int) w;
+							edit.value.srcPageHeight = (int) h;
+						}
+						if (isEraser || needResize)
+							edit.value.useDifferentialSave = false; // TODO: Take this into a separate thread, as non-differential save *is* slow. 
+						edit.value.saveEdits (); // Save. 
+						executingPushes--; // Make the counter 0, so strokes can be edited again. 
+					} catch (IOException err) {
+						// Log this error: 
+						err.printStackTrace ();
+						// Restore all the previous edits (to not fool the user of false 'save'): 
+//								if (!hasErase) // (but it gets complicated with erasing, so 
+//									edit.value.mEdits.setSize (oldSize); // just undo writes, no erases). 
+						edit.value.mEdits.setSize (oldSize);
+						// Make the counter 0, so strokes can be edited by other operations now: 
+						executingPushes--;
+					}
+					strokeCache.update (edit.value);
+				}
+						if (!mNowErasing && !mNowWriting && !mNowWhiting)
+			tmpPointCount = 0;
+				invalidate (); 
+		} 
 					public String updateStrokeEdits (WriteDetector.Stroke... params) { 
 						// Wait for any other operations to complete on the strokes. 
 						while (executingPushes > 0) { 
@@ -253,6 +322,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 				}; 
 				MyWork mGlobalPushStroke = new MyWork (); 
 	void pushStrokesInThisThread (WriteDetector.Stroke ... params) { 
+		if (isToolEraser ()) return; // To prevent bugs, let's get rid of the eraser branch here. 
 		mGlobalPushStroke.onPreExecute (); 
 		String result = mGlobalPushStroke.updateStrokeEdits (params); 
 		mGlobalPushStroke.onPostExecute (result); 
@@ -309,9 +379,11 @@ public class PageView extends ImageView implements TouchInfoSetter {
 				tmpPointCount = 2; 
 				tmpPoints[0] = x; 
 				tmpPoints[1] = y; 
-				if (mTool == NoteActivity.TOOL_ERASER) 
+				if (mTool == NoteActivity.TOOL_ERASER) {
 					mNowErasing = true; 
-				else if (mTool == NoteActivity.TOOL_WHITEOUT) 
+					mGlobalPushStroke.eraseBegin (); 
+					mGlobalPushStroke.eraseNext (mWriteDetector.getStroke (strokeID)); 
+				} else if (mTool == NoteActivity.TOOL_WHITEOUT) 
 					mNowWhiting = true; 
 				else mNowWriting = true; 
 				return true; 
@@ -331,6 +403,8 @@ public class PageView extends ImageView implements TouchInfoSetter {
 					System.arraycopy (tmpPoints, 0, now, 0, tmpPointCount); 
 					tmpPoints = now; 
 				} 
+				if (isToolEraser ()) 
+					mGlobalPushStroke.eraseNext (mWriteDetector.getStroke (strokeID)); 
 				invalidate (); // Redraw. 
 				return true; 
 			} 
@@ -344,6 +418,9 @@ public class PageView extends ImageView implements TouchInfoSetter {
 				else mNowWriting = false; 
 				tmpPointCount -= 2; // The last two coordinates are the beginning 
 				// of a new line segment, which is not needed anymore if the stroke is done. 
+				if (isToolEraser ()) 
+					mGlobalPushStroke.eraseDone (); 
+				else 
 				pushStrokesInThisThread (stroke); 
 			} 
 			
@@ -355,18 +432,22 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			
 			@Override public boolean onEraseBegin (int strokeID, float x, float y) { 
 				mNowErasing = true; 
+				mGlobalPushStroke.eraseBegin (); 
+				mGlobalPushStroke.eraseNext (mWriteDetector.getStroke (strokeID)); 
 				return true; 
 			} 
 			
 			@Override public boolean onEraseMove (int strokeID, 
 												  float x0, float y0, 
 												  float x1, float y1) { 
+				mGlobalPushStroke.eraseNext (mWriteDetector.getStroke (strokeID)); 
 				return true; 
 			} 
 			
 			@Override public void onEraseEnd (int strokeID, float x, float y) { 
 				mNowErasing = false;
-				pushStrokesInThisThread (mWriteDetector.getStroke (strokeID)); 
+//				pushStrokesInThisThread (mWriteDetector.getStroke (strokeID)); 
+				mGlobalPushStroke.eraseDone (); 
 			} 
 			
 			@Override public void onEraseCancel (int strokeID) { 

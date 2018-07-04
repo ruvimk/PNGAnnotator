@@ -607,6 +607,10 @@ public class PngEdit {
 					float brushW = buf[i + 4]; 
 					float countP = buf[i + 5]; 
 					ptCount = Math.round (countP); 
+					// Skip this one if it's invisible: 
+					if (brushW == 0 || colorA == 0) { 
+						continue; 
+					} 
 					// Store these: 
 					LittleEdit littleEdit = new LittleEdit (); 
 					littleEdit.color = Color.argb ((int) (colorA * 255), 

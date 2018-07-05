@@ -36,6 +36,8 @@ public class PngEdit {
 	File mVectorEdits = null; 
 	final Vector<LittleEdit> mEdits = new Vector<> (); 
 	
+	File mResources [] = new File [0]; 
+	
 	int mLastIoEditCount = 0; 
 	boolean useDifferentialSave = true; 
 	
@@ -563,6 +565,35 @@ public class PngEdit {
 	} 
 	
 	
+	File loadResource (InputStream inputStream) throws IOException { 
+		byte szBuf [] = new byte [4]; // File size 
+		byte dotExt [] = new byte [4]; // File extension, including the dot; no null terminator; 
+		if (inputStream.read (szBuf) != 4 || inputStream.read (dotExt) != 4) return new File (""); 
+		int resFileSize = (szBuf[0] << 24) + (szBuf[1] << 16) + (szBuf[2] << 8) + szBuf[3]; 
+		File cacheDir = mContext.getCacheDir (); 
+		File resourceFolder = new File (cacheDir, "NotepadResources"); 
+		if (!resourceFolder.mkdirs ()) 
+			throw new IOException ("Error loading resource: Could not create folder " + resourceFolder.getPath ()); 
+		File output = File.createTempFile ("resource-", new String (dotExt), resourceFolder); 
+		FileOutputStream fos = new FileOutputStream (output, false); 
+		int ofs = 0; 
+		byte buf [] = new byte [4096]; 
+		for (; ofs < resFileSize - buf.length ;) { 
+			int read = inputStream.read (buf); 
+			if (read == 0) { 
+				if (ofs < resFileSize) 
+					throw new IOException ("Error loading resource: Could not read more than " + ofs + " bytes for a " + 
+						resFileSize + " size file. "); 
+				break; 
+			} 
+			fos.write (buf, 0, read); 
+			ofs += read; 
+		} 
+		int read = inputStream.read (buf, 0, resFileSize - ofs); 
+		fos.write (buf, 0, read); 
+		return output; 
+	} 
+	
 	
 	public void loadEdits () throws IOException { 
 		if (mVectorEdits == null || !mVectorEdits.exists ()) return; 
@@ -576,16 +607,34 @@ public class PngEdit {
 					version = 1; 
 				else if (magic[2] == '1' && magic[3] == '1') 
 					version = 2; 
+				else if (magic[2] == '1' && magic[3] == '2') 
+					version = 3; 
 			} else ((FileInputStream) inputStream).getChannel ().position (0); // Seek back. 
 			int totalBytes = inputStream.available (); 
+			if (version == 3) { 
+				byte szBuf [] = new byte [8]; 
+				if (inputStream.read (szBuf) == 8) { 
+					int positionOfStrokeStreamStart = (szBuf[0] << 24) + (szBuf[1] << 16) + (szBuf[2] << 8) + szBuf[3]; 
+					int resourceCount = (szBuf[4] << 24) + (szBuf[5] << 16) + (szBuf[6] << 8) + szBuf[7]; 
+					File resList [] = new File [resourceCount]; 
+					for (int i = 0; i < resourceCount; i++) 
+						resList[i] = loadResource (inputStream); 
+					mResources = resList; 
+					long skipAmount = positionOfStrokeStreamStart - ((FileInputStream) inputStream).getChannel ().position (); 
+					if (skipAmount > 0) 
+						if (inputStream.skip (skipAmount) != skipAmount) 
+							throw new IOException ("Error loading edits: could not skip " + skipAmount + " bytes"); 
+				} 
+				totalBytes = inputStream.available (); 
+			} 
 			ByteBuffer buffer = version > 0 ? ByteBuffer.allocate (totalBytes) : null; 
-			if (version == 1 || version == 2) { 
+			if (version >= 1) { 
 				((FileInputStream) inputStream).getChannel ().read (buffer); 
 				float buf [] = new float [totalBytes / 4]; 
 				buffer.rewind (); // Seek back to position 0, for reading now. 
 				buffer.asFloatBuffer ().get (buf); 
 				int skipHeader = 0; 
-				if (version == 2) { 
+				if (version == 2 || version == 3) { 
 					srcPageWidth = (int) buf[0]; 
 					srcPageHeight = (int) buf[1]; 
 					srcPageBackground = (int) buf[2]; 

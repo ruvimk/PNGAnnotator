@@ -594,6 +594,39 @@ public class PngEdit {
 		return output; 
 	} 
 	
+	void storeResource (OutputStream outputStream, File resource) throws IOException { 
+		String name = resource.getName (); 
+		byte szBuf [] = new byte [4]; 
+		byte dotExt [] = new byte [4]; 
+		int lastDot = name.lastIndexOf ('.'); 
+		for (int i = 0, j = 0; i < 4 && i < name.length () - lastDot; i++, j++) 
+			dotExt[j] = (byte) name.charAt (i); 
+		FileInputStream fis = new FileInputStream (resource); 
+		int totalSize = fis.available (); 
+		szBuf[0] = (byte) (totalSize >> 24); 
+		szBuf[1] = (byte) ((totalSize >> 16) & 0xFF); 
+		szBuf[2] = (byte) ((totalSize >>  8) & 0xFF); 
+		szBuf[3] = (byte) (totalSize & 0xFF); 
+		outputStream.write (szBuf); 
+		outputStream.write (dotExt); 
+		int ofs = 0; 
+		byte buf [] = new byte [4096]; 
+		for (; ofs < totalSize - buf.length ;) { 
+			int read = fis.read (buf); 
+			if (read == 0) { 
+				if (ofs < totalSize) 
+					throw new IOException ("Error storing resource: could not write more than " + ofs + 
+						" bytes for a file of size " + totalSize + " bytes"); 
+				break; 
+			} 
+			outputStream.write (buf, 0, read); 
+			ofs += read; 
+		} 
+		int read = fis.read (buf, 0, totalSize - ofs); 
+		outputStream.write (buf, 0, read); 
+		fis.close (); 
+	} 
+	
 	
 	public void loadEdits () throws IOException { 
 		if (mVectorEdits == null || !mVectorEdits.exists ()) return; 

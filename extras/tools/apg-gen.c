@@ -45,6 +45,26 @@ void packageResource (FILE * output, char * filename) {
 	fclose (input); 
 } 
 
+void writeInt (FILE * output, int value) { 
+	byte buf [4]; 
+	buf[0] = (byte) (value >> 24); 
+	buf[1] = (byte) ((value >> 16) & 0xFF); 
+	buf[2] = (byte) ((value >>  8) & 0xFF); 
+	buf[3] = (byte) (value & 0xFF); 
+	fwrite (buf, 4, 1, output); 
+} 
+void writeFloat (FILE * output, float value) { 
+	float b = value; 
+	fwrite ((void *) (&b), sizeof (b), 1, output); 
+} 
+void writeHeader (FILE * output) { 
+	byte buf [1024]; 
+	FILE * input = fopen ("header.bin", "rb"); 
+	size_t nBytes = fread (buf, 1, 1024, input); 
+	fwrite (buf, 1, nBytes, output); 
+	fclose (input); 
+} 
+
 int main (int argc, char * argv []) { 
 	if (argc < 2) return 0; 
 	FILE * file = fopen (argv[1], "wb+"); 
@@ -66,6 +86,7 @@ int main (int argc, char * argv []) {
 	szBuf[3] = (byte) (streamPos & 0xFF); 
 	fwrite (szBuf, 4, 1, file); 
 	fseek (file, streamPos, SEEK_SET); 
+	writeHeader (file); 
 	// Possibly also write some stroke data here. 
 	fclose (file); 
 	printf ("Done.\n"); 

@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -740,7 +741,7 @@ public class PngEdit {
 			inputStream.close (); 
 		} 
 	} 
-	int SAVE_VERSION = 2; 
+	int SAVE_VERSION = 3; 
 	public void saveEdits () throws IOException { 
 		synchronized (mEdits) { 
 			// The following statement is needed because the magic number needs to be 
@@ -751,14 +752,41 @@ public class PngEdit {
 			// Open the file for writing, with the append flag set to true if saving differentially: 
 			OutputStream outputStream = new FileOutputStream (mVectorEdits, useDifferentialSave); 
 			float ratioHW = imageHeight / imageWidth; 
-			if (SAVE_VERSION == 1 || SAVE_VERSION == 2) { 
+			if (SAVE_VERSION == 1 || SAVE_VERSION == 2 || SAVE_VERSION == 3) { 
 				if (!useDifferentialSave) { 
 					// Write magic number: 
 					byte magic []; 
 					if (SAVE_VERSION == 2)
 						magic = new byte [] { 'G', 'E', '1', '1' }; 
+					else if (SAVE_VERSION == 3) 
+						magic = new byte [] { 'G', 'E', '1', '2' }; 
 					else magic = new byte [] { 'G', 'E', '1', '0' }; 
 					outputStream.write (magic); 
+					// Write resources: 
+					if (SAVE_VERSION == 3) { 
+						// Write the resources header: 
+						byte posInfo [] = new byte [4]; 
+						byte resCount [] = new byte [4]; 
+						resCount[0] = (byte) (mResources.length >> 24); 
+						resCount[1] = (byte) ((mResources.length >> 16) & 0xFF); 
+						resCount[2] = (byte) ((mResources.length >>  8) & 0xFF); 
+						resCount[3] = (byte) (mResources.length & 0xFF); 
+						outputStream.write (posInfo); 
+						outputStream.write (resCount); 
+						// Write resources data: 
+						for (File resource : mResources) 
+							storeResource (outputStream, resource); 
+						// Go back and update the pointer that points to the stroke stream data: 
+						FileChannel channel = ((FileOutputStream) outputStream).getChannel (); 
+						long wasPosition = channel.position (); 
+						channel.position (4); 
+						posInfo[0] = (byte) (wasPosition >> 24); 
+						posInfo[1] = (byte) ((wasPosition >> 16) & 0xFF); 
+						posInfo[2] = (byte) ((wasPosition >>  8) & 0xFF); 
+						posInfo[3] = (byte) (wasPosition & 0xFF); 
+						outputStream.write (posInfo); 
+						channel.position (wasPosition); 
+					} 
 					// Write header: 
 					if (SAVE_VERSION >= 2) {
 						int hdrSize = 4; 

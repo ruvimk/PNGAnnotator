@@ -573,7 +573,7 @@ public class PngEdit {
 		int resFileSize = (szBuf[0] << 24) + (szBuf[1] << 16) + (szBuf[2] << 8) + szBuf[3]; 
 		File cacheDir = mContext.getCacheDir (); 
 		File resourceFolder = new File (cacheDir, "NotepadResources"); 
-		if (!resourceFolder.mkdirs ()) 
+		if (!resourceFolder.exists () && !resourceFolder.mkdirs ()) 
 			throw new IOException ("Error loading resource: Could not create folder " + resourceFolder.getPath ()); 
 		File output = File.createTempFile ("resource-", new String (dotExt), resourceFolder); 
 		FileOutputStream fos = new FileOutputStream (output, false); 

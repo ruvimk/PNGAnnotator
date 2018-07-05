@@ -10,3 +10,6 @@
 *Thumbs.db
 *.apk
 app/release
+*.map
+*.obj
+*.exe

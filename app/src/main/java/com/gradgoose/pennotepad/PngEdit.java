@@ -591,6 +591,7 @@ public class PngEdit {
 		} 
 		int read = inputStream.read (buf, 0, resFileSize - ofs); 
 		fos.write (buf, 0, read); 
+		fos.close (); 
 		return output; 
 	} 
 	

@@ -215,8 +215,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 	} 
 	public void preparePageList () { 
 		if (pdfDocument != null) { 
-			pdfiumCore.closeDocument (pdfDocument); 
-			pdfDocument = null; 
+			synchronized (pdfiumCore) { 
+				pdfiumCore.closeDocument (pdfDocument); 
+				pdfDocument = null; 
+			} 
 		} 
 		ParcelFileDescriptor fd = null; 
 		try { 
@@ -390,7 +392,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 								params.putX, params.putY, params.putWidth, params.putHeight, 
 								params.wideScaleParameter, params.skipDrawingIfPutParametersTheSame); 
 					} else if (!params.pageView.isAnnotatedPage && context instanceof Activity && 
-																	   (Build.VERSION.SDK_INT < 17 || !((Activity) context).isDestroyed ())) { 
+																	   !mActivityDestroyed) { 
 						RequestBuilder builder = Glide.with (context) 
 														 .load (params.file) 
 														 .apply (RequestOptions.skipMemoryCacheOf (true)) 
@@ -816,6 +818,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 			int targetWidth = pageView.getWidth (); 
 			if (mIsPDF && pdfDocument != null && targetWidth > 0) { 
 				synchronized (pdfiumCore) { 
+					if (pdfDocument == null || mActivityDestroyed) return; 
 					pdfiumCore.openPage (pdfDocument, pageIndex); 
 					int rvW = 1; 
 					int rvH = 1; 
@@ -941,8 +944,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 //		for (PageView pageView : mAllPageViews) 
 //			pageView.setImageBitmap (null); // This will recycle the previous bitmap. 
 		if (pdfDocument != null) { 
-			pdfiumCore.closeDocument (pdfDocument); 
-			pdfDocument = null; 
+			synchronized (pdfiumCore) { 
+				pdfiumCore.closeDocument (pdfDocument); 
+				pdfDocument = null; 
+			} 
 		} 
 		Vector<Holder> holders = mHolders; 
 		if (holders != null) 

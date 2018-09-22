@@ -387,14 +387,20 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 					Context context = mContext; 
 					if (context == null) 
 						return; 
+					File file = params.file; 
+					int page = params.page; 
+					int putX = params.putX; 
+					int putY = params.putY; 
+					int putWidth = params.putWidth; 
+					int putHeight = params.putHeight; 
 					if (mIsPDF) { 
-						params.holder.renderPage (params.page, 
-								params.putX, params.putY, params.putWidth, params.putHeight, 
+						params.holder.renderPage (page, 
+								putX, putY, putWidth, putHeight, 
 								params.wideScaleParameter, params.skipDrawingIfPutParametersTheSame); 
 					} else if (!params.pageView.isAnnotatedPage && context instanceof Activity && 
 																	   !mActivityDestroyed) { 
 						RequestBuilder builder = Glide.with (context) 
-														 .load (params.file) 
+														 .load (file) 
 														 .apply (RequestOptions.skipMemoryCacheOf (true)) 
 														 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
 														 .apply (RequestOptions.sizeMultiplierOf (params.pageView.viewMode == PageView.VIEW_SMALL ? 
@@ -448,6 +454,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 							err.printStackTrace (); 
 						} 
 					} 
+					// Check if params has changed while we were redrawing; if it has, then mark it as dirty again: 
+					params.dirty |= file != params.file || 
+										   page != params.page || 
+										   putX != params.putX || 
+										   putY != params.putY || 
+										   putWidth != params.putWidth || 
+										   putHeight != params.putHeight; 
 				} 
 				if (!hasDirty) { 
 					try { sleep (32); } catch (InterruptedException err) { err.printStackTrace (); } 

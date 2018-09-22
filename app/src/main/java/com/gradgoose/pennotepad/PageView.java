@@ -1020,6 +1020,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		if (listener != null) 
 				listener.requestRedrawPagePDF (this, itemFile, itemPage, 
 						renderX, renderY, renderW, renderH, WIDE_SCALE_BUFFER_PARAMETER, true); 
+		Log.i (TAG, "computePageDrawPosition (): Requesting redraw of page index " + itemPage); 
 //		} 
 	} 
 	

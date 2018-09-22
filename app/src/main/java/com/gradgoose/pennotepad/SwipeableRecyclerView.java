@@ -13,6 +13,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
@@ -399,13 +400,25 @@ public class SwipeableRecyclerView extends RecyclerView implements TouchInfoSett
 		int left = meG.left - meL.left; 
 		int top = meG.top - meL.top; 
 		if (mSettingsManager != null && mSettingsManager.isInvisiblePageNavTapEnabled ()) { 
+			// The following code checks if the click was within invisible_size of the top or bottom 
+			// of this view, and if it was, then this is a click on the PAGE_UP or PAGE_DOWN invisible 
+			// button. In that case, we scroll in the appropriate direction, but also ask our parent 
+			// ScaleDetectorContainer to forget that it registered a click just now: otherwise when 
+			// the user tries to tap multiple times to scroll through multiple pages, the parent 
+			// container will interpret that as double-taps and try to zoom in on the tapped area. 
 			int navInvisibleBtnSize = getContext ().getResources ().getDimensionPixelSize (R.dimen.pg_up_down_invisible_size); 
+			ViewParent parent = getParent (); 
+			ScaleDetectorContainer container = parent instanceof ScaleDetectorContainer ? (ScaleDetectorContainer) parent : null; 
 			if (y < navInvisibleBtnSize) { 
 				pageUp (); 
+				if (container != null) 
+					container.forgetLastClickTime (); 
 				return; 
 			} 
 			if (y >= getHeight () - navInvisibleBtnSize) { 
 				pageDown (); 
+				if (container != null) 
+					container.forgetLastClickTime (); 
 				return; 
 			} 
 		} 

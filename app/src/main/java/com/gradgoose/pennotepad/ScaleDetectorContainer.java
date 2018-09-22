@@ -253,6 +253,10 @@ public class ScaleDetectorContainer extends FrameLayout {
 			click (); 
 		} 
 	} 
+	void forgetLastClickTime () { 
+		lastClickTime = 0; 
+		clickCount = 0; 
+	} 
 	void resetTouchVariables (float x, float y, MotionEvent event) {
 		resetTouchVariables (x, y); 
 		orgPointerId = event.getPointerId (0); 

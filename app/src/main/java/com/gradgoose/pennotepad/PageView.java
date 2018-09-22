@@ -527,7 +527,9 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		mode.setMaximumHandleTouchCount (1); // We'll handle zoom from ScaleDetectorContainer. 
 	} 
 	public void setPenMode (boolean penMode) { 
-		mWriteDetector.setPenMode (penMode); 
+		WriteDetector detector = mWriteDetector; 
+		if (detector != null) 
+			detector.setPenMode (penMode); 
 	} 
 	public void setToolMode (boolean toolMode) { 
 		mToolMode = toolMode; 
@@ -585,7 +587,9 @@ public class PageView extends ImageView implements TouchInfoSetter {
 //			} catch (IllegalArgumentException err) { 
 //				Log.e (TAG, err.getLocalizedMessage ()); 
 //			} 
-			redrawRequestListener.requestClearImage (this); 
+			RequestRedraw listener = redrawRequestListener; 
+			if (listener != null) 
+				listener.requestClearImage (this); 
 		} 
 //		setImageBitmap (null); // Safe-guard to make sure we always free up memory we won't need. 
 	} 
@@ -603,7 +607,9 @@ public class PageView extends ImageView implements TouchInfoSetter {
 //			} catch (IllegalArgumentException err) { 
 //				Log.e (TAG, err.getLocalizedMessage ()); 
 //			} 
-			redrawRequestListener.requestClearImage (this); 
+			RequestRedraw listener = redrawRequestListener;
+			if (listener != null)
+				listener.requestClearImage (this); 
 			hasGlideImage = false; 
 		} 
 	} 
@@ -629,7 +635,9 @@ public class PageView extends ImageView implements TouchInfoSetter {
 //				builder.thumbnail (THUMBNAIL_MULTIPLIER); 
 //			builder.into (this); 
 //			hasGlideImage = true; 
-			redrawRequestListener.requestRedrawImage (imageFile, this); 
+			RequestRedraw listener = redrawRequestListener;
+			if (listener != null)
+				listener.requestRedrawImage (imageFile, this); 
 		} 
 		else if (hasGlideImage) { 
 //			try { 
@@ -638,7 +646,9 @@ public class PageView extends ImageView implements TouchInfoSetter {
 //			} catch (IllegalArgumentException err) { 
 //				Log.e (TAG, err.getLocalizedMessage ()); 
 //			} 
-			redrawRequestListener.requestClearImage (this); 
+			RequestRedraw listener = redrawRequestListener;
+			if (listener != null)
+				listener.requestClearImage (this); 
 			hasGlideImage = false; 
 		} 
 	} 
@@ -738,8 +748,11 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			// We set natural width and height for the annotated page case after we load the edits. 
 		} else if (isPDF) { 
 			// Let's load the PDF page size for now ... 
-			mBitmapNaturalWidth = redrawRequestListener.getPageWidth (page); 
-			mBitmapNaturalHeight = redrawRequestListener.getPageHeight (page); 
+			RequestRedraw listener = redrawRequestListener;
+			if (listener != null) {
+				mBitmapNaturalWidth = listener.getPageWidth (page); 
+				mBitmapNaturalHeight = listener.getPageHeight (page); 
+			} 
 		} 
 		// Load the image with the Glide library: 
 		loadGlideImage (file); 
@@ -834,13 +847,16 @@ public class PageView extends ImageView implements TouchInfoSetter {
 //			} catch (IllegalArgumentException err) { 
 //				Log.e (TAG, err.getLocalizedMessage ()); 
 //			} 
-			redrawRequestListener.requestClearImage (this); 
+			RequestRedraw listener = redrawRequestListener;
+			if (listener != null)
+				listener.requestClearImage (this); 
 		} 
 		// Reload image: 
 		loadGlideImage (itemFile); 
 		// Notify adapter's listener, etc. (for example, to re-render the PDF page): 
-		if (mSizeChangeCallback != null) 
-			mSizeChangeCallback.onSizeChanged (); 
+		SizeChanged callback = mSizeChangeCallback; 
+		if (callback != null)
+			callback.onSizeChanged (); 
 		// Update paper lines, if any: 
 		if (paperPoints != null) { 
 			int fromW = oldW != 0 ? oldW : 1; 
@@ -990,10 +1006,10 @@ public class PageView extends ImageView implements TouchInfoSetter {
 		else if (renderY < h - bigH) 
 			renderY = (int) (h - bigH); 
 //		if (renderX != lastRenderX || renderY != lastRenderY || renderW != lastRenderW || renderH != lastRenderH) { 
-			if (redrawRequestListener != null) { 
-				redrawRequestListener.requestRedrawPagePDF (this, itemFile, itemPage, 
+		RequestRedraw listener = redrawRequestListener;
+		if (listener != null) 
+				listener.requestRedrawPagePDF (this, itemFile, itemPage, 
 						renderX, renderY, renderW, renderH, WIDE_SCALE_BUFFER_PARAMETER, true); 
-			} 
 //		} 
 	} 
 	

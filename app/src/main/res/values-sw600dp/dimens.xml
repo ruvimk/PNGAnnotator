@@ -5,6 +5,7 @@
 	<dimen name="pg_up_down_btn_pad_side">10dp</dimen>
 	<dimen name="pg_up_down_btn_pad_top">28dp</dimen>
 	<dimen name="pg_up_down_btn_pad_bottom">20dp</dimen>
+	<dimen name="pg_up_down_invisible_size">160dp</dimen> 
 	
 	
 	

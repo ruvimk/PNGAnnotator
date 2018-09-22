@@ -27,10 +27,13 @@ import java.util.Vector;
 public class SwipeableRecyclerView extends RecyclerView implements TouchInfoSetter { 
 	static final String TAG = "SwipeRV"; 
 	
+	SettingsManager mSettingsManager = null; 
+	
 	float decayRate = 0.05f; 
 	long timestep = 20; 
 	
 	final float MAX_DISPLACEMENT_FOR_CLICK; 
+	final int PIXELS_PER_INCH; 
 	
 	final int touchSlop; 
 	
@@ -67,6 +70,7 @@ public class SwipeableRecyclerView extends RecyclerView implements TouchInfoSett
 				metrics)); 
 		MAX_DISPLACEMENT_FOR_CLICK = TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 0.5f, 
 				metrics); 
+		PIXELS_PER_INCH = (int) TypedValue.applyDimension (TypedValue.COMPLEX_UNIT_IN, 1f, metrics); 
 		ViewConfiguration viewConf = ViewConfiguration.get (context); 
 		touchSlop = viewConf.getScaledTouchSlop (); 
 //		mScaleGestureDetector = new ScaleGestureDetector (context, new ScaleGestureDetector.OnScaleGestureListener () { 
@@ -394,6 +398,17 @@ public class SwipeableRecyclerView extends RecyclerView implements TouchInfoSett
 		getGlobalVisibleRect (meG); 
 		int left = meG.left - meL.left; 
 		int top = meG.top - meL.top; 
+		if (mSettingsManager != null && mSettingsManager.isInvisiblePageNavTapEnabled ()) { 
+			int navInvisibleBtnSize = getContext ().getResources ().getDimensionPixelSize (R.dimen.pg_up_down_invisible_size); 
+			if (y < navInvisibleBtnSize) { 
+				pageUp (); 
+				return; 
+			} 
+			if (y >= getHeight () - navInvisibleBtnSize) { 
+				pageDown (); 
+				return; 
+			} 
+		} 
 		checkClick ((int) x + left, (int) y + top, toolType, this); 
 	} 
 	@Override public boolean onInterceptTouchEvent (MotionEvent event) { 

@@ -144,6 +144,8 @@ public class NoteActivity extends Activity {
 	SharedPreferences leftOff = null; 
 	SharedPreferences recents = null; 
 	
+	SettingsManager mSettingsManager = null; 
+	
 	final SelectionManager selectionManager = new SelectionManager (this); 
 	final CustomEditDialog customEditDialog = new CustomEditDialog (this); 
 	
@@ -178,6 +180,7 @@ public class NoteActivity extends Activity {
 		super.onCreate (savedInstanceState); 
 		setContentView (R.layout.activity_main); 
 		// Read the key-value quick options from last time: 
+		mSettingsManager = new SettingsManager (this); 
 		prefs = getSharedPreferences (PREFS_NAME, MODE_PRIVATE); 
 		leftOff = getSharedPreferences (LEFTOFF_NAME, MODE_PRIVATE); 
 		recents = getSharedPreferences (RECENTS_NAME, MODE_PRIVATE); 
@@ -1466,6 +1469,7 @@ public class NoteActivity extends Activity {
 		
 		// Image annotation RecyclerView: 
 		mRvBigPages = findViewById (R.id.rvBigPages);
+		mRvBigPages.mSettingsManager = mSettingsManager; 
 		rearrangeManager = new RearrangeManager (this, mRvBigPages, findViewById (R.id.llRearrangeContainer)); 
 		mRvBigPages.setParentFolder (mParentFolder, mBrowsingFolders.elementAt (0).getName ()); 
 		mRvBigPages.setAdapter (mNotesAdapter); 

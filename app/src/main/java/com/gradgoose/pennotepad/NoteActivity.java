@@ -1761,7 +1761,7 @@ public class NoteActivity extends Activity {
 //		if (mNotesAdapter != null) 
 //			mNotesAdapter.cleanUp (); 
 		if (mNotesAdapter != null) 
-			mNotesAdapter.mActivityRunning = false; 
+			mNotesAdapter.notifyActivityDestroyed (); 
 		super.onDestroy (); 
 	} 
 	

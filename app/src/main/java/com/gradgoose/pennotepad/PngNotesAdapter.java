@@ -49,11 +49,11 @@ import java.util.Vector;
 public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSetter { 
 	static final String TAG = "PngNotesAdapter"; 
 	
-	final Context mContext; 
+	Context mContext; 
 	final Vector<File> mBrowsingFolder; 
 	final HashMap<String, Long> mStableIds; 
 	
-	final SelectionManager selectionManager; 
+	SelectionManager selectionManager; 
 	
 	int touchSlop; 
 	int longPressTimeout; 
@@ -72,6 +72,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 	PageView.ErrorCallback mErrorCallback = null; 
 	
 	boolean mActivityRunning = true; 
+	boolean mActivityDestroyed = false; 
 	
 	boolean mAllowLinks = true; 
 	
@@ -92,6 +93,26 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 	int mPdfAvailableSizes = 0; 
 	
 	static final int AVAILABLE_SIZES_FILL_INCREMENT = 16; 
+	
+	void notifyActivityDestroyed () { 
+		mActivityDestroyed = true; 
+		mActivityRunning = false; 
+		for (PageView pageView : mAllPageViews) 
+			pageView.notifyActivityDestroyed (); 
+		clearReferencesToObjects (); 
+	} 
+	void clearReferencesToObjects () { 
+		mContext = null; 
+		selectionManager = null; 
+		mErrorCallback = null; 
+		mOnNoteInteractListener = null; 
+		mAttachedRecyclerView = null; 
+		mOnFilesChangedListener = null; 
+		mAllPageViews = null; 
+		mRedrawCode = null; 
+		recyclerViewTouchListener = null; 
+		mHolders = null; 
+	} 
 	
 	RecyclerView mAttachedRecyclerView = null; 
 	@Override public void onAttachedToRecyclerView (RecyclerView recyclerView) { 
@@ -334,7 +355,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 		@Override public void run () { 
 			boolean hasDirty; 
 			setPriority (NORM_PRIORITY - 1); // Drawing the bitmaps is not as high-priority as getting page sizes. 
-			while (mActivityRunning) { 
+			while (mActivityRunning && !mActivityDestroyed) { 
 				hasDirty = false; 
 				if (mPdfAvailableSizes < mPdfPageCount) { 
 					synchronized (pdfiumCore) { 
@@ -356,13 +377,16 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 					hasDirty = true; 
 					// Go redraw it: 
 					params.dirty = false; 
+					Context context = mContext; 
+					if (context == null) 
+						return; 
 					if (mIsPDF) { 
 						params.holder.renderPage (params.page, 
 								params.putX, params.putY, params.putWidth, params.putHeight, 
 								params.wideScaleParameter, params.skipDrawingIfPutParametersTheSame); 
-					} else if (!params.pageView.isAnnotatedPage && mContext instanceof Activity && 
-																	   (Build.VERSION.SDK_INT < 17 || !((Activity) mContext).isDestroyed ())) { 
-						RequestBuilder builder = Glide.with (mContext) 
+					} else if (!params.pageView.isAnnotatedPage && context instanceof Activity && 
+																	   (Build.VERSION.SDK_INT < 17 || !((Activity) context).isDestroyed ())) { 
+						RequestBuilder builder = Glide.with (context) 
 														 .load (params.file) 
 														 .apply (RequestOptions.skipMemoryCacheOf (true)) 
 														 .apply (RequestOptions.diskCacheStrategyOf (DiskCacheStrategy.RESOURCE)) 
@@ -398,8 +422,9 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 								FutureTarget t = params.target; 
 								params.target = target; 
 								params.pageView.hasGlideImage = true; 
-								if (Build.VERSION.SDK_INT < 17 || !((Activity) mContext).isDestroyed ()) 
-									Glide.with (mContext) 
+								Context context = mContext; 
+								if (!mActivityDestroyed && context != null) 
+									Glide.with (context) 
 										.clear (t); 
 								synchronized (this) { 
 									this.notify (); 
@@ -508,7 +533,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 	public boolean hasTouchMoved () { 
 		return mTouchMoved; 
 	} 
-	final View.OnTouchListener recyclerViewTouchListener = new View.OnTouchListener () { 
+	View.OnTouchListener recyclerViewTouchListener = new View.OnTouchListener () { 
 		float firstX = 0; 
 		float firstY = 0; 
 		boolean noDisallowIntercept = false; 
@@ -684,8 +709,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 			} 
 		} 
 		public void bind (File itemFile, int positionInList) { 
+			Context context = mContext; 
+			if (context == null) return; 
 			final int pageIndex = mIsPDF ? positionInList - countHeaderViews () : 1; 
-			String pageNumberLabel = mIsPDF ? String.format (Locale.US, mContext.getString (R.string.label_pg_of), pageIndex + 1, mPdfPageCount) : ""; 
+			String pageNumberLabel = mIsPDF ? String.format (Locale.US, context.getString (R.string.label_pg_of), pageIndex + 1, mPdfPageCount) : ""; 
 			titleView.setText (itemFile.getName ()); 
 			topRightView.setText (pageNumberLabel); 
 			topRightView.setVisibility (pageNumberLabel.isEmpty () ? View.GONE : View.VISIBLE); 
@@ -849,24 +876,26 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 								} 
 							} 
 						} 
-						if (bmp == null) { 
-							try { 
-								bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
-							} catch (OutOfMemoryError err) { 
-								if (mErrorCallback != null) 
-									mErrorCallback.onBitmapOutOfMemory (); 
+						synchronized (pageView.mBackgroundBmpMutex) { 
+							if (bmp == null) { 
+								try { 
+									bmp = Bitmap.createBitmap (loadWidth, loadHeight, Bitmap.Config.RGB_565); 
+								} catch (OutOfMemoryError err) { 
+									if (mErrorCallback != null) 
+										mErrorCallback.onBitmapOutOfMemory (); 
+								} 
 							} 
-						} 
-						if (bmp != null) { 
-							pageView.lastRenderX = putX; 
-							pageView.lastRenderY = putY; 
-							pageView.lastRenderW = putWidth; 
-							pageView.lastRenderH = putHeight; 
-							pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, putX, putY, putWidth, putHeight); 
-							pageView.mBackgroundBitmap = bmp; 
-							pageView.mBitmapNaturalWidth = loadWidth; 
-							pageView.mBitmapNaturalHeight = naturalHeight; 
-							pageView.mBitmapLoadHeight = loadHeight; 
+							if (bmp != null) { 
+								pageView.lastRenderX = putX; 
+								pageView.lastRenderY = putY; 
+								pageView.lastRenderW = putWidth; 
+								pageView.lastRenderH = putHeight; 
+								pdfiumCore.renderPageBitmap (pdfDocument, bmp, pageIndex, putX, putY, putWidth, putHeight); 
+								pageView.mBackgroundBitmap = bmp; 
+								pageView.mBitmapNaturalWidth = loadWidth; 
+								pageView.mBitmapNaturalHeight = naturalHeight; 
+								pageView.mBitmapLoadHeight = loadHeight; 
+							} 
 						} 
 				} 
 			} else { 
@@ -880,7 +909,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 				} 
 			} 
 			final boolean finalNeedLayout = needLayout; 
-			((Activity) mContext).runOnUiThread (new Runnable () { 
+			Context context = mContext; 
+			if (context != null) ((Activity) mContext).runOnUiThread (new Runnable () { 
 				@Override public void run () { 
 					if (finalNeedLayout) 
 						pageView.requestLayout (); // Redo layout if the view's aspect ratio is different from the render's. 
@@ -903,12 +933,16 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 	} 
 	
 	void refreshViews () { 
-		for (Holder h : mHolders) 
-			h.pageView.computePageDrawPosition (); 
+		Vector<Holder> holders = mHolders; 
+		if (holders != null) 
+			for (Holder h : holders) 
+				h.pageView.computePageDrawPosition (); 
 	} 
 	void forceRedrawAll () { 
-		for (Holder h : mHolders) 
-			h.pageView.forceRedraw (); 
+		Vector<Holder> holders = mHolders; 
+		if (holders != null) 
+			for (Holder h : holders) 
+				h.pageView.forceRedraw (); 
 	} 
 	
 	Vector<Holder> mHolders = new Vector<> (); 

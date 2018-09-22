@@ -79,6 +79,17 @@ public class PageView extends ImageView implements TouchInfoSetter {
 	
 	RequestRedraw redrawRequestListener = null; 
 	
+	void clearReferencesToObjects () { 
+		redrawRequestListener = null; 
+		mErrorCallback = null; 
+		mSizeChangeCallback = null; 
+		mWriteDetector = null; 
+		mOtherGestureDetector = null; 
+		mGlobalPushStroke = null; 
+		paperGenerator = null; 
+		metrics = null; 
+	} 
+	
 	public interface RequestRedraw { 
 		void requestRedrawPagePDF (PageView pageView, File file, int page, 
 								   int putX, int putY, int putWidth, int putHeight, 
@@ -542,6 +553,18 @@ public class PageView extends ImageView implements TouchInfoSetter {
 	int mBitmapLoadHeight = 1; 
 	boolean isAnnotatedPage = false; 
 	boolean isPDF = false; 
+	
+	boolean mActivityDestroyed = false; 
+	void notifyActivityDestroyed () { 
+		mActivityDestroyed = true; 
+		synchronized (mBackgroundBmpMutex) { 
+			if (mBackgroundBitmap != null) { 
+				mBackgroundBitmap.recycle (); 
+				mBackgroundBitmap = null; 
+			} 
+		} 
+		clearReferencesToObjects (); 
+	} 
 	
 	final Object mBackgroundBmpMutex = new Object (); 
 	Bitmap mBackgroundBitmap = null; // For PDF rendering, as of right now (02/19/2018). 

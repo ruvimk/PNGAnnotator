@@ -97,8 +97,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 	void notifyActivityDestroyed () { 
 		mActivityDestroyed = true; 
 		mActivityRunning = false; 
-		for (PageView pageView : mAllPageViews) 
-			pageView.notifyActivityDestroyed (); 
+		cleanUp (); // Preliminary cleanup: Delete bitmaps and clean up other ViewHolder things. 
+		Vector<PageView> pageViews = mAllPageViews; 
+		if (pageViews != null) 
+			for (PageView pageView : pageViews) 
+				pageView.notifyActivityDestroyed (); 
 		clearReferencesToObjects (); 
 	} 
 	void clearReferencesToObjects () { 
@@ -193,16 +196,18 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 					@Override public void onFilesChanged (File [][] list) { 
 						mList = getFlattenedList (list); 
 						// Callback: 
-						if (mOnFilesChangedListener != null) 
-							mOnFilesChangedListener.onFilesChanged (list); 
+						FileListCache.OnFilesChangedListener listener = mOnFilesChangedListener; 
+						if (listener != null)
+							listener.onFilesChanged (list); 
 //						updateCache (); 
 						// Update views: 
 						notifyDataSetChanged (); 
 					} 
 					@Override public void onFilesNoChange (File [] [] list) { 
 						// Callback: 
-						if (mOnFilesChangedListener != null) 
-							mOnFilesChangedListener.onFilesNoChange (list); 
+						FileListCache.OnFilesChangedListener listener = mOnFilesChangedListener; 
+						if (listener != null)
+							listener.onFilesNoChange (list); 
 //						updateCache (); 
 					} 
 				}); 
@@ -394,9 +399,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 																										  params.pageView.GLIDE_SMALL_SIZE_MULT : 
 																										  params.pageView.GLIDE_LARGE_SIZE_MULT)) 
 														 .listener (new RequestListener<Drawable> () { 
-															 @Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) { 
-																 if (mErrorCallback != null) 
-																	 mErrorCallback.onBitmapLoadError (); 
+															 @Override public boolean onLoadFailed (@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+																 PageView.ErrorCallback callback = mErrorCallback; 
+															 	 if (callback != null)
+																	 callback.onBitmapLoadError (); 
 																 return false; 
 															 } 
 															 @Override public boolean onResourceReady (Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) { 
@@ -607,7 +613,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 					onToggleSelectClick.onClick (view); 
 					return; 
 				} 
-				if (mOnNoteInteractListener != null) mOnNoteInteractListener.onNotePageClicked (mItemFile, mListPosition); 
+				OnNoteInteractListener listener = mOnNoteInteractListener; 
+				if (listener != null) listener.onNotePageClicked (mItemFile, mListPosition); 
 			} 
 		}; 
 		final View.OnLongClickListener onLongClickListener = new View.OnLongClickListener () { 
@@ -625,7 +632,8 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 					return false; 
 				} 
 				// Exit if the note interact listener chooses to consume the event: 
-				if (mOnNoteInteractListener != null && mOnNoteInteractListener.onNotePageLongClicked (mItemFile, mListPosition)) 
+				OnNoteInteractListener listener = mOnNoteInteractListener; 
+				if (listener != null && listener.onNotePageLongClicked (mItemFile, mListPosition)) 
 					return true; 
 				// Ruvim commented out the following line of code because it's already done in onClick just above this: 
 //				// Select file: 
@@ -781,12 +789,13 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 					if (mapped.contains (touchX, touchY)) { 
 						Log.i (TAG, "This is the link!"); 
 						Integer destPageIdx = link.getDestPageIdx (); 
+						OnNoteInteractListener listener = mOnNoteInteractListener; 
 						if (destPageIdx != null) { 
-							if (mOnNoteInteractListener != null) 
-								return mOnNoteInteractListener.onPageLinkClicked (destPageIdx); 
+							if (listener != null) 
+								return listener.onPageLinkClicked (destPageIdx); 
 						} else { 
-							if (mOnNoteInteractListener != null) 
-								return mOnNoteInteractListener.onUriLinkClicked (link.getUri ()); 
+							if (listener != null) 
+								return listener.onUriLinkClicked (link.getUri ()); 
 						} 
 						return false; 
 					} 
@@ -803,9 +812,10 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 					pdfiumCore.openPage (pdfDocument, pageIndex); 
 					int rvW = 1; 
 					int rvH = 1; 
-					if (mAttachedRecyclerView != null) { 
-						rvW = mAttachedRecyclerView.getWidth (); 
-						rvH = mAttachedRecyclerView.getHeight (); 
+					RecyclerView rv = mAttachedRecyclerView; 
+					if (rv != null) { 
+						rvW = rv.getWidth (); 
+						rvH = rv.getHeight (); 
 					} 
 					int srcWidth = pdfiumCore.getPageWidth (pdfDocument, pageIndex); 
 					int srcHeight = pdfiumCore.getPageHeight (pdfDocument, pageIndex); 
@@ -927,9 +937,11 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 			pdfiumCore.closeDocument (pdfDocument); 
 			pdfDocument = null; 
 		} 
-		for (Holder h : mHolders) { 
-			h.pageView.cleanUp (); 
-		} 
+		Vector<Holder> holders = mHolders; 
+		if (holders != null) 
+			for (Holder h : holders) { 
+				h.pageView.cleanUp (); 
+			} 
 	} 
 	
 	void refreshViews () { 

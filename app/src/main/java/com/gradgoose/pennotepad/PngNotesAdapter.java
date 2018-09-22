@@ -544,6 +544,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 		float firstY = 0; 
 		boolean noDisallowIntercept = false; 
 		@Override public boolean onTouch (View view, MotionEvent motionEvent) { 
+			if (mActivityDestroyed) return false; 
 			float x = motionEvent.getX (); 
 			float y = motionEvent.getY (); 
 			setLastTouchedPoint (x, y); 
@@ -574,6 +575,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 			float firstY = 0; 
 			boolean noDisallowIntercept = false; 
 			@Override public boolean onTouch (View view, MotionEvent motionEvent) { 
+				if (mActivityDestroyed) return false; 
 				float x = motionEvent.getX (); 
 				float y = motionEvent.getY (); 
 				if (motionEvent.getAction () == MotionEvent.ACTION_DOWN) { 
@@ -593,6 +595,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 		}; 
 		final View.OnClickListener onToggleSelectClick = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
+				if (mActivityDestroyed) return; 
 				cbSelect.setChecked (!cbSelect.isChecked ()); 
 				String fileString = getFileString (); 
 				if (selectionManager.isFileSelected (fileString)) 
@@ -604,6 +607,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 		}; 
 		final View.OnClickListener onClickListener = new View.OnClickListener () { 
 			@Override public void onClick (View view) { 
+				if (mActivityDestroyed) return; 
 				if (mAllowLinks && clickLink (pageView.itemPage, pageView)) { 
 					Log.i (TAG, "clickLink () returned 'true';"); 
 					return; 
@@ -619,6 +623,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 		}; 
 		final View.OnLongClickListener onLongClickListener = new View.OnLongClickListener () { 
 			@Override public boolean onLongClick (View view) { 
+				if (mActivityDestroyed) return false; 
 				// Exit if it's a pen that's selected and (we're not in pen mode or it's not a finger that did the touch ...): 
 				int toolType = pageView.getLastTouchedToolType (); 
 				boolean toolMode = pageView.mToolMode; 
@@ -658,6 +663,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 														final int putX, final int putY, final int putWidth, final int putHeight, 
 														final int wideScaleParameter,
 														final boolean skipDrawingIfPutParametersTheSame) { 
+				if (mActivityDestroyed) return; 
 				mRedrawParams.pageView = pageView; 
 				mRedrawParams.file = file; 
 				mRedrawParams.page = page; 
@@ -675,6 +681,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 //				}.start (); 
 			} 
 			@Override public void requestRedrawImage (File imageFile, PageView pageView) {
+				if (mActivityDestroyed) return; 
 				mRedrawParams.pageView = pageView; 
 				mRedrawParams.file = imageFile; 
 				mRedrawParams.dirty = true; 
@@ -718,7 +725,7 @@ public class PngNotesAdapter extends RecyclerView.Adapter implements TouchInfoSe
 		} 
 		public void bind (File itemFile, int positionInList) { 
 			Context context = mContext; 
-			if (context == null) return; 
+			if (context == null || mActivityDestroyed) return; 
 			final int pageIndex = mIsPDF ? positionInList - countHeaderViews () : 1; 
 			String pageNumberLabel = mIsPDF ? String.format (Locale.US, context.getString (R.string.label_pg_of), pageIndex + 1, mPdfPageCount) : ""; 
 			titleView.setText (itemFile.getName ()); 

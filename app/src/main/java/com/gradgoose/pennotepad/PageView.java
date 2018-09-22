@@ -366,6 +366,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			} 
 			
 			@Override public boolean onSingleTapUp (MotionEvent motionEvent) { 
+				if (mActivityDestroyed) return false; 
 				performClick (); // Just perform a click - tell the View that it was clicked. 
 				return true; 
 			} 
@@ -375,6 +376,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			} 
 			
 			@Override public void onLongPress (MotionEvent motionEvent) { 
+				if (mActivityDestroyed) return; 
 				if (Build.VERSION.SDK_INT >= 24) 
 					performLongClick (motionEvent.getX (), motionEvent.getY ()); // Tell it about a long click. 
 				else performLongClick (); 
@@ -385,7 +387,8 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			} 
 		}); 
 		mWriteDetector = new WriteDetector (getContext (), new WriteDetector.OnWriteGestureListener () { 
-			@Override public boolean onStrokeBegin (int strokeID, float x, float y) { 
+			@Override public boolean onStrokeBegin (int strokeID, float x, float y) {
+				if (mActivityDestroyed) return false; 
 				if (edit.value == null) return false; 
 				tmpPointCount = 2; 
 				tmpPoints[0] = x; 
@@ -403,6 +406,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			@Override public boolean onStrokeWrite (int strokeID, 
 													float x0, float y0, 
 													float x1, float y1) { 
+				if (mActivityDestroyed) return false; 
 				tmpPoints[tmpPointCount + 0] = x1; 
 				tmpPoints[tmpPointCount + 1] = y1; 
 				tmpPoints[tmpPointCount + 2] = x1; 
@@ -421,6 +425,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			} 
 			
 			@Override public void onStrokeEnd (int strokeID, float x, float y) { 
+				if (mActivityDestroyed) return; 
 				WriteDetector.Stroke stroke = mWriteDetector.getStroke (strokeID); 
 				if (mTool == NoteActivity.TOOL_ERASER) 
 					mNowErasing = false; 
@@ -436,12 +441,14 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			} 
 			
 			@Override public void onStrokeCancel (int strokeID) { 
+				if (mActivityDestroyed) return; 
 				tmpPointCount = 0; 
 				mNowWriting = false; 
 				invalidate (); 
 			} 
 			
 			@Override public boolean onEraseBegin (int strokeID, float x, float y) { 
+				if (mActivityDestroyed) return false; 
 				mNowErasing = true; 
 				mGlobalPushStroke.eraseBegin (); 
 				mGlobalPushStroke.eraseNext (mWriteDetector.getStroke (strokeID)); 
@@ -451,11 +458,13 @@ public class PageView extends ImageView implements TouchInfoSetter {
 			@Override public boolean onEraseMove (int strokeID, 
 												  float x0, float y0, 
 												  float x1, float y1) { 
+				if (mActivityDestroyed) return false; 
 				mGlobalPushStroke.eraseNext (mWriteDetector.getStroke (strokeID)); 
 				return true; 
 			} 
 			
 			@Override public void onEraseEnd (int strokeID, float x, float y) { 
+				if (mActivityDestroyed) return; 
 				mNowErasing = false;
 //				pushStrokesInThisThread (mWriteDetector.getStroke (strokeID)); 
 				mGlobalPushStroke.eraseDone (); 
@@ -907,6 +916,7 @@ public class PageView extends ImageView implements TouchInfoSetter {
 	} 
 	
 	@Override public boolean onTouchEvent (MotionEvent event) { 
+		if (mActivityDestroyed) return false; 
 		setLastTouchedPoint (event.getX (), event.getY ()); 
 		setLastTouchedToolType (event.getToolType (0)); 
 		int [] locationScreen = new int [2]; 
